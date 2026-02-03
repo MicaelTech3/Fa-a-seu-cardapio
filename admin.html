@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Cardápio Digital</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/admin.css">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-container">
+    <div class="login-header">
+      <h1>Painel Admin</h1>
+      <p>Gerenciamento do Cardápio Digital</p>
+    </div>
+
+    <form id="loginForm" class="login-form">
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="email" required>
+      </div>
+
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="password" required>
+      </div>
+
+      <button class="btn-primary" type="submit">Entrar</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div class="admin-dashboard" id="adminDashboard" style="display:none;">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Admin Panel</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="dashboard">Dashboard</button>
+      <button class="nav-item" data-section="products">Produtos</button>
+      <button class="nav-item" data-section="categories">Categorias</button>
+      <button class="nav-item" data-section="orders">Pedidos</button>
+      <button class="nav-item" data-section="configuracoes">Configurações</button>
+      <button class="nav-item" data-section="pages">Pages</button>
+    </nav>
+
+    <button class="btn-logout" id="btnLogout">Sair</button>
+  </aside>
+
+  <!-- ===== CONTEÚDO ===== -->
+  <main class="main-content">
+
+    <!-- Dashboard -->
+    <section class="content-section active" id="sectionDashboard">
+      <h1>Dashboard</h1>
+      <div id="dashboardContainer"></div>
+    </section>
+
+    <!-- Produtos -->
+    <section class="content-section" id="sectionProducts">
+      <div class="section-header">
+        <h1>Produtos</h1>
+        <button class="btn-primary" id="btnAddProduct">Novo Produto</button>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <!-- Categorias -->
+    <section class="content-section" id="sectionCategories">
+      <div class="section-header">
+        <h1>Categorias</h1>
+        <button class="btn-primary" id="btnAddCategory">Nova Categoria</button>
+      </div>
+      <div id="categoriesList"></div>
+    </section>
+
+    <!-- Pedidos -->
+    <section class="content-section" id="sectionOrders">
+      <h1>Pedidos</h1>
+      <div class="orders-filter">
+        <button class="filter-btn active" data-status="all">Todos</button>
+        <button class="filter-btn" data-status="novo">Novos</button>
+        <button class="filter-btn" data-status="preparando">Preparando</button>
+        <button class="filter-btn" data-status="pronto">Prontos</button>
+      </div>
+      <div id="ordersList"></div>
+    </section>
+
+    <!-- Configurações -->
+    <section class="content-section" id="sectionConfiguracoes">
+      <h1>Configurações</h1>
+      <div id="configContainer"></div>
+    </section>
+
+    <!-- Pages -->
+    <section class="content-section" id="sectionPages">
+      <h1>Pages</h1>
+      <div id="pagesContainer"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= MODAIS ================= -->
+
+<!-- Modal Produto -->
+<div class="modal" id="productModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content large">
+    <form id="productForm">
+      <h2>Novo Produto</h2>
+
+      <input type="text" id="productName" placeholder="Nome" required>
+      <input type="number" id="productPrice" step="0.01" placeholder="Preço" required>
+
+      <select id="productCategory" required></select>
+      <textarea id="productDescription" placeholder="Descrição"></textarea>
+
+      <input type="file" id="productImage" accept="image/*">
+      <label>
+        <input type="checkbox" id="productActive" checked> Produto ativo
+      </label>
+
+      <button type="submit" class="btn-primary">Salvar</button>
+      <button type="button" class="btn-secondary" id="cancelProductModal">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Categoria -->
+<div class="modal" id="categoryModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <form id="categoryForm">
+      <h2>Nova Categoria</h2>
+      <input type="text" id="categoryName" required>
+      <button type="submit" class="btn-primary">Salvar</button>
+      <button type="button" class="btn-secondary" id="cancelCategoryModal">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= UI ================= -->
+<div class="loading" id="loading"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ================= SCRIPTS ================= -->
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/admin.js"></script>
+
+</body>
+</html>

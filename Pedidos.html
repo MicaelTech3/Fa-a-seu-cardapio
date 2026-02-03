@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Pedidos</title>
+    <link rel="stylesheet" href="css/Pedidos.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🍽️ Acompanhamento de Pedidos</h1>
+            <p class="subtitle">Veja em tempo real o status de todos os pedidos</p>
+        </header>
+
+        <div class="status-legend">
+            <div class="legend-item">
+                <span class="legend-dot novo"></span>
+                <span>Novo</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot preparando"></span>
+                <span>Preparando</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot pronto"></span>
+                <span>Pronto</span>
+            </div>
+        </div>
+
+        <div class="orders-grid" id="ordersGrid">
+            <!-- Pedidos serão carregados aqui -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <h2>Nenhum pedido no momento</h2>
+            <p>Os pedidos aparecerão aqui em tempo real</p>
+        </div>
+    </div>
+
+    <!-- Notificação de Pedido Pronto -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">✅</div>
+        <div class="notification-content">
+            <strong>Seu pedido está pronto!</strong>
+            <p id="notificationText"></p>
+        </div>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/pedidos.js"></script>
+</body>
+</html>

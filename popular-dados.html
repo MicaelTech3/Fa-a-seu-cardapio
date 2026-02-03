@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular Dados de Exemplo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2C2C2C;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #D4AF37;
+            color: #2C2C2C;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #B8941F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            display: none;
+        }
+        .log.active {
+            display: block;
+        }
+        .log div {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Popular Dados de Exemplo</h1>
+        <p class="subtitle">Este script irá adicionar categorias e produtos de exemplo ao seu Firebase</p>
+        
+        <div class="warning">
+            <strong>⚠️ Atenção:</strong> Este script irá adicionar dados de exemplo ao seu banco de dados. 
+            Use apenas para testes. Execute apenas uma vez!
+        </div>
+
+        <button id="btnPopularCategorias">1. Popular Categorias</button>
+        <button id="btnPopularProdutos" disabled>2. Popular Produtos</button>
+        <button id="btnLimpar">Limpar Log</button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+        const log = document.getElementById('log');
+        const btnPopularCategorias = document.getElementById('btnPopularCategorias');
+        const btnPopularProdutos = document.getElementById('btnPopularProdutos');
+        const btnLimpar = document.getElementById('btnLimpar');
+
+        function addLog(message, type = 'info') {
+            log.classList.add('active');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Categorias de exemplo
+        const categorias = [
+            { nome: 'Pizzas' },
+            { nome: 'Hambúrgueres' },
+            { nome: 'Bebidas' },
+            { nome: 'Sobremesas' }
+        ];
+
+        // Produtos de exemplo (sem imagens reais para simplicidade)
+        const produtos = [
+            // Pizzas
+            {
+                nome: 'Pizza Margherita',
+                preco: 35.90,
+                categoria: 'Pizzas',
+                descricao: 'Molho de tomate, mussarela, manjericão e azeite',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800'
+            },
+            {
+                nome: 'Pizza Calabresa',
+                preco: 38.90,
+                categoria: 'Pizzas',
+                descricao: 'Molho, mussarela, calabresa, cebola e orégano',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800'
+            },
+            {
+                nome: 'Pizza Portuguesa',
+                preco: 42.90,
+                categoria: 'Pizzas',
+                descricao: 'Molho, mussarela, presunto, ovos, cebola, azeitonas',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800'
+            },
+            
+            // Hambúrgueres
+            {
+                nome: 'X-Burger Classic',
+                preco: 25.90,
+                categoria: 'Hambúrgueres',
+                descricao: 'Pão, hambúrguer, queijo, alface, tomate e molho especial',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'
+            },
+            {
+                nome: 'X-Bacon Deluxe',
+                preco: 32.90,
+                categoria: 'Hambúrgueres',
+                descricao: 'Pão, hambúrguer, queijo, bacon crocante, cebola caramelizada',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800'
+            },
+            {
+                nome: 'Veggie Burger',
+                preco: 28.90,
+                categoria: 'Hambúrgueres',
+                descricao: 'Hambúrguer vegetal, queijo vegano, rúcula, tomate seco',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1520072959219-c595dc870360?w=800'
+            },
+
+            // Bebidas
+            {
+                nome: 'Refrigerante Lata',
+                preco: 5.00,
+                categoria: 'Bebidas',
+                descricao: 'Coca-Cola, Guaraná, Fanta - 350ml',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=800'
+            },
+            {
+                nome: 'Suco Natural',
+                preco: 8.00,
+                categoria: 'Bebidas',
+                descricao: 'Laranja, Limão ou Maracujá - 300ml',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800'
+            },
+            {
+                nome: 'Água Mineral',
+                preco: 3.00,
+                categoria: 'Bebidas',
+                descricao: 'Água mineral sem gás - 500ml',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800'
+            },
+
+            // Sobremesas
+            {
+                nome: 'Brownie de Chocolate',
+                preco: 12.90,
+                categoria: 'Sobremesas',
+                descricao: 'Brownie caseiro com pedaços de chocolate e sorvete',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1607920591413-4ec007e70023?w=800'
+            },
+            {
+                nome: 'Pudim de Leite',
+                preco: 10.90,
+                categoria: 'Sobremesas',
+                descricao: 'Pudim tradicional com calda de caramelo',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1562440499-64c9a111f713?w=800'
+            },
+            {
+                nome: 'Petit Gateau',
+                preco: 15.90,
+                categoria: 'Sobremesas',
+                descricao: 'Bolinho quente com chocolate derretido e sorvete',
+                ativo: true,
+                imagem: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800'
+            }
+        ];
+
+        // Popular categorias
+        btnPopularCategorias.addEventListener('click', async () => {
+            btnPopularCategorias.disabled = true;
+            addLog('Iniciando inserção de categorias...', 'info');
+
+            try {
+                for (const categoria of categorias) {
+                    await addDoc(collection(db, 'categorias'), categoria);
+                    addLog(`✓ Categoria "${categoria.nome}" adicionada`, 'success');
+                }
+                addLog('✓ Todas as categorias foram adicionadas com sucesso!', 'success');
+                btnPopularProdutos.disabled = false;
+                addLog('Agora você pode popular os produtos!', 'info');
+            } catch (error) {
+                addLog(`✗ Erro ao adicionar categorias: ${error.message}`, 'error');
+                btnPopularCategorias.disabled = false;
+            }
+        });
+
+        // Popular produtos
+        btnPopularProdutos.addEventListener('click', async () => {
+            btnPopularProdutos.disabled = true;
+            addLog('Iniciando inserção de produtos...', 'info');
+
+            try {
+                for (const produto of produtos) {
+                    await addDoc(collection(db, 'produtos'), produto);
+                    addLog(`✓ Produto "${produto.nome}" adicionado`, 'success');
+                }
+                addLog('✓ Todos os produtos foram adicionados com sucesso!', 'success');
+                addLog('🎉 Banco de dados populado! Acesse menu.html para ver o cardápio.', 'success');
+            } catch (error) {
+                addLog(`✗ Erro ao adicionar produtos: ${error.message}`, 'error');
+                btnPopularProdutos.disabled = false;
+            }
+        });
+
+        // Limpar log
+        btnLimpar.addEventListener('click', () => {
+            log.innerHTML = '';
+            log.classList.remove('active');
+        });
+
+        addLog('Sistema pronto. Clique em "1. Popular Categorias" para começar.', 'info');
+    </script>
+</body>
+</html>

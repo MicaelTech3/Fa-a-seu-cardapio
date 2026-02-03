@@ -1,0 +1,451 @@
+/* ========================================
+   Pedidos.css - Acompanhamento de Pedidos
+======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-primary: #3b82f6;
+    --color-secondary: #64748b;
+    --color-text: #1e293b;
+    --color-text-light: #64748b;
+    --color-border: #e2e8f0;
+    --color-background: #f8fafc;
+    --color-white: #ffffff;
+    --color-success: #22c55e;
+    --color-warning: #f59e0b;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --radius: 12px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--color-text);
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+}
+
+/* Legenda de Status */
+.status-legend {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.legend-dot.novo {
+    background: #3b82f6;
+}
+
+.legend-dot.preparando {
+    background: #f59e0b;
+}
+
+.legend-dot.pronto {
+    background: #22c55e;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+/* Grid de Pedidos */
+.orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.order-card-public {
+    background: var(--color-white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--color-border);
+    transition: var(--transition);
+    animation: fadeInUp 0.5s ease;
+}
+
+.order-card-public:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.order-card-public.novo {
+    border-left-color: #3b82f6;
+}
+
+.order-card-public.preparando {
+    border-left-color: #f59e0b;
+}
+
+.order-card-public.pronto {
+    border-left-color: #22c55e;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.order-header-public {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--color-background);
+}
+
+.order-number-public {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text);
+    font-family: 'Playfair Display', serif;
+}
+
+.order-status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.order-status-badge.novo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.order-status-badge.preparando {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.order-status-badge.pronto {
+    background: #dcfce7;
+    color: #166534;
+    animation: ready-pulse 1.5s infinite;
+}
+
+@keyframes ready-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.order-time-public {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    margin-bottom: 16px;
+}
+
+/* Log de Processo */
+.order-process-log {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    padding: 16px;
+    background: var(--color-background);
+    border-radius: 8px;
+}
+
+.process-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.process-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    border: 3px solid #e2e8f0;
+    transition: var(--transition);
+    position: relative;
+    z-index: 2;
+}
+
+.process-step.active .process-dot {
+    background: var(--color-white);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.process-step.active .process-label {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.process-label {
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.process-line {
+    flex: 1;
+    height: 3px;
+    background: #e2e8f0;
+    margin: 0 -4px;
+    position: relative;
+    top: -20px;
+    z-index: 1;
+}
+
+.process-step.active ~ .process-step .process-dot {
+    background: #e2e8f0;
+    border-color: #e2e8f0;
+}
+
+/* Animação de progresso */
+.process-step.active .process-dot::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+    75%, 100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.order-items-public {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.order-item-public {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.95rem;
+}
+
+.order-item-name-public {
+    color: var(--color-text);
+}
+
+.order-item-qty-public {
+    color: var(--color-text-light);
+    margin-left: 6px;
+}
+
+.order-total-public {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 2px solid var(--color-background);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.order-total-public span {
+    color: var(--color-primary);
+    font-family: 'Playfair Display', serif;
+}
+
+/* Estado Vazio */
+.empty-state {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--color-text-light);
+}
+
+.empty-state svg {
+    color: var(--color-border);
+    margin-bottom: 16px;
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    color: var(--color-text);
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    font-size: 1rem;
+}
+
+/* Notificação */
+.notification {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: var(--color-success);
+    color: white;
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 400px;
+    transform: translateX(500px);
+    opacity: 0;
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+.notification.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-icon {
+    font-size: 2rem;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.notification-content strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.notification-content p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .orders-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-legend {
+        gap: 20px;
+    }
+    
+    .notification {
+        left: 24px;
+        right: 24px;
+        max-width: none;
+    }
+    
+    .order-process-log {
+        padding: 12px;
+    }
+    
+    .process-label {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 24px 16px;
+    }
+    
+    .header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .order-card-public {
+        padding: 20px 16px;
+    }
+    
+    .process-step {
+        gap: 6px;
+    }
+    
+    .process-dot {
+        width: 20px;
+        height: 20px;
+    }
+}
