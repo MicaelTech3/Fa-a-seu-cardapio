@@ -21,7 +21,23 @@ let categorias = [];
 let carrinho = [];
 let categoriaAtiva = 'todas';
 let pedidoAtualId = null;
-let configuracoes = {}; // ← ADICIONADO
+let configuracoes = {
+    nomeCardapio: 'Xfood',
+    logoUrl: 'img/logo.jpg',
+    corPrimaria: '#3b82f6',
+    corSecundaria: '#64748b',
+    fonte: 'DM Sans',
+    tituloBemVindo: '😋 Bemvindos',
+    endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil',
+    whatsApp: '5554999999999',
+    status: 'aberto',
+    servicoLocal: true,
+    servicoRetirada: true,
+    servicoDelivery: true,
+    carrinhoAtivo: true,
+    chavePix: '',
+    qrCodePix: ''
+};
 
 // Elementos do DOM
 const productsContainer = document.getElementById('productsContainer');
@@ -49,7 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function initApp() {
     try {
         showLoading();
-        await carregarConfiguracoes(); // ← ADICIONADO
+        await carregarConfiguracoes();
         await carregarCategorias();
         await carregarProdutos();
         setupEventListeners();
@@ -65,20 +81,31 @@ async function carregarConfiguracoes() {
     try {
         const configRef = doc(db, 'configuracoes', 'geral');
 
+        // Usar onSnapshot para atualizações em tempo real
         onSnapshot(configRef, (docSnap) => {
             if (docSnap.exists()) {
                 const config = docSnap.data();
-                configuracoes = config; // ← ADICIONADO
-                aplicarConfiguracoes(config);
+                configuracoes = { ...configuracoes, ...config }; // Mesclar com valores padrão
+                console.log('🔄 Configurações carregadas/atualizadas:', configuracoes);
+                aplicarConfiguracoes(configuracoes);
+            } else {
+                console.log('⚠️ Documento de configurações não encontrado, usando padrões');
+                aplicarConfiguracoes(configuracoes);
             }
+        }, (error) => {
+            console.error('❌ Erro ao carregar configurações:', error);
+            aplicarConfiguracoes(configuracoes); // Usar padrões em caso de erro
         });
     } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
+        console.error('❌ Erro ao configurar listener:', error);
+        aplicarConfiguracoes(configuracoes); // Usar padrões em caso de erro
     }
 }
 
-// Aplicar configurações ao cardápio (NOVA FUNÇÃO)
+// Aplicar configurações ao cardápio
 function aplicarConfiguracoes(config) {
+    console.log('🎨 Aplicando configurações:', config);
+    
     // Aplicar nome do cardápio
     if (config.nomeCardapio) {
         document.title = config.nomeCardapio;
@@ -110,25 +137,19 @@ function aplicarConfiguracoes(config) {
         }
     }
     
-    // Aplicar cores
+    // Aplicar cores CSS Variables
     if (config.corPrimaria) {
         document.documentElement.style.setProperty('--primary-color', config.corPrimaria);
+        console.log('✅ Cor primária aplicada:', config.corPrimaria);
     }
     
     if (config.corSecundaria) {
         document.documentElement.style.setProperty('--secondary-color', config.corSecundaria);
+        console.log('✅ Cor secundária aplicada:', config.corSecundaria);
     }
     
     // Aplicar fonte
-    if (config.fonte) {
-        // Remover links de fonte anteriores
-        const oldFontLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"]');
-        oldFontLinks.forEach(link => {
-            if (!link.href.includes('DM+Sans')) {
-                link.remove();
-            }
-        });
-        
+    if (config.fonte && config.fonte !== 'DM Sans') {
         // Carregar nova fonte do Google Fonts
         const fontLink = document.createElement('link');
         fontLink.rel = 'stylesheet';
@@ -137,6 +158,7 @@ function aplicarConfiguracoes(config) {
         
         // Aplicar fonte ao body
         document.body.style.fontFamily = `'${config.fonte}', sans-serif`;
+        console.log('✅ Fonte aplicada:', config.fonte);
     }
     
     // ===== CONFIGURAÇÕES DO HERO SECTION =====
@@ -146,6 +168,7 @@ function aplicarConfiguracoes(config) {
         const heroTitle = document.querySelector('.hero-title');
         if (heroTitle) {
             heroTitle.textContent = config.tituloBemVindo;
+            console.log('✅ Título atualizado:', config.tituloBemVindo);
         }
     }
     
@@ -154,6 +177,7 @@ function aplicarConfiguracoes(config) {
         const heroAddress = document.querySelector('.hero-address span');
         if (heroAddress) {
             heroAddress.textContent = config.endereco;
+            console.log('✅ Endereço atualizado:', config.endereco);
         }
     }
     
@@ -162,6 +186,7 @@ function aplicarConfiguracoes(config) {
         const whatsappBtn = document.querySelector('.btn-hero-secondary[href*="wa.me"]');
         if (whatsappBtn) {
             whatsappBtn.href = `https://wa.me/${config.whatsApp}`;
+            console.log('✅ WhatsApp atualizado:', config.whatsApp);
         }
     }
     
@@ -183,6 +208,7 @@ function aplicarConfiguracoes(config) {
                 Fechado
             `;
         }
+        console.log('✅ Status atualizado:', config.status);
     }
     
     // Aplicar badges de serviço
@@ -228,30 +254,27 @@ function aplicarConfiguracoes(config) {
         }
         
         heroFeatures.innerHTML = badges.join('');
+        console.log('✅ Badges de serviço atualizados');
     }
     
     // Controlar visibilidade do carrinho
-    if (config.carrinhoAtivo === false) {
-        const cartToggle = document.getElementById('cartToggle');
-        if (cartToggle) {
-            cartToggle.style.display = 'none';
-        }
-        
-        if (produtos.length > 0) {
-            filtrarProdutos();
-        }
-    } else {
-        const cartToggle = document.getElementById('cartToggle');
-        if (cartToggle) {
-            cartToggle.style.display = 'flex';
-        }
-        
-        if (produtos.length > 0) {
-            filtrarProdutos();
+    const cartToggleBtn = document.getElementById('cartToggle');
+    if (cartToggleBtn) {
+        if (config.carrinhoAtivo === false) {
+            cartToggleBtn.style.display = 'none';
+            console.log('✅ Carrinho desativado');
+        } else {
+            cartToggleBtn.style.display = 'flex';
+            console.log('✅ Carrinho ativado');
         }
     }
     
-    console.log('✅ Configurações aplicadas:', config);
+    // Atualizar produtos se já carregados
+    if (produtos.length > 0) {
+        filtrarProdutos();
+    }
+    
+    console.log('✅ Configurações aplicadas com sucesso!');
 }
 
 // Carregar categorias do Firestore em tempo real
@@ -656,9 +679,7 @@ function mostrarNotificacaoPedidoPronto(numeroPedido) {
     tocarSomNotificacao();
 }
 
-/* =========================
-   FECHAR NOTIFICAÇÃO
-========================= */
+// Fechar notificação
 function fecharNotificacaoPedido() {
     const notificacao = document.getElementById('pedidoProntoNotificacao');
     if (notificacao) {
@@ -666,9 +687,7 @@ function fecharNotificacaoPedido() {
     }
 }
 
-/* =========================
-   SOM DE NOTIFICAÇÃO
-========================= */
+// Som de notificação
 function tocarSomNotificacao() {
     try {
         const audio = new Audio(
@@ -684,34 +703,42 @@ function tocarSomNotificacao() {
 // Setup event listeners
 function setupEventListeners() {
     // Carrinho
-    cartToggle.addEventListener('click', abrirCarrinho);
-    cartClose.addEventListener('click', fecharCarrinho);
-    cartOverlay.addEventListener('click', fecharCarrinho);
-    btnCheckout.addEventListener('click', finalizarPedido);
+    if (cartToggle) cartToggle.addEventListener('click', abrirCarrinho);
+    if (cartClose) cartClose.addEventListener('click', fecharCarrinho);
+    if (cartOverlay) cartOverlay.addEventListener('click', fecharCarrinho);
+    if (btnCheckout) btnCheckout.addEventListener('click', finalizarPedido);
     
     // Modal
-    btnCloseModal.addEventListener('click', () => {
-        confirmModal.classList.remove('active');
-    });
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', () => {
+            confirmModal.classList.remove('active');
+        });
+    }
     
     // Fechar modal ao clicar fora
-    confirmModal.addEventListener('click', (e) => {
-        if (e.target === confirmModal) {
-            confirmModal.classList.remove('active');
-        }
-    });
+    if (confirmModal) {
+        confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                confirmModal.classList.remove('active');
+            }
+        });
+    }
 }
 
 // Abrir carrinho
 function abrirCarrinho() {
-    cartDrawer.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (cartDrawer) {
+        cartDrawer.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 // Fechar carrinho
 function fecharCarrinho() {
-    cartDrawer.classList.remove('active');
-    document.body.style.overflow = '';
+    if (cartDrawer) {
+        cartDrawer.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 }
 
 // Formatar preço
@@ -721,11 +748,11 @@ function formatarPreco(valor) {
 
 // Loading
 function showLoading() {
-    loading.classList.add('active');
+    if (loading) loading.classList.add('active');
 }
 
 function hideLoading() {
-    loading.classList.remove('active');
+    if (loading) loading.classList.remove('active');
 }
 
-console.log('App do cliente inicializado!');
+console.log('✅ App do cliente inicializado!');
