@@ -7,6 +7,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin-styles-extras.css">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,15 +52,59 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-item active" data-section="dashboard">Dashboard</button>
-      <button class="nav-item" data-section="products">Produtos</button>
-      <button class="nav-item" data-section="categories">Categorias</button>
-      <button class="nav-item" data-section="orders">Pedidos</button>
-      <button class="nav-item" data-section="configuracoes">Configurações</button>
-      <button class="nav-item" data-section="pages">Pages</button>
+      <button class="nav-item active" data-section="dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-section="produtos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
+        Produtos
+      </button>
+      <button class="nav-item" data-section="categorias">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Categorias
+      </button>
+      <button class="nav-item" data-section="pedidos">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        Pedidos
+      </button>
+      <button class="nav-item" data-section="configuracoes">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M1 12h6m6 0h6m-13.2 5.2l4.2-4.2m6 0l4.2 4.2"></path>
+        </svg>
+        Configurações
+      </button>
+      <button class="nav-item" data-section="pages">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+          <polyline points="13 2 13 9 20 9"></polyline>
+        </svg>
+        Pages
+      </button>
     </nav>
 
-    <button class="btn-logout" id="btnLogout">Sair</button>
+    <button class="btn-logout" id="btnLogout">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      Sair
+    </button>
   </aside>
 
   <!-- ===== CONTEÚDO ===== -->
@@ -68,35 +113,89 @@
     <!-- Dashboard -->
     <section class="content-section active" id="sectionDashboard">
       <h1>Dashboard</h1>
-      <div id="dashboardContainer"></div>
+      <div id="dashboardContainer">
+        <!-- Stats, gráficos e RANKING serão renderizados aqui pelo JavaScript -->
+      </div>
     </section>
 
     <!-- Produtos -->
-    <section class="content-section" id="sectionProducts">
+    <section class="content-section" id="sectionProdutos">
       <div class="section-header">
         <h1>Produtos</h1>
-        <button class="btn-primary" id="btnAddProduct">Novo Produto</button>
+        <button class="btn-primary" id="btnAddProduct">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Novo Produto
+        </button>
       </div>
-      <div class="products-grid" id="productsGrid"></div>
+      
+      <!-- NOVO: Filtros de Categoria -->
+      <div id="categoryFilters" class="category-filters">
+        <!-- Os filtros serão renderizados aqui pelo JavaScript -->
+      </div>
+      
+      <!-- Grid de Produtos -->
+      <div class="products-grid" id="productsGrid">
+        <!-- Os produtos serão renderizados aqui pelo JavaScript -->
+      </div>
     </section>
 
     <!-- Categorias -->
-    <section class="content-section" id="sectionCategories">
+    <section class="content-section" id="sectionCategorias">
       <div class="section-header">
         <h1>Categorias</h1>
-        <button class="btn-primary" id="btnAddCategory">Nova Categoria</button>
+        <button class="btn-primary" id="btnAddCategory">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nova Categoria
+        </button>
       </div>
       <div id="categoriesList"></div>
     </section>
 
     <!-- Pedidos -->
-    <section class="content-section" id="sectionOrders">
-      <h1>Pedidos</h1>
+    <section class="content-section" id="sectionPedidos">
+      <div class="section-header">
+        <h1>Pedidos</h1>
+        <button class="btn-danger" onclick="limparTodosPedidos()" style="margin-left: auto;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Limpar Todos
+        </button>
+      </div>
       <div class="orders-filter">
-        <button class="filter-btn active" data-status="all">Todos</button>
-        <button class="filter-btn" data-status="novo">Novos</button>
-        <button class="filter-btn" data-status="preparando">Preparando</button>
-        <button class="filter-btn" data-status="pronto">Prontos</button>
+        <button class="filter-btn active" data-status="all">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+          Todos
+        </button>
+        <button class="filter-btn" data-status="novo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Novos
+        </button>
+        <button class="filter-btn" data-status="preparando">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          Preparando
+        </button>
+        <button class="filter-btn" data-status="pronto">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          Prontos
+        </button>
       </div>
       <div id="ordersList"></div>
     </section>
@@ -122,22 +221,62 @@
 <div class="modal" id="productModal">
   <div class="modal-overlay"></div>
   <div class="modal-content large">
+    <button class="modal-close" id="closeProductModal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    
     <form id="productForm">
-      <h2>Novo Produto</h2>
+      <h2 id="modalTitle">Novo Produto</h2>
 
-      <input type="text" id="productName" placeholder="Nome" required>
-      <input type="number" id="productPrice" step="0.01" placeholder="Preço" required>
+      <div class="form-group">
+        <label>Nome do Produto *</label>
+        <input type="text" id="productName" placeholder="Ex: X-Bacon" required>
+      </div>
 
-      <select id="productCategory" required></select>
-      <textarea id="productDescription" placeholder="Descrição"></textarea>
+      <div class="form-group">
+        <label>Preço *</label>
+        <input type="number" id="productPrice" step="0.01" placeholder="0.00" required>
+      </div>
 
-      <input type="file" id="productImage" accept="image/*">
-      <label>
-        <input type="checkbox" id="productActive" checked> Produto ativo
-      </label>
+      <div class="form-group">
+        <label>Categoria *</label>
+        <select id="productCategory" required>
+          <option value="">Selecione uma categoria</option>
+        </select>
+      </div>
 
-      <button type="submit" class="btn-primary">Salvar</button>
-      <button type="button" class="btn-secondary" id="cancelProductModal">Cancelar</button>
+      <div class="form-group">
+        <label>Descrição</label>
+        <textarea id="productDescription" placeholder="Descreva o produto..." rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Imagem do Produto</label>
+        <input type="file" id="productImage" accept="image/*">
+        <div id="imagePreview" class="image-preview"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="productActive" checked>
+          <span>Produto ativo (visível no cardápio)</span>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Salvar Produto
+        </button>
+        <button type="button" class="btn-secondary" id="cancelProductModal">Cancelar</button>
+      </div>
     </form>
   </div>
 </div>
@@ -146,17 +285,41 @@
 <div class="modal" id="categoryModal">
   <div class="modal-overlay"></div>
   <div class="modal-content">
+    <button class="modal-close" id="closeCategoryModal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    
     <form id="categoryForm">
-      <h2>Nova Categoria</h2>
-      <input type="text" id="categoryName" required>
-      <button type="submit" class="btn-primary">Salvar</button>
-      <button type="button" class="btn-secondary" id="cancelCategoryModal">Cancelar</button>
+      <h2 id="categoryModalTitle">Nova Categoria</h2>
+      
+      <div class="form-group">
+        <label>Nome da Categoria *</label>
+        <input type="text" id="categoryName" placeholder="Ex: Lanches" required>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Salvar Categoria
+        </button>
+        <button type="button" class="btn-secondary" id="cancelCategoryModal">Cancelar</button>
+      </div>
     </form>
   </div>
 </div>
 
 <!-- ================= UI ================= -->
-<div class="loading" id="loading"><div class="spinner"></div></div>
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- ================= SCRIPTS ================= -->

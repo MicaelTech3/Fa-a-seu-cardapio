@@ -36,6 +36,7 @@ let pedidos = [];
 let editandoProduto = null;
 let editandoCategoria = null;
 let filtroStatusPedido = 'all';
+let filtroCategoriaProduto = 'all'; // NOVO: filtro de categoria na aba produtos
 let categoriaExpandida = null;
 let configuracoes = {
     nomeCardapio: 'Xfood',
@@ -172,6 +173,8 @@ function setupEventListeners() {
                 renderizarConfiguracoes();
             } else if (section === 'pages') {
                 renderizarPages();
+            } else if (section === 'produtos') {
+                renderizarFiltrosCategorias();
             }
         });
     });
@@ -608,6 +611,31 @@ window.fecharQRModal = function() {
 
 // ===== DASHBOARD =====
 
+function calcularRankingProdutos() {
+    // Contar quantas vezes cada produto foi pedido
+    const contagemProdutos = {};
+    
+    pedidos.forEach(pedido => {
+        pedido.itens.forEach(item => {
+            if (!contagemProdutos[item.nome]) {
+                // Buscar o produto original para pegar a categoria
+                const produtoOriginal = produtos.find(p => p.nome === item.nome);
+                contagemProdutos[item.nome] = {
+                    nome: item.nome,
+                    quantidade: 0,
+                    categoria: produtoOriginal?.categoria || 'Sem categoria'
+                };
+            }
+            contagemProdutos[item.nome].quantidade += item.quantidade;
+        });
+    });
+    
+    // Converter para array e ordenar
+    return Object.values(contagemProdutos)
+        .sort((a, b) => b.quantidade - a.quantidade)
+        .slice(0, 10); // Top 10
+}
+
 function atualizarDashboard() {
     const dashboardContainer = document.getElementById('dashboardContainer');
     if (!dashboardContainer) return;
@@ -628,6 +656,10 @@ function atualizarDashboard() {
         const cat = p.categoria || 'Sem categoria';
         produtosPorCategoria[cat] = (produtosPorCategoria[cat] || 0) + 1;
     });
+    
+    // Calcular ranking de produtos
+    const rankingProdutos = calcularRankingProdutos();
+    const carrinhoAtivo = configuracoes.carrinhoAtivo !== false;
     
     // Renderizar dashboard
     dashboardContainer.innerHTML = `
@@ -739,8 +771,80 @@ function atualizarDashboard() {
                 </div>
             </div>
         </div>
+        
+        <!-- NOVO: Ranking de Produtos Mais Pedidos -->
+        <div class="ranking-section">
+            <h3 class="chart-title">
+                🏆 Ranking de Produtos Mais Pedidos
+                ${!carrinhoAtivo ? 
+                    '<span class="ranking-status disabled">Ranking Indisponível</span>' : 
+                    '<span class="ranking-status enabled">Ranking Ativado</span>'
+                }
+            </h3>
+            
+            ${!carrinhoAtivo ? `
+                <div class="ranking-disabled-message">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p>O carrinho de compras está desativado.</p>
+                    <p>Ative o carrinho nas <a href="#" onclick="navegarParaConfiguracoes()">Configurações</a> para habilitar o ranking de produtos.</p>
+                </div>
+            ` : rankingProdutos.length === 0 ? `
+                <div class="ranking-disabled-message">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <p>Nenhum pedido registrado ainda.</p>
+                    <p>Os produtos mais pedidos aparecerão aqui assim que houver pedidos.</p>
+                </div>
+            ` : `
+                <div class="ranking-list">
+                    ${rankingProdutos.map((produto, index) => {
+                        const maxQuantidade = rankingProdutos[0].quantidade;
+                        const percentage = (produto.quantidade / maxQuantidade) * 100;
+                        
+                        // Definir cores dos medals
+                        let medalColor = '#64748b';
+                        if (index === 0) medalColor = '#fbbf24'; // Ouro
+                        else if (index === 1) medalColor = '#9ca3af'; // Prata
+                        else if (index === 2) medalColor = '#cd7f32'; // Bronze
+                        
+                        return `
+                            <div class="ranking-item">
+                                <div class="ranking-position" style="background-color: ${medalColor}">
+                                    ${index + 1}
+                                </div>
+                                <div class="ranking-info">
+                                    <div class="ranking-product-name">${produto.nome}</div>
+                                    <div class="ranking-product-category">${produto.categoria}</div>
+                                </div>
+                                <div class="ranking-bar">
+                                    <div class="ranking-bar-fill" style="width: ${percentage}%"></div>
+                                </div>
+                                <div class="ranking-quantity">
+                                    ${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `}
+        </div>
     `;
 }
+
+// Função para navegar até configurações
+window.navegarParaConfiguracoes = function() {
+    const configNav = document.querySelector('[data-section="configuracoes"]');
+    if (configNav) {
+        configNav.click();
+    }
+    return false;
+};
 
 // ===== CATEGORIAS =====
 
@@ -759,6 +863,7 @@ async function carregarCategorias() {
             
             renderizarCategorias();
             atualizarSelectCategorias();
+            renderizarFiltrosCategorias(); // Atualizar filtros quando categorias mudarem
         });
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);
@@ -916,6 +1021,33 @@ window.excluirCategoria = async function(categoriaId) {
 
 // ===== PRODUTOS =====
 
+// NOVO: Renderizar filtros de categorias na aba produtos
+function renderizarFiltrosCategorias() {
+    const filtrosContainer = document.getElementById('categoryFilters');
+    if (!filtrosContainer) return;
+    
+    filtrosContainer.innerHTML = `
+        <button class="category-filter-btn ${filtroCategoriaProduto === 'all' ? 'active' : ''}" onclick="window.filtrarPorCategoria('all')">
+            Todos (${produtos.length})
+        </button>
+        ${categorias.map(cat => {
+            const count = produtos.filter(p => p.categoria === cat.nome).length;
+            return `
+                <button class="category-filter-btn ${filtroCategoriaProduto === cat.nome ? 'active' : ''}" onclick="window.filtrarPorCategoria('${cat.nome}')">
+                    ${cat.nome} (${count})
+                </button>
+            `;
+        }).join('')}
+    `;
+}
+
+// NOVO: Filtrar produtos por categoria
+window.filtrarPorCategoria = function(categoria) {
+    filtroCategoriaProduto = categoria;
+    renderizarFiltrosCategorias();
+    renderizarProdutos();
+};
+
 async function carregarProdutos() {
     try {
         const produtosRef = collection(db, 'produtos');
@@ -929,6 +1061,7 @@ async function carregarProdutos() {
                 });
             });
             
+            renderizarFiltrosCategorias();
             renderizarProdutos();
             atualizarDashboard();
         });
@@ -941,16 +1074,22 @@ async function carregarProdutos() {
 function renderizarProdutos() {
     if (!productsGrid) return;
     
-    if (produtos.length === 0) {
+    // Filtrar produtos pela categoria selecionada
+    let produtosFiltrados = produtos;
+    if (filtroCategoriaProduto !== 'all') {
+        produtosFiltrados = produtos.filter(p => p.categoria === filtroCategoriaProduto);
+    }
+    
+    if (produtosFiltrados.length === 0) {
         productsGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #666;">
-                <p style="font-size: 1.1rem;">Nenhum produto cadastrado</p>
+                <p style="font-size: 1.1rem;">Nenhum produto encontrado${filtroCategoriaProduto !== 'all' ? ' nesta categoria' : ''}</p>
             </div>
         `;
         return;
     }
     
-    productsGrid.innerHTML = produtos.map(produto => {
+    productsGrid.innerHTML = produtosFiltrados.map(produto => {
         const isAtivo = produto.ativo !== false;
         
         // Criar HTML da imagem ou placeholder
