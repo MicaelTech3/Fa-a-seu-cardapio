@@ -3,14 +3,21 @@
 // JavaScript para navegação e interações
 // ================================================
 
-document.addEventListener('DOMContentLoaded', function() {
+import { carregarConfiguracoes } from './home-config.js';
+
+document.addEventListener('DOMContentLoaded', async function() {
+    
+    // ============================================
+    // CARREGAR CONFIGURAÇÕES DO FIREBASE
+    // ============================================
+    const firebaseConfig = await carregarConfiguracoes();
     
     // ============================================
     // CONFIGURAÇÕES
     // ============================================
     const CONFIG = {
         menuURL: 'menu.html',
-        whatsappNumber: '5554999999999',
+        whatsappNumber: firebaseConfig.whatsApp || '5554999999999',
         loadingDelay: 1800 // milissegundos
     };
 
@@ -309,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // LOG DE INICIALIZAÇÃO
     // ============================================
-    console.log('🍔 X-Food - Página Inicial Carregada!');
+    console.log(`🍔 ${firebaseConfig.nomeCardapio} - Página Inicial Carregada!`);
     console.log('📱 Desenvolvido com ❤️');
     
 });

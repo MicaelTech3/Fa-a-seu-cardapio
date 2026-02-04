@@ -36,11 +36,11 @@ let pedidos = [];
 let editandoProduto = null;
 let editandoCategoria = null;
 let filtroStatusPedido = 'all';
-let filtroCategoriaProduto = 'all'; // NOVO: filtro de categoria na aba produtos
+let filtroCategoriaProduto = 'all';
 let categoriaExpandida = null;
 let configuracoes = {
     nomeCardapio: 'Xfood',
-    logoUrl: 'img/logo.jpg',
+    logoUrl: '#',
     corPrimaria: '#3b82f6',
     corSecundaria: '#64748b',
     fonte: 'DM Sans',
@@ -247,10 +247,35 @@ function renderizarConfiguracoes() {
                     <input type="text" id="configNome" value="${configuracoes.nomeCardapio || 'Xfood'}" class="config-input">
                 </div>
                 
-                <div class="config-field">
-                    <label>URL da Logo</label>
-                    <input type="text" id="configLogo" value="${configuracoes.logoUrl || 'img/logo.jpg'}" class="config-input">
-                    <small>Cole a URL da imagem da logo</small>
+                <div class="config-field full-width">
+                    <label>Logo do Estabelecimento</label>
+                    <div class="upload-zone">
+                        <input type="file" id="logoFileInput" accept="image/*" style="display: none;">
+                        <button type="button" class="btn-upload" id="btnUploadLogo">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Fazer Upload
+                        </button>
+                        <span class="upload-divider">ou</span>
+                        <input 
+                            type="text" 
+                            id="configLogoUrl" 
+                            value="${configuracoes.logoUrl || '#'}" 
+                            class="config-input"
+                            placeholder="Cole a URL da imagem"
+                        >
+                    </div>
+                    <div id="logoPreviewContainer" class="preview-container">
+                        ${configuracoes.logoUrl && configuracoes.logoUrl !== '#' ? `
+                            <div class="image-preview-uploaded">
+                                <img src="${configuracoes.logoUrl}" alt="Logo Preview">
+                            </div>
+                        ` : ''}
+                    </div>
+                    <small>Formatos: JPG, PNG, GIF, WEBP (máx 5MB)</small>
                 </div>
                 
                 <div class="config-field">
@@ -359,10 +384,35 @@ function renderizarConfiguracoes() {
                     <small>Email, CPF, CNPJ ou chave aleatória</small>
                 </div>
                 
-                <div class="config-field">
-                    <label>URL do QR Code PIX</label>
-                    <input type="text" id="configQrCodePix" value="${configuracoes.qrCodePix || ''}" class="config-input" placeholder="https://...">
-                    <small>Link da imagem do QR Code</small>
+                <div class="config-field full-width">
+                    <label>QR Code PIX</label>
+                    <div class="upload-zone">
+                        <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
+                        <button type="button" class="btn-upload" id="btnUploadQR">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Fazer Upload
+                        </button>
+                        <span class="upload-divider">ou</span>
+                        <input 
+                            type="text" 
+                            id="configQrCodePix" 
+                            value="${configuracoes.qrCodePix || ''}" 
+                            class="config-input"
+                            placeholder="Cole a URL da imagem do QR Code"
+                        >
+                    </div>
+                    <div id="qrPreviewContainer" class="preview-container">
+                        ${configuracoes.qrCodePix ? `
+                            <div class="image-preview-uploaded">
+                                <img src="${configuracoes.qrCodePix}" alt="QR Code Preview">
+                            </div>
+                        ` : ''}
+                    </div>
+                    <small>Imagem do QR Code para pagamentos via PIX</small>
                 </div>
             </div>
         </div>
@@ -381,6 +431,142 @@ function renderizarConfiguracoes() {
             </button>
         </div>
     `;
+    
+    // IMPORTANTE: Configurar listeners de upload após renderizar
+    setupLogoUpload();
+}
+
+// Função para configurar listeners de upload
+function setupLogoUpload() {
+    const logoUploadBtn = document.getElementById('btnUploadLogo');
+    const logoFileInput = document.getElementById('logoFileInput');
+    const qrUploadBtn = document.getElementById('btnUploadQR');
+    const qrFileInput = document.getElementById('qrFileInput');
+    
+    // Upload de Logo
+    if (logoUploadBtn && logoFileInput) {
+        logoUploadBtn.addEventListener('click', () => {
+            logoFileInput.click();
+        });
+        
+        logoFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await uploadImagem(file, 'logos', 'logoUrl');
+            }
+        });
+    }
+    
+    // Upload de QR Code
+    if (qrUploadBtn && qrFileInput) {
+        qrUploadBtn.addEventListener('click', () => {
+            qrFileInput.click();
+        });
+        
+        qrFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await uploadImagem(file, 'pix', 'qrCodePix');
+            }
+        });
+    }
+}
+
+// Função universal para upload de imagens
+async function uploadImagem(file, pasta, campoConfig) {
+    try {
+        // Validar arquivo
+        if (!file.type.startsWith('image/')) {
+            showToast('Por favor, selecione uma imagem válida', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Imagem muito grande! Máximo 5MB', 'error');
+            return;
+        }
+        
+        showLoading();
+        
+        // Criar referência no Storage
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const storageRef = ref(storage, `${pasta}/${fileName}`);
+        
+        // Fazer upload
+        const snapshot = await uploadBytes(storageRef, file);
+        
+        // Obter URL pública
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        // Atualizar campo de configuração
+        const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
+        if (inputField) {
+            inputField.value = downloadURL;
+        }
+        
+        // Mostrar preview
+        const previewContainer = campoConfig === 'logoUrl' ? 
+            document.getElementById('logoPreviewContainer') : 
+            document.getElementById('qrPreviewContainer');
+            
+        if (previewContainer) {
+            previewContainer.innerHTML = `
+                <div class="image-preview-uploaded">
+                    <img src="${downloadURL}" alt="Preview">
+                    <button class="btn-remove-image" onclick="removerImagemPreview('${campoConfig}')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        Remover
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Atualizar configurações temporariamente
+        configuracoes[campoConfig] = downloadURL;
+        
+        showToast('Imagem enviada com sucesso!', 'success');
+        hideLoading();
+        
+    } catch (error) {
+        console.error('Erro ao fazer upload:', error);
+        
+        if (error.code === 'storage/unauthorized') {
+            showToast('Erro: Você não tem permissão. Verifique se está logado.', 'error');
+        } else if (error.code === 'storage/canceled') {
+            showToast('Upload cancelado', 'info');
+        } else {
+            showToast('Erro ao enviar imagem. Verifique as regras do Storage.', 'error');
+        }
+        
+        hideLoading();
+    }
+}
+
+// Remover preview de imagem
+window.removerImagemPreview = function(campoConfig) {
+    const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
+    if (inputField) {
+        inputField.value = '';
+    }
+    
+    const previewContainer = campoConfig === 'logoUrl' ? 
+        document.getElementById('logoPreviewContainer') : 
+        document.getElementById('qrPreviewContainer');
+    
+    if (previewContainer) {
+        previewContainer.innerHTML = '';
+    }
+    
+    showToast('Imagem removida. Clique em Salvar para aplicar.', 'info');
+};
+
+// Função auxiliar para capitalizar primeira letra
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 window.salvarConfiguracoes = async function() {
@@ -390,7 +576,7 @@ window.salvarConfiguracoes = async function() {
         const novasConfigs = {
             // Aparência
             nomeCardapio: document.getElementById('configNome').value,
-            logoUrl: document.getElementById('configLogo').value,
+            logoUrl: document.getElementById('configLogoUrl').value,
             corPrimaria: document.getElementById('configCorPrimaria').value,
             corSecundaria: document.getElementById('configCorSecundaria').value,
             fonte: document.getElementById('configFonte').value,
@@ -432,7 +618,7 @@ window.resetarConfiguracoes = function() {
     configuracoes = {
         // Aparência
         nomeCardapio: 'Xfood',
-        logoUrl: 'img/logo.jpg',
+        logoUrl: '#',
         corPrimaria: '#3b82f6',
         corSecundaria: '#64748b',
         fonte: 'DM Sans',
@@ -612,13 +798,11 @@ window.fecharQRModal = function() {
 // ===== DASHBOARD =====
 
 function calcularRankingProdutos() {
-    // Contar quantas vezes cada produto foi pedido
     const contagemProdutos = {};
     
     pedidos.forEach(pedido => {
         pedido.itens.forEach(item => {
             if (!contagemProdutos[item.nome]) {
-                // Buscar o produto original para pegar a categoria
                 const produtoOriginal = produtos.find(p => p.nome === item.nome);
                 contagemProdutos[item.nome] = {
                     nome: item.nome,
@@ -630,17 +814,15 @@ function calcularRankingProdutos() {
         });
     });
     
-    // Converter para array e ordenar
     return Object.values(contagemProdutos)
         .sort((a, b) => b.quantidade - a.quantidade)
-        .slice(0, 10); // Top 10
+        .slice(0, 10);
 }
 
 function atualizarDashboard() {
     const dashboardContainer = document.getElementById('dashboardContainer');
     if (!dashboardContainer) return;
     
-    // Calcular estatísticas
     const totalProdutos = produtos.length;
     const produtosAtivos = produtos.filter(p => p.ativo !== false).length;
     const produtosInativos = totalProdutos - produtosAtivos;
@@ -650,18 +832,15 @@ function atualizarDashboard() {
     const pedidosPreparando = pedidos.filter(p => p.status === 'preparando').length;
     const pedidosProntos = pedidos.filter(p => p.status === 'pronto').length;
     
-    // Produtos por categoria
     const produtosPorCategoria = {};
     produtos.forEach(p => {
         const cat = p.categoria || 'Sem categoria';
         produtosPorCategoria[cat] = (produtosPorCategoria[cat] || 0) + 1;
     });
     
-    // Calcular ranking de produtos
     const rankingProdutos = calcularRankingProdutos();
     const carrinhoAtivo = configuracoes.carrinhoAtivo !== false;
     
-    // Renderizar dashboard
     dashboardContainer.innerHTML = `
         <div class="stats-grid">
             <div class="stat-card">
@@ -772,7 +951,6 @@ function atualizarDashboard() {
             </div>
         </div>
         
-        <!-- NOVO: Ranking de Produtos Mais Pedidos -->
         <div class="ranking-section">
             <h3 class="chart-title">
                 🏆 Ranking de Produtos Mais Pedidos
@@ -807,11 +985,10 @@ function atualizarDashboard() {
                         const maxQuantidade = rankingProdutos[0].quantidade;
                         const percentage = (produto.quantidade / maxQuantidade) * 100;
                         
-                        // Definir cores dos medals
                         let medalColor = '#64748b';
-                        if (index === 0) medalColor = '#fbbf24'; // Ouro
-                        else if (index === 1) medalColor = '#9ca3af'; // Prata
-                        else if (index === 2) medalColor = '#cd7f32'; // Bronze
+                        if (index === 0) medalColor = '#fbbf24';
+                        else if (index === 1) medalColor = '#9ca3af';
+                        else if (index === 2) medalColor = '#cd7f32';
                         
                         return `
                             <div class="ranking-item">
@@ -837,7 +1014,6 @@ function atualizarDashboard() {
     `;
 }
 
-// Função para navegar até configurações
 window.navegarParaConfiguracoes = function() {
     const configNav = document.querySelector('[data-section="configuracoes"]');
     if (configNav) {
@@ -863,7 +1039,7 @@ async function carregarCategorias() {
             
             renderizarCategorias();
             atualizarSelectCategorias();
-            renderizarFiltrosCategorias(); // Atualizar filtros quando categorias mudarem
+            renderizarFiltrosCategorias();
         });
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);
@@ -982,11 +1158,9 @@ async function salvarCategoria(e) {
         showLoading();
         
         if (editandoCategoria) {
-            // Editar categoria existente
             await updateDoc(doc(db, 'categorias', editandoCategoria), { nome });
             showToast('Categoria atualizada com sucesso!', 'success');
         } else {
-            // Criar nova categoria
             await addDoc(collection(db, 'categorias'), { nome });
             showToast('Categoria criada com sucesso!', 'success');
         }
@@ -1021,7 +1195,6 @@ window.excluirCategoria = async function(categoriaId) {
 
 // ===== PRODUTOS =====
 
-// NOVO: Renderizar filtros de categorias na aba produtos
 function renderizarFiltrosCategorias() {
     const filtrosContainer = document.getElementById('categoryFilters');
     if (!filtrosContainer) return;
@@ -1041,7 +1214,6 @@ function renderizarFiltrosCategorias() {
     `;
 }
 
-// NOVO: Filtrar produtos por categoria
 window.filtrarPorCategoria = function(categoria) {
     filtroCategoriaProduto = categoria;
     renderizarFiltrosCategorias();
@@ -1074,7 +1246,6 @@ async function carregarProdutos() {
 function renderizarProdutos() {
     if (!productsGrid) return;
     
-    // Filtrar produtos pela categoria selecionada
     let produtosFiltrados = produtos;
     if (filtroCategoriaProduto !== 'all') {
         produtosFiltrados = produtos.filter(p => p.categoria === filtroCategoriaProduto);
@@ -1092,7 +1263,6 @@ function renderizarProdutos() {
     productsGrid.innerHTML = produtosFiltrados.map(produto => {
         const isAtivo = produto.ativo !== false;
         
-        // Criar HTML da imagem ou placeholder
         const imagemHTML = produto.imagem ? 
             `<img 
                 src="${produto.imagem}" 
@@ -1158,7 +1328,6 @@ function renderizarProdutos() {
     }).join('');
 }
 
-// Toggle visibilidade do produto
 window.toggleVisibilidadeProduto = async function(produtoId, ativoAtual) {
     try {
         await updateDoc(doc(db, 'produtos', produtoId), { ativo: !ativoAtual });
@@ -1172,7 +1341,6 @@ window.toggleVisibilidadeProduto = async function(produtoId, ativoAtual) {
 function abrirModalProduto(produtoId = null) {
     editandoProduto = produtoId;
 
-    // Novo produto
     if (!produtoId) {
         if (modalTitle) modalTitle.textContent = 'Novo Produto';
         productForm.reset();
@@ -1184,7 +1352,6 @@ function abrirModalProduto(produtoId = null) {
         return;
     }
 
-    // Editar produto existente
     const produto = produtos.find(p => p.id === produtoId);
 
     if (!produto) {
@@ -1250,7 +1417,6 @@ async function salvarProduto(e) {
         
         let imagemURL = null;
         
-        // Se tiver arquivo para upload, tenta fazer o upload
         if (imagemFile) {
             try {
                 const storageRef = ref(storage, `produtos/${Date.now()}_${imagemFile.name}`);
@@ -1258,12 +1424,10 @@ async function salvarProduto(e) {
                 imagemURL = await getDownloadURL(storageRef);
             } catch (storageError) {
                 console.warn('Erro ao fazer upload da imagem (Storage não configurado):', storageError);
-                // Se der erro no upload, apenas ignora e continua sem imagem
                 imagemURL = null;
                 showToast('Produto salvo sem imagem (Storage não configurado)', 'success');
             }
         } else if (editandoProduto) {
-            // Manter imagem antiga se estiver editando
             const produtoAntigo = produtos.find(p => p.id === editandoProduto);
             imagemURL = produtoAntigo?.imagem || null;
         }
@@ -1278,13 +1442,11 @@ async function salvarProduto(e) {
         };
         
         if (editandoProduto) {
-            // Editar produto existente
             await updateDoc(doc(db, 'produtos', editandoProduto), dadosProduto);
             if (!imagemFile) {
                 showToast('Produto atualizado com sucesso!', 'success');
             }
         } else {
-            // Criar novo produto
             await addDoc(collection(db, 'produtos'), dadosProduto);
             if (!imagemFile) {
                 showToast('Produto criado com sucesso!', 'success');
@@ -1371,7 +1533,6 @@ function renderizarPedidos(pedidosParaExibir) {
             new Date(pedido.data.seconds * 1000).toLocaleString('pt-BR') : 
             'Data não disponível';
         
-        // Log de processo
         const statusLog = [
             { status: 'novo', label: 'Novo', ativo: true },
             { status: 'preparando', label: 'Preparando', ativo: pedido.status === 'preparando' || pedido.status === 'pronto' },
@@ -1388,7 +1549,6 @@ function renderizarPedidos(pedidosParaExibir) {
                     <span class="order-status ${pedido.status}">${pedido.status}</span>
                 </div>
                 
-                <!-- Log de Processo -->
                 <div class="order-process-log">
                     ${statusLog.map((s, index) => `
                         <div class="process-step ${s.ativo ? 'active' : ''}">
@@ -1468,7 +1628,6 @@ window.excluirPedido = async function(pedidoId) {
     }
 };
 
-// Limpar todos os pedidos
 window.limparTodosPedidos = async function() {
     if (!confirm('⚠️ ATENÇÃO! Isso irá excluir TODOS os pedidos permanentemente. Tem certeza?')) return;
     if (!confirm('Confirme novamente: Deseja realmente excluir TODOS os pedidos?')) return;
