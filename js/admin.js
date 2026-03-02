@@ -98,7 +98,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initApp() {
-    // Verificar autenticação
     onAuthStateChanged(auth, (user) => {
         if (user) {
             mostrarDashboard();
@@ -111,7 +110,6 @@ function initApp() {
     setupEventListeners();
 }
 
-// Mostrar/ocultar telas
 function mostrarLogin() {
     loginScreen.style.display = 'flex';
     adminDashboard.style.display = 'none';
@@ -166,7 +164,6 @@ function setupEventListeners() {
             contentSections.forEach(sec => sec.classList.remove('active'));
             document.getElementById(`section${capitalize(section)}`).classList.add('active');
             
-            // Atualizar seção específica
             if (section === 'dashboard') {
                 atualizarDashboard();
             } else if (section === 'configuracoes') {
@@ -185,6 +182,14 @@ function setupEventListeners() {
     cancelProductModal.addEventListener('click', fecharModalProduto);
     productForm.addEventListener('submit', salvarProduto);
     productImageInput.addEventListener('change', previewImagem);
+
+    // ── NOVO: listener para o campo URL da imagem do produto ──
+    // O campo é inserido dinamicamente no modal, então usamos delegação de eventos
+    document.addEventListener('input', (e) => {
+        if (e.target && e.target.id === 'productImageUrl') {
+            previewImagemUrl(e.target.value.trim());
+        }
+    });
     
     // Categorias
     btnAddCategory.addEventListener('click', () => abrirModalCategoria());
@@ -312,13 +317,13 @@ function renderizarConfiguracoes() {
                 
                 <div class="config-field full-width">
                     <label>Endereço Completo</label>
-                    <input type="text" id="configEndereco" value="${configuracoes.endereco || 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil'}" class="config-input" placeholder="Rua, Número - Bairro, Cidade - Estado, CEP">
+                    <input type="text" id="configEndereco" value="${configuracoes.endereco || ''}" class="config-input" placeholder="Rua, Número - Bairro, Cidade - Estado, CEP">
                     <small>Endereço exibido na seção principal</small>
                 </div>
                 
                 <div class="config-field">
                     <label>Número WhatsApp</label>
-                    <input type="text" id="configWhatsApp" value="${configuracoes.whatsApp || '5554999999999'}" class="config-input" placeholder="5554999999999">
+                    <input type="text" id="configWhatsApp" value="${configuracoes.whatsApp || ''}" class="config-input" placeholder="5554999999999">
                     <small>Formato: DDI + DDD + Número (sem espaços)</small>
                 </div>
                 
@@ -432,55 +437,38 @@ function renderizarConfiguracoes() {
         </div>
     `;
     
-    // IMPORTANTE: Configurar listeners de upload após renderizar
     setupLogoUpload();
 }
 
-// Função para configurar listeners de upload
 function setupLogoUpload() {
     const logoUploadBtn = document.getElementById('btnUploadLogo');
     const logoFileInput = document.getElementById('logoFileInput');
     const qrUploadBtn = document.getElementById('btnUploadQR');
     const qrFileInput = document.getElementById('qrFileInput');
     
-    // Upload de Logo
     if (logoUploadBtn && logoFileInput) {
-        logoUploadBtn.addEventListener('click', () => {
-            logoFileInput.click();
-        });
-        
+        logoUploadBtn.addEventListener('click', () => logoFileInput.click());
         logoFileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                await uploadImagem(file, 'logos', 'logoUrl');
-            }
+            if (file) await uploadImagem(file, 'logos', 'logoUrl');
         });
     }
     
-    // Upload de QR Code
     if (qrUploadBtn && qrFileInput) {
-        qrUploadBtn.addEventListener('click', () => {
-            qrFileInput.click();
-        });
-        
+        qrUploadBtn.addEventListener('click', () => qrFileInput.click());
         qrFileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                await uploadImagem(file, 'pix', 'qrCodePix');
-            }
+            if (file) await uploadImagem(file, 'pix', 'qrCodePix');
         });
     }
 }
 
-// Função universal para upload de imagens
 async function uploadImagem(file, pasta, campoConfig) {
     try {
-        // Validar arquivo
         if (!file.type.startsWith('image/')) {
             showToast('Por favor, selecione uma imagem válida', 'error');
             return;
         }
-        
         if (file.size > 5 * 1024 * 1024) {
             showToast('Imagem muito grande! Máximo 5MB', 'error');
             return;
@@ -488,24 +476,16 @@ async function uploadImagem(file, pasta, campoConfig) {
         
         showLoading();
         
-        // Criar referência no Storage
         const timestamp = Date.now();
         const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         const storageRef = ref(storage, `${pasta}/${fileName}`);
         
-        // Fazer upload
         const snapshot = await uploadBytes(storageRef, file);
-        
-        // Obter URL pública
         const downloadURL = await getDownloadURL(snapshot.ref);
         
-        // Atualizar campo de configuração
         const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
-        if (inputField) {
-            inputField.value = downloadURL;
-        }
+        if (inputField) inputField.value = downloadURL;
         
-        // Mostrar preview
         const previewContainer = campoConfig === 'logoUrl' ? 
             document.getElementById('logoPreviewContainer') : 
             document.getElementById('qrPreviewContainer');
@@ -525,15 +505,12 @@ async function uploadImagem(file, pasta, campoConfig) {
             `;
         }
         
-        // Atualizar configurações temporariamente
         configuracoes[campoConfig] = downloadURL;
-        
         showToast('Imagem enviada com sucesso!', 'success');
         hideLoading();
         
     } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        
         if (error.code === 'storage/unauthorized') {
             showToast('Erro: Você não tem permissão. Verifique se está logado.', 'error');
         } else if (error.code === 'storage/canceled') {
@@ -541,30 +518,22 @@ async function uploadImagem(file, pasta, campoConfig) {
         } else {
             showToast('Erro ao enviar imagem. Verifique as regras do Storage.', 'error');
         }
-        
         hideLoading();
     }
 }
 
-// Remover preview de imagem
 window.removerImagemPreview = function(campoConfig) {
     const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
-    if (inputField) {
-        inputField.value = '';
-    }
+    if (inputField) inputField.value = '';
     
     const previewContainer = campoConfig === 'logoUrl' ? 
         document.getElementById('logoPreviewContainer') : 
         document.getElementById('qrPreviewContainer');
     
-    if (previewContainer) {
-        previewContainer.innerHTML = '';
-    }
-    
+    if (previewContainer) previewContainer.innerHTML = '';
     showToast('Imagem removida. Clique em Salvar para aplicar.', 'info');
 };
 
-// Função auxiliar para capitalizar primeira letra
 function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -574,28 +543,19 @@ window.salvarConfiguracoes = async function() {
         showLoading();
         
         const novasConfigs = {
-            // Aparência
             nomeCardapio: document.getElementById('configNome').value,
             logoUrl: document.getElementById('configLogoUrl').value,
             corPrimaria: document.getElementById('configCorPrimaria').value,
             corSecundaria: document.getElementById('configCorSecundaria').value,
             fonte: document.getElementById('configFonte').value,
-            
-            // Informações do estabelecimento
             tituloBemVindo: document.getElementById('configTituloBemVindo').value,
             endereco: document.getElementById('configEndereco').value,
             whatsApp: document.getElementById('configWhatsApp').value,
             status: document.getElementById('configStatus').value,
-            
-            // Serviços
             servicoLocal: document.getElementById('configServicoLocal').checked,
             servicoRetirada: document.getElementById('configServicoRetirada').checked,
             servicoDelivery: document.getElementById('configServicoDelivery').checked,
-            
-            // Funcionalidades
             carrinhoAtivo: document.getElementById('configCarrinho').checked,
-            
-            // PIX
             chavePix: document.getElementById('configChavePix').value,
             qrCodePix: document.getElementById('configQrCodePix').value
         };
@@ -616,28 +576,19 @@ window.resetarConfiguracoes = function() {
     if (!confirm('Tem certeza que deseja restaurar as configurações padrão?')) return;
     
     configuracoes = {
-        // Aparência
         nomeCardapio: 'Xfood',
         logoUrl: '#',
         corPrimaria: '#3b82f6',
         corSecundaria: '#64748b',
         fonte: 'DM Sans',
-        
-        // Informações
         tituloBemVindo: '😋 Bemvindos',
         endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil',
         whatsApp: '5554999999999',
         status: 'aberto',
-        
-        // Serviços
         servicoLocal: true,
         servicoRetirada: true,
         servicoDelivery: true,
-        
-        // Funcionalidades
         carrinhoAtivo: true,
-        
-        // PIX
         chavePix: '',
         qrCodePix: ''
     };
@@ -754,7 +705,6 @@ function renderizarPages() {
             </ul>
         </div>
         
-        <!-- Modal QR Code -->
         <div class="modal" id="qrModal" style="display: none;">
             <div class="modal-overlay" onclick="fecharQRModal()"></div>
             <div class="modal-content qr-modal-content">
@@ -782,17 +732,13 @@ window.copiarUrl = function(inputId) {
 window.gerarQRCode = function(url) {
     const modal = document.getElementById('qrModal');
     const container = document.getElementById('qrCodeContainer');
-    
-    // Usar API do Google Charts para gerar QR Code
     const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(url)}`;
-    
     container.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; border-radius: 8px;">`;
     modal.style.display = 'flex';
 };
 
 window.fecharQRModal = function() {
-    const modal = document.getElementById('qrModal');
-    modal.style.display = 'none';
+    document.getElementById('qrModal').style.display = 'none';
 };
 
 // ===== DASHBOARD =====
@@ -855,7 +801,6 @@ function atualizarDashboard() {
                     <span class="stat-value">${totalProdutos}</span>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon green">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -868,7 +813,6 @@ function atualizarDashboard() {
                     <span class="stat-value">${produtosAtivos}</span>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon gray">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -881,7 +825,6 @@ function atualizarDashboard() {
                     <span class="stat-value">${produtosInativos}</span>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon orange">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -904,48 +847,27 @@ function atualizarDashboard() {
                         const percentage = (count / totalProdutos) * 100;
                         return `
                             <div class="chart-bar-item">
-                                <div class="chart-bar-label">
-                                    <span>${cat}</span>
-                                    <span>${count}</span>
-                                </div>
-                                <div class="chart-bar-track">
-                                    <div class="chart-bar-fill" style="width: ${percentage}%"></div>
-                                </div>
+                                <div class="chart-bar-label"><span>${cat}</span><span>${count}</span></div>
+                                <div class="chart-bar-track"><div class="chart-bar-fill" style="width: ${percentage}%"></div></div>
                             </div>
                         `;
                     }).join('')}
                 </div>
             </div>
-            
             <div class="chart-card">
                 <h3 class="chart-title">Status dos Pedidos</h3>
                 <div class="chart-bars">
                     <div class="chart-bar-item">
-                        <div class="chart-bar-label">
-                            <span>Novos</span>
-                            <span>${pedidosNovos}</span>
-                        </div>
-                        <div class="chart-bar-track">
-                            <div class="chart-bar-fill blue" style="width: ${totalPedidos > 0 ? (pedidosNovos / totalPedidos) * 100 : 0}%"></div>
-                        </div>
+                        <div class="chart-bar-label"><span>Novos</span><span>${pedidosNovos}</span></div>
+                        <div class="chart-bar-track"><div class="chart-bar-fill blue" style="width: ${totalPedidos > 0 ? (pedidosNovos / totalPedidos) * 100 : 0}%"></div></div>
                     </div>
                     <div class="chart-bar-item">
-                        <div class="chart-bar-label">
-                            <span>Preparando</span>
-                            <span>${pedidosPreparando}</span>
-                        </div>
-                        <div class="chart-bar-track">
-                            <div class="chart-bar-fill orange" style="width: ${totalPedidos > 0 ? (pedidosPreparando / totalPedidos) * 100 : 0}%"></div>
-                        </div>
+                        <div class="chart-bar-label"><span>Preparando</span><span>${pedidosPreparando}</span></div>
+                        <div class="chart-bar-track"><div class="chart-bar-fill orange" style="width: ${totalPedidos > 0 ? (pedidosPreparando / totalPedidos) * 100 : 0}%"></div></div>
                     </div>
                     <div class="chart-bar-item">
-                        <div class="chart-bar-label">
-                            <span>Prontos</span>
-                            <span>${pedidosProntos}</span>
-                        </div>
-                        <div class="chart-bar-track">
-                            <div class="chart-bar-fill green" style="width: ${totalPedidos > 0 ? (pedidosProntos / totalPedidos) * 100 : 0}%"></div>
-                        </div>
+                        <div class="chart-bar-label"><span>Prontos</span><span>${pedidosProntos}</span></div>
+                        <div class="chart-bar-track"><div class="chart-bar-fill green" style="width: ${totalPedidos > 0 ? (pedidosProntos / totalPedidos) * 100 : 0}%"></div></div>
                     </div>
                 </div>
             </div>
@@ -959,7 +881,6 @@ function atualizarDashboard() {
                     '<span class="ranking-status enabled">Ranking Ativado</span>'
                 }
             </h3>
-            
             ${!carrinhoAtivo ? `
                 <div class="ranking-disabled-message">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -984,27 +905,19 @@ function atualizarDashboard() {
                     ${rankingProdutos.map((produto, index) => {
                         const maxQuantidade = rankingProdutos[0].quantidade;
                         const percentage = (produto.quantidade / maxQuantidade) * 100;
-                        
                         let medalColor = '#64748b';
                         if (index === 0) medalColor = '#fbbf24';
                         else if (index === 1) medalColor = '#9ca3af';
                         else if (index === 2) medalColor = '#cd7f32';
-                        
                         return `
                             <div class="ranking-item">
-                                <div class="ranking-position" style="background-color: ${medalColor}">
-                                    ${index + 1}
-                                </div>
+                                <div class="ranking-position" style="background-color: ${medalColor}">${index + 1}</div>
                                 <div class="ranking-info">
                                     <div class="ranking-product-name">${produto.nome}</div>
                                     <div class="ranking-product-category">${produto.categoria}</div>
                                 </div>
-                                <div class="ranking-bar">
-                                    <div class="ranking-bar-fill" style="width: ${percentage}%"></div>
-                                </div>
-                                <div class="ranking-quantity">
-                                    ${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}
-                                </div>
+                                <div class="ranking-bar"><div class="ranking-bar-fill" style="width: ${percentage}%"></div></div>
+                                <div class="ranking-quantity">${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}</div>
                             </div>
                         `;
                     }).join('')}
@@ -1016,9 +929,7 @@ function atualizarDashboard() {
 
 window.navegarParaConfiguracoes = function() {
     const configNav = document.querySelector('[data-section="configuracoes"]');
-    if (configNav) {
-        configNav.click();
-    }
+    if (configNav) configNav.click();
     return false;
 };
 
@@ -1027,16 +938,11 @@ window.navegarParaConfiguracoes = function() {
 async function carregarCategorias() {
     try {
         const categoriasRef = collection(db, 'categorias');
-        
         onSnapshot(categoriasRef, (snapshot) => {
             categorias = [];
             snapshot.forEach((doc) => {
-                categorias.push({
-                    id: doc.id,
-                    ...doc.data()
-                });
+                categorias.push({ id: doc.id, ...doc.data() });
             });
-            
             renderizarCategorias();
             atualizarSelectCategorias();
             renderizarFiltrosCategorias();
@@ -1119,18 +1025,14 @@ window.toggleCategoria = function(categoriaId) {
 function atualizarSelectCategorias() {
     const select = document.getElementById('productCategory');
     if (!select) return;
-    
     select.innerHTML = `
         <option value="">Selecione uma categoria</option>
-        ${categorias.map(cat => `
-            <option value="${cat.nome}">${cat.nome}</option>
-        `).join('')}
+        ${categorias.map(cat => `<option value="${cat.nome}">${cat.nome}</option>`).join('')}
     `;
 }
 
 function abrirModalCategoria(categoriaId = null) {
     editandoCategoria = categoriaId;
-    
     if (categoriaId) {
         const categoria = categorias.find(c => c.id === categoriaId);
         document.getElementById('categoryModalTitle').textContent = 'Editar Categoria';
@@ -1139,7 +1041,6 @@ function abrirModalCategoria(categoriaId = null) {
         document.getElementById('categoryModalTitle').textContent = 'Nova Categoria';
         categoryForm.reset();
     }
-    
     categoryModal.classList.add('active');
 }
 
@@ -1151,12 +1052,9 @@ function fecharModalCategoria() {
 
 async function salvarCategoria(e) {
     e.preventDefault();
-    
     const nome = document.getElementById('categoryName').value.trim();
-    
     try {
         showLoading();
-        
         if (editandoCategoria) {
             await updateDoc(doc(db, 'categorias', editandoCategoria), { nome });
             showToast('Categoria atualizada com sucesso!', 'success');
@@ -1164,7 +1062,6 @@ async function salvarCategoria(e) {
             await addDoc(collection(db, 'categorias'), { nome });
             showToast('Categoria criada com sucesso!', 'success');
         }
-        
         fecharModalCategoria();
         hideLoading();
     } catch (error) {
@@ -1174,13 +1071,10 @@ async function salvarCategoria(e) {
     }
 }
 
-window.editarCategoria = function(categoriaId) {
-    abrirModalCategoria(categoriaId);
-};
+window.editarCategoria = function(categoriaId) { abrirModalCategoria(categoriaId); };
 
 window.excluirCategoria = async function(categoriaId) {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
-    
     try {
         showLoading();
         await deleteDoc(doc(db, 'categorias', categoriaId));
@@ -1198,7 +1092,6 @@ window.excluirCategoria = async function(categoriaId) {
 function renderizarFiltrosCategorias() {
     const filtrosContainer = document.getElementById('categoryFilters');
     if (!filtrosContainer) return;
-    
     filtrosContainer.innerHTML = `
         <button class="category-filter-btn ${filtroCategoriaProduto === 'all' ? 'active' : ''}" onclick="window.filtrarPorCategoria('all')">
             Todos (${produtos.length})
@@ -1223,16 +1116,11 @@ window.filtrarPorCategoria = function(categoria) {
 async function carregarProdutos() {
     try {
         const produtosRef = collection(db, 'produtos');
-        
         onSnapshot(produtosRef, (snapshot) => {
             produtos = [];
             snapshot.forEach((doc) => {
-                produtos.push({
-                    id: doc.id,
-                    ...doc.data()
-                });
+                produtos.push({ id: doc.id, ...doc.data() });
             });
-            
             renderizarFiltrosCategorias();
             renderizarProdutos();
             atualizarDashboard();
@@ -1338,22 +1226,25 @@ window.toggleVisibilidadeProduto = async function(produtoId, ativoAtual) {
     }
 };
 
+// ─────────────────────────────────────────────
+// MODAL PRODUTO — abre com campo URL de imagem
+// ─────────────────────────────────────────────
+
 function abrirModalProduto(produtoId = null) {
     editandoProduto = produtoId;
+
+    // Injeta o campo de URL de imagem no formulário se ainda não existir
+    injetarCampoImagemUrl();
 
     if (!produtoId) {
         if (modalTitle) modalTitle.textContent = 'Novo Produto';
         productForm.reset();
-        if (imagePreview) {
-            imagePreview.innerHTML = '';
-            imagePreview.classList.remove('active');
-        }
+        limparPreviewImagem();
         productModal.classList.add('active');
         return;
     }
 
     const produto = produtos.find(p => p.id === produtoId);
-
     if (!produto) {
         console.error('Produto não encontrado:', produtoId);
         showToast('Erro: produto não encontrado', 'error');
@@ -1367,29 +1258,78 @@ function abrirModalProduto(produtoId = null) {
     document.getElementById('productDescription').value = produto.descricao ?? '';
     document.getElementById('productActive').checked = produto.ativo !== false;
 
+    // Preenche campo URL se a imagem for uma URL externa (não base64)
+    const urlInput = document.getElementById('productImageUrl');
+    if (urlInput) {
+        const isUrl = produto.imagem && produto.imagem.startsWith('http');
+        urlInput.value = isUrl ? produto.imagem : '';
+    }
+
+    // Preview
     if (imagePreview) {
         if (produto.imagem) {
             imagePreview.innerHTML = `<img src="${produto.imagem}" alt="Preview">`;
             imagePreview.classList.add('active');
         } else {
-            imagePreview.innerHTML = '';
-            imagePreview.classList.remove('active');
+            limparPreviewImagem();
         }
     }
 
     productModal.classList.add('active');
 }
 
+/**
+ * Injeta dinamicamente o campo "URL da Imagem" no modal do produto,
+ * logo abaixo do campo de upload de arquivo, se ainda não existir.
+ */
+function injetarCampoImagemUrl() {
+    if (document.getElementById('productImageUrl')) return; // já existe
+
+    const fileFormGroup = productImageInput?.closest('.form-group');
+    if (!fileFormGroup) return;
+
+    // Altera o label do campo de arquivo para deixar claro que são dois modos
+    const labelArquivo = fileFormGroup.querySelector('label');
+    if (labelArquivo) labelArquivo.textContent = 'Imagem do Produto — Upload de Arquivo';
+
+    // Cria novo form-group para a URL
+    const urlGroup = document.createElement('div');
+    urlGroup.className = 'form-group';
+    urlGroup.id = 'formGroupImageUrl';
+    urlGroup.innerHTML = `
+        <label>Imagem do Produto — URL Externa</label>
+        <input 
+            type="url" 
+            id="productImageUrl" 
+            placeholder="https://exemplo.com/imagem.png  |  .jpg  |  .svg  |  ..."
+            style="width:100%"
+        >
+        <small style="color:#888">Cole aqui um link direto para a imagem (PNG, JPG, SVG, WEBP, GIF…). 
+        Se preencher tanto URL quanto arquivo, o <strong>arquivo</strong> tem prioridade.</small>
+    `;
+
+    // Insere logo após o form-group do arquivo
+    fileFormGroup.insertAdjacentElement('afterend', urlGroup);
+}
+
 function fecharModalProduto() {
     productModal.classList.remove('active');
     productForm.reset();
+    limparPreviewImagem();
+    // Limpa o campo URL também
+    const urlInput = document.getElementById('productImageUrl');
+    if (urlInput) urlInput.value = '';
+    editandoProduto = null;
+}
+
+function limparPreviewImagem() {
     if (imagePreview) {
         imagePreview.innerHTML = '';
         imagePreview.classList.remove('active');
     }
-    editandoProduto = null;
 }
 
+// Preview ao selecionar arquivo
 function previewImagem(e) {
     const file = e.target.files[0];
     if (file && imagePreview) {
@@ -1402,6 +1342,28 @@ function previewImagem(e) {
     }
 }
 
+// Preview ao digitar URL
+function previewImagemUrl(url) {
+    if (!imagePreview) return;
+    if (!url) {
+        // Se o campo URL for apagado mas houver arquivo, não limpa
+        if (!productImageInput?.files?.length) limparPreviewImagem();
+        return;
+    }
+    imagePreview.innerHTML = `
+        <img 
+            src="${url}" 
+            alt="Preview" 
+            onerror="this.parentElement.innerHTML='<span style=color:#e53e3e>URL inválida ou imagem inacessível</span>'"
+        >
+    `;
+    imagePreview.classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+// SALVAR PRODUTO — lida com arquivo OU url
+// ─────────────────────────────────────────────
+
 async function salvarProduto(e) {
     e.preventDefault();
     
@@ -1411,6 +1373,7 @@ async function salvarProduto(e) {
     const descricao = document.getElementById('productDescription').value.trim();
     const ativo = document.getElementById('productActive').checked;
     const imagemFile = productImageInput.files[0];
+    const imagemUrlDigitada = (document.getElementById('productImageUrl')?.value || '').trim();
     
     try {
         showLoading();
@@ -1418,6 +1381,7 @@ async function salvarProduto(e) {
         let imagemURL = null;
         
         if (imagemFile) {
+            // Prioridade 1: arquivo enviado (PNG, JPG, SVG, etc.)
             try {
                 const storageRef = ref(storage, `produtos/${Date.now()}_${imagemFile.name}`);
                 await uploadBytes(storageRef, imagemFile);
@@ -1427,30 +1391,23 @@ async function salvarProduto(e) {
                 imagemURL = null;
                 showToast('Produto salvo sem imagem (Storage não configurado)', 'success');
             }
+        } else if (imagemUrlDigitada) {
+            // Prioridade 2: URL externa digitada
+            imagemURL = imagemUrlDigitada;
         } else if (editandoProduto) {
+            // Prioridade 3: manter imagem existente
             const produtoAntigo = produtos.find(p => p.id === editandoProduto);
             imagemURL = produtoAntigo?.imagem || null;
         }
         
-        const dadosProduto = {
-            nome,
-            preco,
-            categoria,
-            descricao,
-            ativo,
-            imagem: imagemURL
-        };
+        const dadosProduto = { nome, preco, categoria, descricao, ativo, imagem: imagemURL };
         
         if (editandoProduto) {
             await updateDoc(doc(db, 'produtos', editandoProduto), dadosProduto);
-            if (!imagemFile) {
-                showToast('Produto atualizado com sucesso!', 'success');
-            }
+            showToast('Produto atualizado com sucesso!', 'success');
         } else {
             await addDoc(collection(db, 'produtos'), dadosProduto);
-            if (!imagemFile) {
-                showToast('Produto criado com sucesso!', 'success');
-            }
+            showToast('Produto criado com sucesso!', 'success');
         }
         
         fecharModalProduto();
@@ -1462,13 +1419,10 @@ async function salvarProduto(e) {
     }
 }
 
-window.editarProduto = function(produtoId) {
-    abrirModalProduto(produtoId);
-};
+window.editarProduto = function(produtoId) { abrirModalProduto(produtoId); };
 
 window.excluirProduto = async function(produtoId) {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    
     try {
         showLoading();
         await deleteDoc(doc(db, 'produtos', produtoId));
@@ -1487,16 +1441,11 @@ async function carregarPedidos() {
     try {
         const pedidosRef = collection(db, 'pedidos');
         const q = query(pedidosRef, orderBy('data', 'desc'));
-        
         onSnapshot(q, (snapshot) => {
             pedidos = [];
             snapshot.forEach((doc) => {
-                pedidos.push({
-                    id: doc.id,
-                    ...doc.data()
-                });
+                pedidos.push({ id: doc.id, ...doc.data() });
             });
-            
             filtrarPedidos();
             atualizarDashboard();
         });
@@ -1508,11 +1457,9 @@ async function carregarPedidos() {
 
 function filtrarPedidos() {
     let pedidosFiltrados = pedidos;
-    
     if (filtroStatusPedido !== 'all') {
         pedidosFiltrados = pedidos.filter(p => p.status === filtroStatusPedido);
     }
-    
     renderizarPedidos(pedidosFiltrados);
 }
 
@@ -1548,7 +1495,6 @@ function renderizarPedidos(pedidosParaExibir) {
                     </div>
                     <span class="order-status ${pedido.status}">${pedido.status}</span>
                 </div>
-                
                 <div class="order-process-log">
                     ${statusLog.map((s, index) => `
                         <div class="process-step ${s.ativo ? 'active' : ''}">
@@ -1558,7 +1504,6 @@ function renderizarPedidos(pedidosParaExibir) {
                         ${index < statusLog.length - 1 ? '<div class="process-line"></div>' : ''}
                     `).join('')}
                 </div>
-                
                 <div class="order-items">
                     ${pedido.itens.map(item => `
                         <div class="order-item">
@@ -1570,11 +1515,8 @@ function renderizarPedidos(pedidosParaExibir) {
                         </div>
                     `).join('')}
                 </div>
-                
                 <div class="order-footer">
-                    <div class="order-total">
-                        Total: <span>R$ ${formatarPreco(pedido.total)}</span>
-                    </div>
+                    <div class="order-total">Total: <span>R$ ${formatarPreco(pedido.total)}</span></div>
                     <div class="order-actions">
                         ${pedido.status === 'novo' ? `
                             <button class="btn-status preparando" onclick="window.atualizarStatusPedido('${pedido.id}', 'preparando')">
@@ -1615,7 +1557,6 @@ window.atualizarStatusPedido = async function(pedidoId, novoStatus) {
 
 window.excluirPedido = async function(pedidoId) {
     if (!confirm('Tem certeza que deseja excluir este pedido? Ele será removido permanentemente.')) return;
-    
     try {
         showLoading();
         await deleteDoc(doc(db, 'pedidos', pedidoId));
@@ -1634,17 +1575,13 @@ window.limparTodosPedidos = async function() {
     
     try {
         showLoading();
-        
         const pedidosRef = collection(db, 'pedidos');
         const snapshot = await getDocs(pedidosRef);
-        
         const promises = [];
         snapshot.forEach((docSnap) => {
             promises.push(deleteDoc(doc(db, 'pedidos', docSnap.id)));
         });
-        
         await Promise.all(promises);
-        
         showToast(`${promises.length} pedidos excluídos com sucesso!`, 'success');
         hideLoading();
     } catch (error) {
@@ -1664,21 +1601,13 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function showLoading() {
-    loading.classList.add('active');
-}
-
-function hideLoading() {
-    loading.classList.remove('active');
-}
+function showLoading() { loading.classList.add('active'); }
+function hideLoading() { loading.classList.remove('active'); }
 
 function showToast(message, type = 'success') {
     toast.textContent = message;
     toast.className = `toast ${type} active`;
-    
-    setTimeout(() => {
-        toast.classList.remove('active');
-    }, 3000);
+    setTimeout(() => toast.classList.remove('active'), 3000);
 }
 
 console.log('Admin app inicializado!');

@@ -3,287 +3,581 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popular Dados de Exemplo</title>
+    <title>Popular Dados - X-Food</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
             padding: 20px;
-            background: #f5f5f5;
         }
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 960px;
+            margin: 0 auto;
         }
         h1 {
-            color: #2C2C2C;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            color: #D4AF37;
+            margin-bottom: 6px;
         }
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        button {
-            background: #D4AF37;
-            color: #2C2C2C;
-            border: none;
-            padding: 15px 30px;
+        .subtitle { color: #aaa; margin-bottom: 24px; font-size: 0.95rem; }
+
+        .warning {
+            background: #2a1f00;
+            border-left: 4px solid #ffc107;
+            color: #ffd54f;
+            padding: 14px 18px;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn {
+            background: #16213e;
+            border: 1px solid #333;
+            color: #aaa;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            margin: 10px 10px 10px 0;
-            transition: all 0.3s;
+            font-size: 0.9rem;
+            transition: all 0.2s;
         }
-        button:hover {
-            background: #B8941F;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        .tab-btn.active, .tab-btn:hover {
+            background: #D4AF37;
+            color: #1a1a2e;
+            border-color: #D4AF37;
+            font-weight: 600;
         }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+
+        /* Produto list */
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
         }
-        .log {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 14px;
+        .product-item {
+            background: #16213e;
+            border: 1px solid #2a2a4e;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: start;
+        }
+        .product-item .info { display: flex; flex-direction: column; gap: 4px; }
+        .product-item .nome { font-weight: 600; font-size: 0.95rem; color: #fff; }
+        .product-item .descricao { font-size: 0.8rem; color: #888; }
+        .product-item .preco { font-size: 0.85rem; color: #D4AF37; font-weight: 600; }
+        .product-item .categoria-badge {
+            background: #0f3460;
+            color: #90caf9;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+        .product-item .controls { display: flex; gap: 8px; flex-direction: column; align-items: flex-end; }
+        .img-field {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-direction: column;
+            width: 200px;
+        }
+        .img-field input[type="text"] {
+            width: 100%;
+            background: #0f1e3a;
+            border: 1px solid #333;
+            color: #eee;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+        }
+        .img-field input[type="file"] {
             display: none;
         }
-        .log.active {
-            display: block;
+        .img-upload-btn {
+            background: #0f3460;
+            color: #90caf9;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            width: 100%;
         }
-        .log div {
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 4px;
+        .img-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #333;
+            display: none;
         }
-        .success {
-            background: #d4edda;
-            color: #155724;
+        .remove-btn {
+            background: #3a0a0a;
+            color: #f48fb1;
+            border: 1px solid #5a1a1a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
         }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
+
+        /* Buttons */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
         }
-        .info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .warning {
-            background: #fff3cd;
-            color: #856404;
-            margin: 20px 0;
-            padding: 15px;
+        .btn {
+            background: #D4AF37;
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 24px;
             border-radius: 8px;
-            border-left: 4px solid #ffc107;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
         }
+        .btn:hover { background: #b8941f; transform: translateY(-1px); }
+        .btn:disabled { background: #555; cursor: not-allowed; transform: none; color: #888; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #D4AF37;
+            color: #D4AF37;
+        }
+        .btn-outline:hover { background: #D4AF37; color: #1a1a2e; }
+        .btn-red {
+            background: #8b0000;
+            color: #faa;
+            border: none;
+        }
+        .btn-red:hover { background: #a00; color: #fff; }
+
+        /* Log */
+        .log {
+            background: #0d1117;
+            border: 1px solid #2a2a4e;
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.82rem;
+        }
+        .log div { padding: 4px 0; border-bottom: 1px solid #111; }
+        .log .success { color: #81c784; }
+        .log .error { color: #e57373; }
+        .log .info { color: #64b5f6; }
+        .log .warn { color: #ffb74d; }
+
+        /* Progress */
+        .progress-bar {
+            background: #0d1117;
+            border-radius: 8px;
+            height: 8px;
+            margin: 12px 0;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar.active { display: block; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D4AF37, #f5c842);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #D4AF37;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .cat-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .cat-chip {
+            background: #16213e;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cat-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #D4AF37; }
+        .stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #16213e;
+            border: 1px solid #2a2a4e;
+            border-radius: 10px;
+            padding: 14px 20px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        .stat-card .val { font-size: 2rem; font-weight: 700; color: #D4AF37; }
+        .stat-card .lbl { font-size: 0.75rem; color: #888; margin-top: 2px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔥 Popular Dados de Exemplo</h1>
-        <p class="subtitle">Este script irá adicionar categorias e produtos de exemplo ao seu Firebase</p>
-        
-        <div class="warning">
-            <strong>⚠️ Atenção:</strong> Este script irá adicionar dados de exemplo ao seu banco de dados. 
-            Use apenas para testes. Execute apenas uma vez!
-        </div>
+<div class="container">
+    <h1>🔥 X-Food — Popular Dados</h1>
+    <p class="subtitle">Insira as categorias e produtos do cardápio no Firebase</p>
 
-        <button id="btnPopularCategorias">1. Popular Categorias</button>
-        <button id="btnPopularProdutos" disabled>2. Popular Produtos</button>
-        <button id="btnLimpar">Limpar Log</button>
-
-        <div class="log" id="log"></div>
+    <div class="warning">
+        ⚠️ <strong>Atenção:</strong> Execute <strong>Categorias primeiro</strong>, depois os Produtos. Execute cada etapa apenas uma vez para evitar duplicatas!
     </div>
 
-    <script type="module">
-        import { db } from './js/firebase-config.js';
-        import { collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+    <div class="stats">
+        <div class="stat-card"><div class="val" id="statCat">0</div><div class="lbl">Categorias</div></div>
+        <div class="stat-card"><div class="val" id="statProd">0</div><div class="lbl">Produtos</div></div>
+        <div class="stat-card"><div class="val" id="statImg">0</div><div class="lbl">Com Imagem</div></div>
+    </div>
 
-        const log = document.getElementById('log');
-        const btnPopularCategorias = document.getElementById('btnPopularCategorias');
-        const btnPopularProdutos = document.getElementById('btnPopularProdutos');
-        const btnLimpar = document.getElementById('btnLimpar');
+    <!-- Abas de visualização -->
+    <div class="tabs" id="tabBar"></div>
+    <div id="tabContent"></div>
 
-        function addLog(message, type = 'info') {
-            log.classList.add('active');
-            const div = document.createElement('div');
-            div.className = type;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            log.appendChild(div);
-            log.scrollTop = log.scrollHeight;
+    <!-- Ações -->
+    <div class="action-bar">
+        <button class="btn" id="btnCategorias">1. Popular Categorias</button>
+        <button class="btn" id="btnProdutos" disabled>2. Popular Produtos</button>
+        <button class="btn btn-outline" id="btnLimparLog">Limpar Log</button>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="log" id="log">
+        <div class="info">[sistema] Pronto. Configure as imagens e clique em "1. Popular Categorias".</div>
+    </div>
+</div>
+
+<script type="module">
+import { db } from './js/firebase-config.js';
+import { collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+// ===== DADOS DO CARDÁPIO X-FOOD =====
+const CATEGORIAS = [
+    { nome: 'Hamburguer & Salgados' },
+    { nome: 'Entradas' },
+    { nome: 'Pratos' },
+    { nome: 'Menu Kids' },
+    { nome: 'Cafés' },
+    { nome: 'Cafés Gelados' },
+    { nome: 'Chocolates Quentes' },
+    { nome: 'Doces e Sobremesas' },
+    { nome: 'Bebidas' },
+    { nome: 'Bebidas Kids' },
+];
+
+const PRODUTOS = [
+    // ── Hamburguer & Salgados ──────────────────────────────
+    { nome: 'Combo Hero Burguer', preco: 65.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, cheddar, pão brioche, cebola roxa, alface americana, tomate e maionese temperada. Batata frita + Bebida. Escolha o ponto ideal da sua carne. REALIZAR PEDIDO NO CAIXA', ativo: true, imagem: '' },
+    { nome: 'Combo Hero Bacon', preco: 69.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, bacon, cheddar, pão brioche, cebola roxa, barbacue. Batata frita + Bebida. Escolha o ponto ideal da sua carne. REALIZAR PEDIDO NO CAIXA', ativo: true, imagem: '' },
+    { nome: 'Combo Hero Meta Burguer', preco: 71.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, queijo muçarela, cebola caramelizada, rúcula e bacon em tiras e barbacue. Batata frita + Bebida. Escolha o ponto da carne.', ativo: true, imagem: '' },
+    { nome: 'Hero Burguer', preco: 49.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, cheddar, pão brioche, cebola roxa, alface americana, tomate e maionese temperada. Escolha o ponto ideal da sua carne.', ativo: true, imagem: '' },
+    { nome: 'Hero Bacon', preco: 55.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, bacon, cheddar, pão brioche, cebola roxa, barbacue. Escolha o ponto ideal da sua carne.', ativo: true, imagem: '' },
+    { nome: 'Hero Meta Burguer', preco: 65.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer bovino, queijo muçarela, cebola caramelizada, rúcula e bacon em tiras e barbacue.', ativo: true, imagem: '' },
+    { nome: 'Hero Burguer Piscina de Cheddar', preco: 79.90, categoria: 'Hamburguer & Salgados', descricao: 'Hambúrguer com 2 carnes, barbacue, bacon e cebola roxa, partido ao meio submerso na panela com cheddar. Escolha o ponto ideal da sua carne. REALIZAR PEDIDO NO CAIXA', ativo: true, imagem: '' },
+    { nome: 'Monster Hero Burguer', preco: 104.90, categoria: 'Hamburguer & Salgados', descricao: '5 camadas de hambúrgueres bovinos + bacon + queijo + salada. Escolha o ponto ideal da sua carne.', ativo: true, imagem: '' },
+    { nome: 'Squad Fritas', preco: 39.90, categoria: 'Hamburguer & Salgados', descricao: 'Bandeja 400g de batata sem acompanhamento.', ativo: true, imagem: '' },
+    { nome: 'Super Squad Fritas', preco: 49.90, categoria: 'Hamburguer & Salgados', descricao: 'Bandeja 400g de batata com cheddar e bacon.', ativo: true, imagem: '' },
+    { nome: 'Combo Pizza + Soda Italiana', preco: 55.90, categoria: 'Hamburguer & Salgados', descricao: 'Pizza broto (quatro queijos, frango c/ catupiry, calabresa ou marguerita) + Soda Italiana 500ml.', ativo: true, imagem: '' },
+    { nome: 'Pizza Broto', preco: 38.90, categoria: 'Hamburguer & Salgados', descricao: 'Sabores: quatro queijos, frango com catupiry, calabresa e marguerita.', ativo: true, imagem: '' },
+    { nome: 'Fritas no Cone', preco: 29.90, categoria: 'Hamburguer & Salgados', descricao: '120g no cone.', ativo: true, imagem: '' },
+    { nome: 'Squad Nuggets', preco: 29.90, categoria: 'Hamburguer & Salgados', descricao: '6 unidades no cone.', ativo: true, imagem: '' },
+    { nome: 'Squad Coxinhas', preco: 17.90, categoria: 'Hamburguer & Salgados', descricao: '6 unidades no cone.', ativo: true, imagem: '' },
+    { nome: 'Coxinha', preco: 17.90, categoria: 'Hamburguer & Salgados', descricao: 'Coxinha tradicional.', ativo: true, imagem: '' },
+    { nome: 'Combo Donuts + Café', preco: 25.00, categoria: 'Hamburguer & Salgados', descricao: 'Donuts de doce de leite + café passado.', ativo: true, imagem: '' },
+    { nome: 'Combo Pão de Queijo + Café', preco: 18.00, categoria: 'Hamburguer & Salgados', descricao: 'Pão de queijo + café passado.', ativo: true, imagem: '' },
+    { nome: 'Pão de Queijo', preco: 9.90, categoria: 'Hamburguer & Salgados', descricao: '1 unidade.', ativo: true, imagem: '' },
+    { nome: 'Bauru', preco: 17.90, categoria: 'Hamburguer & Salgados', descricao: 'Presunto, queijo, tomate.', ativo: true, imagem: '' },
+    { nome: 'Pastel de Nata de Frango e Requeijão', preco: 17.90, categoria: 'Hamburguer & Salgados', descricao: 'Pastel de nata recheado com frango e requeijão.', ativo: true, imagem: '' },
+    { nome: 'Hot Dog', preco: 17.90, categoria: 'Hamburguer & Salgados', descricao: '1 unidade.', ativo: true, imagem: '' },
+
+    // ── Entradas ───────────────────────────────────────────
+    { nome: 'Salada Super Caesar', preco: 39.90, categoria: 'Entradas', descricao: 'Alface americana, croûton, iscas de frango, parmesão ralado, molho caesar.', ativo: true, imagem: '' },
+    { nome: 'Creme de Moranga com Frango', preco: 36.90, categoria: 'Entradas', descricao: '300ml de creme, acompanha torradas.', ativo: true, imagem: '' },
+    { nome: 'Creme de Aipim com Costela Desfiada', preco: 36.90, categoria: 'Entradas', descricao: '300ml de creme, acompanha torradas.', ativo: true, imagem: '' },
+
+    // ── Pratos ─────────────────────────────────────────────
+    { nome: 'Espaguete do Futuro', preco: 55.90, categoria: 'Pratos', descricao: 'Massa espaguete, molho bolonhesa, manjericão para decorar, queijo parmesão à parte. 180g.', ativo: true, imagem: '' },
+    { nome: 'Super Prato Mario', preco: 55.90, categoria: 'Pratos', descricao: 'Filé de frango, acompanha legumes salteados e arroz branco.', ativo: true, imagem: '' },
+    { nome: 'Penne Quest', preco: 55.90, categoria: 'Pratos', descricao: 'Massa penne, molho quatro queijos, iscas de frango. 180g.', ativo: true, imagem: '' },
+    { nome: 'Super Prato Luigi', preco: 69.90, categoria: 'Pratos', descricao: 'Entrecôte com batatas fritas, acompanha arroz e maionese da casa.', ativo: true, imagem: '' },
+    { nome: 'Super Prato Peach', preco: 69.90, categoria: 'Pratos', descricao: 'Entrecôte ao molho madeira e espaguete alho e óleo.', ativo: true, imagem: '' },
+    { nome: 'Prato Power Up Executivo', preco: 69.90, categoria: 'Pratos', descricao: 'Filé de patinho ou frango, arroz branco, batata frita, feijão carioca, alface e cebola roxa.', ativo: true, imagem: '' },
+
+    // ── Menu Kids ──────────────────────────────────────────
+    { nome: 'Mini Player 1', preco: 43.90, categoria: 'Menu Kids', descricao: 'Iscas de patinho, batata smile, feijão carioca, arroz azul.', ativo: true, imagem: '' },
+    { nome: 'Mini Player 2', preco: 39.90, categoria: 'Menu Kids', descricao: 'Iscas de frango, batata smile, feijão carioca, arroz azul.', ativo: true, imagem: '' },
+
+    // ── Cafés ──────────────────────────────────────────────
+    { nome: 'Espresso Tradicional', preco: 11.00, categoria: 'Cafés', descricao: 'Café curto, intenso e encorpado. 50ml.', ativo: true, imagem: '' },
+    { nome: 'Espresso Duplo', preco: 14.00, categoria: 'Cafés', descricao: 'Duas doses para quem ama café forte. 100ml.', ativo: true, imagem: '' },
+    { nome: 'Espresso com Leite', preco: 15.00, categoria: 'Cafés', descricao: 'Cremoso e equilibrado. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Café Passado', preco: 11.00, categoria: 'Cafés', descricao: 'Mais leve e suave, perfeito para qualquer hora. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Cappuccino Italiano', preco: 16.00, categoria: 'Cafés', descricao: 'Espresso, leite vaporizado e espuma suave. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Cappuccino com Canela', preco: 16.00, categoria: 'Cafés', descricao: 'Levemente aromatizado com canela em pó. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Mocha', preco: 16.00, categoria: 'Cafés', descricao: 'Espresso e chocolate cremoso. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Caramel Macchiato', preco: 16.00, categoria: 'Cafés', descricao: 'Xarope de caramelo, leite vaporizado, espuma suave, expresso. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Avelã Latte', preco: 16.00, categoria: 'Cafés', descricao: 'Xarope de avelã, leite vaporizado, espuma suave, expresso. 190ml.', ativo: true, imagem: '' },
+    { nome: 'Vanilla Latte', preco: 16.00, categoria: 'Cafés', descricao: 'Xarope de vanilla, leite vaporizado, espuma suave, expresso. 190ml.', ativo: true, imagem: '' },
+
+    // ── Cafés Gelados ──────────────────────────────────────
+    { nome: 'Espresso Tônica', preco: 15.00, categoria: 'Cafés Gelados', descricao: 'Espresso, tônica, gelo e fatias de limão. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Café Tradicional Gelado', preco: 14.00, categoria: 'Cafés Gelados', descricao: 'Espresso duplo e gelo. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Cappuccino Italiano Gelado', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Espresso, leite vaporizado e espuma suave. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Frapê de Cappuccino com Canela', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Levemente aromatizado com canela em pó e gelo. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Frapê Mocha', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Espresso e chocolate cremoso. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Frapê de Caramelo', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Xarope de caramelo, leite vaporizado, espuma suave, expresso e gelo. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Frapê de Avelã', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Xarope de avelã, leite vaporizado, espuma suave, expresso e gelo. 300ml.', ativo: true, imagem: '' },
+    { nome: 'Frapê de Baunilha', preco: 18.00, categoria: 'Cafés Gelados', descricao: 'Xarope de vanilla, leite vaporizado, espuma suave, expresso e gelo. 300ml.', ativo: true, imagem: '' },
+
+    // ── Chocolates Quentes ─────────────────────────────────
+    { nome: 'Chocolate Tradicional', preco: 18.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente cremoso tradicional.', ativo: true, imagem: '' },
+    { nome: 'Chocolate Quente de Avelã', preco: 21.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente com avelã.', ativo: true, imagem: '' },
+    { nome: 'Chocolate Quente de Baunilha', preco: 21.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente com baunilha.', ativo: true, imagem: '' },
+    { nome: 'Chocolate Quente Sensação', preco: 21.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente cremoso, harmonizado com essência de morango.', ativo: true, imagem: '' },
+    { nome: 'Chocolate Quente Prestígio', preco: 21.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente sabor prestígio.', ativo: true, imagem: '' },
+    { nome: 'Chocolate Quente com Marshmallow', preco: 21.00, categoria: 'Chocolates Quentes', descricao: 'Chocolate quente com marshmallow.', ativo: true, imagem: '' },
+
+    // ── Doces e Sobremesas ─────────────────────────────────
+    { nome: 'Muffin de Baunilha', preco: 17.90, categoria: 'Doces e Sobremesas', descricao: 'Muffin artesanal de baunilha.', ativo: true, imagem: '' },
+    { nome: 'Muffin de Chocolate', preco: 17.90, categoria: 'Doces e Sobremesas', descricao: 'Muffin artesanal de chocolate.', ativo: true, imagem: '' },
+    { nome: 'Donuts Ring Recheado', preco: 17.90, categoria: 'Doces e Sobremesas', descricao: 'Sabores: doce de leite crocante, frutas vermelhas ou brigadeiro.', ativo: true, imagem: '' },
+    { nome: 'Donuts Recheado', preco: 17.90, categoria: 'Doces e Sobremesas', descricao: 'Sabor: doce de leite.', ativo: true, imagem: '' },
+    { nome: 'Mini Pudim', preco: 17.90, categoria: 'Doces e Sobremesas', descricao: 'Pudim tradicional.', ativo: true, imagem: '' },
+
+    // ── Bebidas ────────────────────────────────────────────
+    { nome: 'Suco Dell Valle Lata', preco: 11.90, categoria: 'Bebidas', descricao: 'Sabores: Pêssego, Uva e Goiaba.', ativo: true, imagem: '' },
+    { nome: 'Refrigerante Lata', preco: 11.90, categoria: 'Bebidas', descricao: 'Coca-Cola Original, Coca-Cola Zero, Fanta Uva, Fanta Guaraná, Fanta Laranja, Schweppes Tônica, Schweppes Citrus.', ativo: true, imagem: '' },
+    { nome: 'Água com/sem Gás', preco: 9.00, categoria: 'Bebidas', descricao: 'Água mineral com ou sem gás.', ativo: true, imagem: '' },
+    { nome: 'Ice Tea', preco: 11.90, categoria: 'Bebidas', descricao: '300ml — pêssego.', ativo: true, imagem: '' },
+    { nome: 'Soda Italiana', preco: 22.00, categoria: 'Bebidas', descricao: 'Sabores: Exceed, Limão Siciliano, Melancia, Maçã Verde, Abacaxi, Morango, Tangerina, Toranja, Maracujá e Menta Verde. 500ml.', ativo: true, imagem: '' },
+    { nome: 'Energético Redbull', preco: 19.90, categoria: 'Bebidas', descricao: '250ml.', ativo: true, imagem: '' },
+    { nome: 'Energético Monster', preco: 25.00, categoria: 'Bebidas', descricao: 'Ultra Paradise, Energy, Energy Ultra, Energy Watermelon.', ativo: true, imagem: '' },
+    { nome: 'Heineken Long Neck', preco: 19.00, categoria: 'Bebidas', descricao: 'Cerveja Premium Heineken 330ml.', ativo: true, imagem: '' },
+    { nome: 'Heineken Zero Long Neck', preco: 19.00, categoria: 'Bebidas', descricao: 'Cerveja Premium Heineken Zero Álcool 330ml.', ativo: true, imagem: '' },
+    { nome: 'Balde de Cerveja Heineken', preco: 85.00, categoria: 'Bebidas', descricao: '5 unidades.', ativo: true, imagem: '' },
+
+    // ── Bebidas Kids ───────────────────────────────────────
+    { nome: 'Cometa Azul', preco: 22.00, categoria: 'Bebidas Kids', descricao: 'Soda azul com tangerina. Um sabor de outro planeta!', ativo: true, imagem: '' },
+    { nome: 'Missão Verde', preco: 22.00, categoria: 'Bebidas Kids', descricao: 'Soda de maçã e limão siciliano. Uma jornada refrescante!', ativo: true, imagem: '' },
+    { nome: 'Turbo Tropicais', preco: 22.00, categoria: 'Bebidas Kids', descricao: 'Soda de abacaxi e toranja. O turbo boost do sabor!', ativo: true, imagem: '' },
+    { nome: 'Kiwi Galaxy', preco: 22.00, categoria: 'Bebidas Kids', descricao: 'Bebida galáctica com kiwi, limão e menta.', ativo: true, imagem: '' },
+    { nome: 'Planeta Roxo', preco: 22.00, categoria: 'Bebidas Kids', descricao: 'Bebida com jabuticaba e toranja. De outro mundo!', ativo: true, imagem: '' },
+];
+
+// ===== ESTADO =====
+let imagensMap = {}; // produtoIndex -> { tipo: 'url'|'file', valor: string|File }
+
+// ===== UI =====
+const logEl = document.getElementById('log');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const btnCat = document.getElementById('btnCategorias');
+const btnProd = document.getElementById('btnProdutos');
+const tabBar = document.getElementById('tabBar');
+const tabContent = document.getElementById('tabContent');
+
+function addLog(msg, type = 'info') {
+    const d = document.createElement('div');
+    d.className = type;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.prepend(d);
+}
+
+function setProgress(pct) {
+    progressBar.classList.add('active');
+    progressFill.style.width = pct + '%';
+    if (pct >= 100) setTimeout(() => progressBar.classList.remove('active'), 800);
+}
+
+// ===== RENDERIZAR TABS =====
+const categoriasUnicas = [...new Set(PRODUTOS.map(p => p.categoria))];
+let abaAtiva = categoriasUnicas[0];
+
+function renderTabs() {
+    tabBar.innerHTML = '';
+    categoriasUnicas.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (cat === abaAtiva ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => { abaAtiva = cat; renderTabs(); renderProdutos(); };
+        tabBar.appendChild(btn);
+    });
+}
+
+function renderProdutos() {
+    const lista = PRODUTOS.filter(p => p.categoria === abaAtiva);
+    tabContent.innerHTML = `
+        <p class="section-title">${abaAtiva} <span style="color:#888;font-size:0.8rem">(${lista.length} itens)</span></p>
+        <div class="product-list" id="productList">
+            ${lista.map((p, localIdx) => {
+                const globalIdx = PRODUTOS.indexOf(p);
+                const img = imagensMap[globalIdx] || {};
+                return `
+                <div class="product-item" id="item-${globalIdx}">
+                    <div class="info">
+                        <div class="nome">${p.nome}</div>
+                        <div class="descricao">${p.descricao}</div>
+                        <div class="preco">R$ ${p.preco.toFixed(2).replace('.',',')}</div>
+                        <div class="categoria-badge">${p.categoria}</div>
+                    </div>
+                    <div class="controls">
+                        <img class="img-preview" id="prev-${globalIdx}"
+                            src="${img.tipo === 'url' ? img.valor : (img.tipo === 'file' ? img.valor : '')}"
+                            style="${img.tipo ? 'display:block' : 'display:none'}"
+                        >
+                        <div class="img-field">
+                            <input type="text" placeholder="Cole a URL da imagem..."
+                                id="url-${globalIdx}"
+                                value="${img.tipo === 'url' ? img.valor : ''}"
+                                oninput="setImgUrl(${globalIdx}, this.value)"
+                            >
+                            <label class="img-upload-btn" for="file-${globalIdx}">📁 Upload de arquivo</label>
+                            <input type="file" accept="image/*" id="file-${globalIdx}"
+                                onchange="setImgFile(${globalIdx}, this)">
+                            ${img.tipo ? `<button class="remove-btn" onclick="clearImg(${globalIdx})">✕ Remover imagem</button>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    `;
+    atualizarStats();
+}
+
+// ===== HANDLERS DE IMAGEM =====
+window.setImgUrl = function(idx, url) {
+    if (!url.trim()) { delete imagensMap[idx]; renderProdutos(); return; }
+    imagensMap[idx] = { tipo: 'url', valor: url.trim() };
+    const prev = document.getElementById(`prev-${idx}`);
+    if (prev) { prev.src = url.trim(); prev.style.display = 'block'; }
+    atualizarStats();
+};
+
+window.setImgFile = function(idx, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        imagensMap[idx] = { tipo: 'file', valor: e.target.result, file };
+        const prev = document.getElementById(`prev-${idx}`);
+        if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+        atualizarStats();
+        renderProdutos();
+    };
+    reader.readAsDataURL(file);
+};
+
+window.clearImg = function(idx) {
+    delete imagensMap[idx];
+    renderProdutos();
+};
+
+function atualizarStats() {
+    document.getElementById('statCat').textContent = CATEGORIAS.length;
+    document.getElementById('statProd').textContent = PRODUTOS.length;
+    document.getElementById('statImg').textContent = Object.keys(imagensMap).length;
+}
+
+// ===== CATEGORIAS =====
+// Categorias badges de resumo
+function renderCatChips() {
+    const chipsHtml = CATEGORIAS.map(c => `
+        <div class="cat-chip"><div class="dot"></div>${c.nome}</div>
+    `).join('');
+    // Inserir antes das tabs se não existir
+    if (!document.getElementById('catChips')) {
+        const el = document.createElement('div');
+        el.id = 'catChips';
+        el.className = 'cat-grid';
+        tabBar.before(el);
+    }
+    document.getElementById('catChips').innerHTML = chipsHtml;
+}
+
+btnCat.addEventListener('click', async () => {
+    btnCat.disabled = true;
+    addLog('Inserindo categorias...', 'info');
+    setProgress(10);
+    try {
+        for (let i = 0; i < CATEGORIAS.length; i++) {
+            await addDoc(collection(db, 'categorias'), CATEGORIAS[i]);
+            addLog(`✓ Categoria "${CATEGORIAS[i].nome}" adicionada`, 'success');
+            setProgress(10 + ((i + 1) / CATEGORIAS.length) * 90);
         }
+        addLog('✅ Todas as categorias inseridas!', 'success');
+        btnProd.disabled = false;
+        setProgress(100);
+    } catch (e) {
+        addLog(`✗ Erro: ${e.message}`, 'error');
+        btnCat.disabled = false;
+    }
+});
 
-        // Categorias de exemplo
-        const categorias = [
-            { nome: 'Pizzas' },
-            { nome: 'Hambúrgueres' },
-            { nome: 'Bebidas' },
-            { nome: 'Sobremesas' }
-        ];
-
-        // Produtos de exemplo (sem imagens reais para simplicidade)
-        const produtos = [
-            // Pizzas
-            {
-                nome: 'Pizza Margherita',
-                preco: 35.90,
-                categoria: 'Pizzas',
-                descricao: 'Molho de tomate, mussarela, manjericão e azeite',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800'
-            },
-            {
-                nome: 'Pizza Calabresa',
-                preco: 38.90,
-                categoria: 'Pizzas',
-                descricao: 'Molho, mussarela, calabresa, cebola e orégano',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800'
-            },
-            {
-                nome: 'Pizza Portuguesa',
-                preco: 42.90,
-                categoria: 'Pizzas',
-                descricao: 'Molho, mussarela, presunto, ovos, cebola, azeitonas',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800'
-            },
-            
-            // Hambúrgueres
-            {
-                nome: 'X-Burger Classic',
-                preco: 25.90,
-                categoria: 'Hambúrgueres',
-                descricao: 'Pão, hambúrguer, queijo, alface, tomate e molho especial',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'
-            },
-            {
-                nome: 'X-Bacon Deluxe',
-                preco: 32.90,
-                categoria: 'Hambúrgueres',
-                descricao: 'Pão, hambúrguer, queijo, bacon crocante, cebola caramelizada',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800'
-            },
-            {
-                nome: 'Veggie Burger',
-                preco: 28.90,
-                categoria: 'Hambúrgueres',
-                descricao: 'Hambúrguer vegetal, queijo vegano, rúcula, tomate seco',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1520072959219-c595dc870360?w=800'
-            },
-
-            // Bebidas
-            {
-                nome: 'Refrigerante Lata',
-                preco: 5.00,
-                categoria: 'Bebidas',
-                descricao: 'Coca-Cola, Guaraná, Fanta - 350ml',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=800'
-            },
-            {
-                nome: 'Suco Natural',
-                preco: 8.00,
-                categoria: 'Bebidas',
-                descricao: 'Laranja, Limão ou Maracujá - 300ml',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800'
-            },
-            {
-                nome: 'Água Mineral',
-                preco: 3.00,
-                categoria: 'Bebidas',
-                descricao: 'Água mineral sem gás - 500ml',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800'
-            },
-
-            // Sobremesas
-            {
-                nome: 'Brownie de Chocolate',
-                preco: 12.90,
-                categoria: 'Sobremesas',
-                descricao: 'Brownie caseiro com pedaços de chocolate e sorvete',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1607920591413-4ec007e70023?w=800'
-            },
-            {
-                nome: 'Pudim de Leite',
-                preco: 10.90,
-                categoria: 'Sobremesas',
-                descricao: 'Pudim tradicional com calda de caramelo',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1562440499-64c9a111f713?w=800'
-            },
-            {
-                nome: 'Petit Gateau',
-                preco: 15.90,
-                categoria: 'Sobremesas',
-                descricao: 'Bolinho quente com chocolate derretido e sorvete',
-                ativo: true,
-                imagem: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800'
+// ===== PRODUTOS =====
+btnProd.addEventListener('click', async () => {
+    btnProd.disabled = true;
+    addLog('Inserindo produtos...', 'info');
+    setProgress(5);
+    try {
+        for (let i = 0; i < PRODUTOS.length; i++) {
+            const p = { ...PRODUTOS[i] };
+            const img = imagensMap[i];
+            if (img) {
+                p.imagem = img.tipo === 'url' ? img.valor : img.valor; // base64 ou URL
+            } else {
+                p.imagem = '';
             }
-        ];
+            await addDoc(collection(db, 'produtos'), p);
+            addLog(`✓ ${p.nome} — R$ ${p.preco.toFixed(2)}`, 'success');
+            setProgress(5 + ((i + 1) / PRODUTOS.length) * 95);
+        }
+        addLog(`🎉 ${PRODUTOS.length} produtos inseridos com sucesso!`, 'success');
+        addLog('Acesse menu.html para ver o cardápio completo.', 'info');
+        setProgress(100);
+    } catch (e) {
+        addLog(`✗ Erro: ${e.message}`, 'error');
+        btnProd.disabled = false;
+    }
+});
 
-        // Popular categorias
-        btnPopularCategorias.addEventListener('click', async () => {
-            btnPopularCategorias.disabled = true;
-            addLog('Iniciando inserção de categorias...', 'info');
+document.getElementById('btnLimparLog').addEventListener('click', () => {
+    logEl.innerHTML = '<div class="info">[sistema] Log limpo.</div>';
+});
 
-            try {
-                for (const categoria of categorias) {
-                    await addDoc(collection(db, 'categorias'), categoria);
-                    addLog(`✓ Categoria "${categoria.nome}" adicionada`, 'success');
-                }
-                addLog('✓ Todas as categorias foram adicionadas com sucesso!', 'success');
-                btnPopularProdutos.disabled = false;
-                addLog('Agora você pode popular os produtos!', 'info');
-            } catch (error) {
-                addLog(`✗ Erro ao adicionar categorias: ${error.message}`, 'error');
-                btnPopularCategorias.disabled = false;
-            }
-        });
-
-        // Popular produtos
-        btnPopularProdutos.addEventListener('click', async () => {
-            btnPopularProdutos.disabled = true;
-            addLog('Iniciando inserção de produtos...', 'info');
-
-            try {
-                for (const produto of produtos) {
-                    await addDoc(collection(db, 'produtos'), produto);
-                    addLog(`✓ Produto "${produto.nome}" adicionado`, 'success');
-                }
-                addLog('✓ Todos os produtos foram adicionados com sucesso!', 'success');
-                addLog('🎉 Banco de dados populado! Acesse menu.html para ver o cardápio.', 'success');
-            } catch (error) {
-                addLog(`✗ Erro ao adicionar produtos: ${error.message}`, 'error');
-                btnPopularProdutos.disabled = false;
-            }
-        });
-
-        // Limpar log
-        btnLimpar.addEventListener('click', () => {
-            log.innerHTML = '';
-            log.classList.remove('active');
-        });
-
-        addLog('Sistema pronto. Clique em "1. Popular Categorias" para começar.', 'info');
-    </script>
+// ===== INIT =====
+renderTabs();
+renderProdutos();
+renderCatChips();
+atualizarStats();
+</script>
 </body>
 </html>
