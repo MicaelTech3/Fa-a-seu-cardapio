@@ -1241,3 +1241,32 @@ body {
         font-size: 2rem;
     }
 }
+
+/* ========================================
+   FIX: Modal do produto sempre centralizado
+   Adicione isso no final do seu style.css
+======================================== */
+
+#productDetailModal {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px;
+}
+
+#productDetailModal .product-detail-modal {
+    border-radius: 20px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 560px) {
+    #productDetailModal {
+        align-items: center !important;
+        padding: 16px;
+    }
+
+    #productDetailModal .product-detail-modal {
+        border-radius: 16px !important;
+        max-height: 92vh;
+    }
+}  

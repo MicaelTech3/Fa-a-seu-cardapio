@@ -15,6 +15,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
+<!-- Modal Visualizar Produto -->
+<div class="modal" id="viewProductModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content large">
+    
+    <button class="modal-close" id="closeViewModal">X</button>
+
+    <div class="product-view-container">
+      
+      <img id="viewProductImage" class="view-product-image">
+
+      <h2 id="viewProductName"></h2>
+      <p id="viewProductDescription"></p>
+      <h3 id="viewProductPrice"></h3>
+
+      <div class="extras-section">
+        <h4>Adicionais</h4>
+        <div id="productExtrasList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 <body>
 
 <!-- ================= LOGIN ================= -->

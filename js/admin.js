@@ -38,6 +38,10 @@ let editandoCategoria = null;
 let filtroStatusPedido = 'all';
 let filtroCategoriaProduto = 'all';
 let categoriaExpandida = null;
+
+// Lista de adicionais sendo editada no modal de produto
+let adicionaisTemp = [];
+
 let configuracoes = {
     nomeCardapio: 'Xfood',
     logoUrl: '#',
@@ -65,11 +69,9 @@ const btnLogout = document.getElementById('btnLogout');
 const loading = document.getElementById('loading');
 const toast = document.getElementById('toast');
 
-// Seções
 const navItems = document.querySelectorAll('.nav-item');
 const contentSections = document.querySelectorAll('.content-section');
 
-// Produtos
 const productsGrid = document.getElementById('productsGrid');
 const btnAddProduct = document.getElementById('btnAddProduct');
 const productModal = document.getElementById('productModal');
@@ -80,7 +82,6 @@ const modalTitle = document.getElementById('modalTitle');
 const productImageInput = document.getElementById('productImage');
 const imagePreview = document.getElementById('imagePreview');
 
-// Categorias
 const categoriesList = document.getElementById('categoriesList');
 const btnAddCategory = document.getElementById('btnAddCategory');
 const categoryModal = document.getElementById('categoryModal');
@@ -88,13 +89,12 @@ const categoryForm = document.getElementById('categoryForm');
 const closeCategoryModal = document.getElementById('closeCategoryModal');
 const cancelCategoryModal = document.getElementById('cancelCategoryModal');
 
-// Pedidos
 const ordersList = document.getElementById('ordersList');
 const filterButtons = document.querySelectorAll('.filter-btn');
 
-// Inicializar
 window.addEventListener('DOMContentLoaded', () => {
     initApp();
+    injetarEstilosAdicionais();
 });
 
 function initApp() {
@@ -106,7 +106,6 @@ function initApp() {
             mostrarLogin();
         }
     });
-    
     setupEventListeners();
 }
 
@@ -120,84 +119,64 @@ function mostrarDashboard() {
     adminDashboard.style.display = 'flex';
 }
 
-// Login
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
     try {
         showLoading();
         await signInWithEmailAndPassword(auth, email, password);
         loginError.classList.remove('active');
         hideLoading();
     } catch (error) {
-        console.error('Erro no login:', error);
         loginError.textContent = 'E-mail ou senha incorretos';
         loginError.classList.add('active');
         hideLoading();
     }
 });
 
-// Logout
 btnLogout.addEventListener('click', async () => {
     try {
         await signOut(auth);
         mostrarLogin();
         showToast('Logout realizado com sucesso', 'success');
     } catch (error) {
-        console.error('Erro no logout:', error);
         showToast('Erro ao fazer logout', 'error');
     }
 });
 
-// Navegação entre seções
 function setupEventListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             const section = item.dataset.section;
-            
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
-            
             contentSections.forEach(sec => sec.classList.remove('active'));
             document.getElementById(`section${capitalize(section)}`).classList.add('active');
-            
-            if (section === 'dashboard') {
-                atualizarDashboard();
-            } else if (section === 'configuracoes') {
-                renderizarConfiguracoes();
-            } else if (section === 'pages') {
-                renderizarPages();
-            } else if (section === 'produtos') {
-                renderizarFiltrosCategorias();
-            }
+            if (section === 'dashboard') atualizarDashboard();
+            else if (section === 'configuracoes') renderizarConfiguracoes();
+            else if (section === 'pages') renderizarPages();
+            else if (section === 'produtos') renderizarFiltrosCategorias();
         });
     });
-    
-    // Produtos
+
     btnAddProduct.addEventListener('click', () => abrirModalProduto());
     if (closeProductModal) closeProductModal.addEventListener('click', fecharModalProduto);
     cancelProductModal.addEventListener('click', fecharModalProduto);
     productForm.addEventListener('submit', salvarProduto);
     productImageInput.addEventListener('change', previewImagem);
 
-    // ── NOVO: listener para o campo URL da imagem do produto ──
-    // O campo é inserido dinamicamente no modal, então usamos delegação de eventos
     document.addEventListener('input', (e) => {
         if (e.target && e.target.id === 'productImageUrl') {
             previewImagemUrl(e.target.value.trim());
         }
     });
-    
-    // Categorias
+
     btnAddCategory.addEventListener('click', () => abrirModalCategoria());
     if (closeCategoryModal) closeCategoryModal.addEventListener('click', fecharModalCategoria);
     cancelCategoryModal.addEventListener('click', fecharModalCategoria);
     categoryForm.addEventListener('submit', salvarCategoria);
-    
-    // Pedidos - filtros
+
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
@@ -206,18 +185,15 @@ function setupEventListeners() {
             filtrarPedidos();
         });
     });
-    
-    // Fechar modais ao clicar fora
+
     productModal.addEventListener('click', (e) => {
         if (e.target === productModal) fecharModalProduto();
     });
-    
     categoryModal.addEventListener('click', (e) => {
         if (e.target === categoryModal) fecharModalCategoria();
     });
 }
 
-// Carregar todos os dados
 async function carregarDados() {
     await carregarConfiguracoes();
     await carregarCategorias();
@@ -226,14 +202,133 @@ async function carregarDados() {
     atualizarDashboard();
 }
 
+// ===== ESTILOS PARA ADICIONAIS NO ADMIN =====
+
+function injetarEstilosAdicionais() {
+    if (document.getElementById('adminExtrasStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'adminExtrasStyles';
+    style.textContent = `
+        .extras-admin-section {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 4px;
+        }
+
+        .extras-admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .extras-admin-header span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .btn-add-extra {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-add-extra:hover { background: #2563eb; }
+
+        .extras-admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .extra-admin-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            animation: fadeSlideIn 0.2s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .extra-admin-item input[type="text"],
+        .extra-admin-item input[type="number"] {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 0.85rem;
+            background: white;
+            color: #1e293b;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .extra-admin-item input[type="text"]:focus,
+        .extra-admin-item input[type="number"]:focus {
+            border-color: #3b82f6;
+        }
+
+        .extra-nome-input { flex: 1; min-width: 0; }
+        .extra-preco-input { width: 90px; flex-shrink: 0; }
+
+        .extra-preco-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .extra-preco-wrapper span {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .btn-remove-extra {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .btn-remove-extra:hover { background: #fee2e2; }
+
+        .extras-empty-msg {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            padding: 12px 0 4px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // ===== CONFIGURAÇÕES =====
 
 async function carregarConfiguracoes() {
     try {
         const configDoc = await getDoc(doc(db, 'configuracoes', 'geral'));
-        if (configDoc.exists()) {
-            configuracoes = { ...configuracoes, ...configDoc.data() };
-        }
+        if (configDoc.exists()) configuracoes = { ...configuracoes, ...configDoc.data() };
     } catch (error) {
         console.error('Erro ao carregar configurações:', error);
     }
@@ -251,7 +346,6 @@ function renderizarConfiguracoes() {
                     <label>Nome do Cardápio</label>
                     <input type="text" id="configNome" value="${configuracoes.nomeCardapio || 'Xfood'}" class="config-input">
                 </div>
-                
                 <div class="config-field full-width">
                     <label>Logo do Estabelecimento</label>
                     <div class="upload-zone">
@@ -265,34 +359,21 @@ function renderizarConfiguracoes() {
                             Fazer Upload
                         </button>
                         <span class="upload-divider">ou</span>
-                        <input 
-                            type="text" 
-                            id="configLogoUrl" 
-                            value="${configuracoes.logoUrl || '#'}" 
-                            class="config-input"
-                            placeholder="Cole a URL da imagem"
-                        >
+                        <input type="text" id="configLogoUrl" value="${configuracoes.logoUrl || '#'}" class="config-input" placeholder="Cole a URL da imagem">
                     </div>
                     <div id="logoPreviewContainer" class="preview-container">
-                        ${configuracoes.logoUrl && configuracoes.logoUrl !== '#' ? `
-                            <div class="image-preview-uploaded">
-                                <img src="${configuracoes.logoUrl}" alt="Logo Preview">
-                            </div>
-                        ` : ''}
+                        ${configuracoes.logoUrl && configuracoes.logoUrl !== '#' ? `<div class="image-preview-uploaded"><img src="${configuracoes.logoUrl}" alt="Logo Preview"></div>` : ''}
                     </div>
                     <small>Formatos: JPG, PNG, GIF, WEBP (máx 5MB)</small>
                 </div>
-                
                 <div class="config-field">
                     <label>Cor Primária</label>
                     <input type="color" id="configCorPrimaria" value="${configuracoes.corPrimaria || '#3b82f6'}" class="config-input">
                 </div>
-                
                 <div class="config-field">
                     <label>Cor Secundária</label>
                     <input type="color" id="configCorSecundaria" value="${configuracoes.corSecundaria || '#64748b'}" class="config-input">
                 </div>
-                
                 <div class="config-field full-width">
                     <label>Fonte do Cardápio</label>
                     <select id="configFonte" class="config-input">
@@ -305,28 +386,22 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        
         <div class="config-section">
             <h3 class="config-title">🏠 Informações do Estabelecimento</h3>
             <div class="config-grid">
                 <div class="config-field full-width">
                     <label>Título de Boas-Vindas</label>
                     <input type="text" id="configTituloBemVindo" value="${configuracoes.tituloBemVindo || '😋 Bemvindos'}" class="config-input" placeholder="😋 Bemvindos">
-                    <small>Título exibido no topo da página</small>
                 </div>
-                
                 <div class="config-field full-width">
                     <label>Endereço Completo</label>
                     <input type="text" id="configEndereco" value="${configuracoes.endereco || ''}" class="config-input" placeholder="Rua, Número - Bairro, Cidade - Estado, CEP">
-                    <small>Endereço exibido na seção principal</small>
                 </div>
-                
                 <div class="config-field">
                     <label>Número WhatsApp</label>
                     <input type="text" id="configWhatsApp" value="${configuracoes.whatsApp || ''}" class="config-input" placeholder="5554999999999">
                     <small>Formato: DDI + DDD + Número (sem espaços)</small>
                 </div>
-                
                 <div class="config-field">
                     <label>Status do Estabelecimento</label>
                     <select id="configStatus" class="config-input">
@@ -336,7 +411,6 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        
         <div class="config-section">
             <h3 class="config-title">🏷️ Serviços Disponíveis</h3>
             <div class="config-grid">
@@ -347,7 +421,6 @@ function renderizarConfiguracoes() {
                         <span class="switch-label">🏠 No local</span>
                     </label>
                 </div>
-                
                 <div class="config-field">
                     <label class="config-switch">
                         <input type="checkbox" id="configServicoRetirada" ${configuracoes.servicoRetirada !== false ? 'checked' : ''}>
@@ -355,7 +428,6 @@ function renderizarConfiguracoes() {
                         <span class="switch-label">🚗 Retirada</span>
                     </label>
                 </div>
-                
                 <div class="config-field">
                     <label class="config-switch">
                         <input type="checkbox" id="configServicoDelivery" ${configuracoes.servicoDelivery !== false ? 'checked' : ''}>
@@ -365,7 +437,6 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        
         <div class="config-section">
             <h3 class="config-title">🛒 Funcionalidades</h3>
             <div class="config-grid">
@@ -379,16 +450,13 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        
         <div class="config-section">
             <h3 class="config-title">💳 Pagamento PIX</h3>
             <div class="config-grid">
                 <div class="config-field">
                     <label>Chave PIX</label>
                     <input type="text" id="configChavePix" value="${configuracoes.chavePix || ''}" class="config-input" placeholder="exemplo@email.com">
-                    <small>Email, CPF, CNPJ ou chave aleatória</small>
                 </div>
-                
                 <div class="config-field full-width">
                     <label>QR Code PIX</label>
                     <div class="upload-zone">
@@ -402,26 +470,14 @@ function renderizarConfiguracoes() {
                             Fazer Upload
                         </button>
                         <span class="upload-divider">ou</span>
-                        <input 
-                            type="text" 
-                            id="configQrCodePix" 
-                            value="${configuracoes.qrCodePix || ''}" 
-                            class="config-input"
-                            placeholder="Cole a URL da imagem do QR Code"
-                        >
+                        <input type="text" id="configQrCodePix" value="${configuracoes.qrCodePix || ''}" class="config-input" placeholder="Cole a URL da imagem do QR Code">
                     </div>
                     <div id="qrPreviewContainer" class="preview-container">
-                        ${configuracoes.qrCodePix ? `
-                            <div class="image-preview-uploaded">
-                                <img src="${configuracoes.qrCodePix}" alt="QR Code Preview">
-                            </div>
-                        ` : ''}
+                        ${configuracoes.qrCodePix ? `<div class="image-preview-uploaded"><img src="${configuracoes.qrCodePix}" alt="QR Code Preview"></div>` : ''}
                     </div>
-                    <small>Imagem do QR Code para pagamentos via PIX</small>
                 </div>
             </div>
         </div>
-        
         <div class="config-actions">
             <button class="btn-primary" onclick="salvarConfiguracoes()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -431,12 +487,9 @@ function renderizarConfiguracoes() {
                 </svg>
                 Salvar Configurações
             </button>
-            <button class="btn-secondary" onclick="resetarConfiguracoes()">
-                Restaurar Padrões
-            </button>
+            <button class="btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
         </div>
     `;
-    
     setupLogoUpload();
 }
 
@@ -453,7 +506,6 @@ function setupLogoUpload() {
             if (file) await uploadImagem(file, 'logos', 'logoUrl');
         });
     }
-    
     if (qrUploadBtn && qrFileInput) {
         qrUploadBtn.addEventListener('click', () => qrFileInput.click());
         qrFileInput.addEventListener('change', async (e) => {
@@ -465,59 +517,26 @@ function setupLogoUpload() {
 
 async function uploadImagem(file, pasta, campoConfig) {
     try {
-        if (!file.type.startsWith('image/')) {
-            showToast('Por favor, selecione uma imagem válida', 'error');
-            return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            showToast('Imagem muito grande! Máximo 5MB', 'error');
-            return;
-        }
-        
+        if (!file.type.startsWith('image/')) { showToast('Por favor, selecione uma imagem válida', 'error'); return; }
+        if (file.size > 5 * 1024 * 1024) { showToast('Imagem muito grande! Máximo 5MB', 'error'); return; }
         showLoading();
-        
         const timestamp = Date.now();
         const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
         const storageRef = ref(storage, `${pasta}/${fileName}`);
-        
         const snapshot = await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
-        
         const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
         if (inputField) inputField.value = downloadURL;
-        
-        const previewContainer = campoConfig === 'logoUrl' ? 
-            document.getElementById('logoPreviewContainer') : 
-            document.getElementById('qrPreviewContainer');
-            
+        const previewContainer = campoConfig === 'logoUrl' ? document.getElementById('logoPreviewContainer') : document.getElementById('qrPreviewContainer');
         if (previewContainer) {
-            previewContainer.innerHTML = `
-                <div class="image-preview-uploaded">
-                    <img src="${downloadURL}" alt="Preview">
-                    <button class="btn-remove-image" onclick="removerImagemPreview('${campoConfig}')">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                        Remover
-                    </button>
-                </div>
-            `;
+            previewContainer.innerHTML = `<div class="image-preview-uploaded"><img src="${downloadURL}" alt="Preview"><button class="btn-remove-image" onclick="removerImagemPreview('${campoConfig}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Remover</button></div>`;
         }
-        
         configuracoes[campoConfig] = downloadURL;
         showToast('Imagem enviada com sucesso!', 'success');
         hideLoading();
-        
     } catch (error) {
         console.error('Erro ao fazer upload:', error);
-        if (error.code === 'storage/unauthorized') {
-            showToast('Erro: Você não tem permissão. Verifique se está logado.', 'error');
-        } else if (error.code === 'storage/canceled') {
-            showToast('Upload cancelado', 'info');
-        } else {
-            showToast('Erro ao enviar imagem. Verifique as regras do Storage.', 'error');
-        }
+        showToast('Erro ao enviar imagem.', 'error');
         hideLoading();
     }
 }
@@ -525,23 +544,16 @@ async function uploadImagem(file, pasta, campoConfig) {
 window.removerImagemPreview = function(campoConfig) {
     const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
     if (inputField) inputField.value = '';
-    
-    const previewContainer = campoConfig === 'logoUrl' ? 
-        document.getElementById('logoPreviewContainer') : 
-        document.getElementById('qrPreviewContainer');
-    
+    const previewContainer = campoConfig === 'logoUrl' ? document.getElementById('logoPreviewContainer') : document.getElementById('qrPreviewContainer');
     if (previewContainer) previewContainer.innerHTML = '';
     showToast('Imagem removida. Clique em Salvar para aplicar.', 'info');
 };
 
-function capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
+function capitalizeFirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
 window.salvarConfiguracoes = async function() {
     try {
         showLoading();
-        
         const novasConfigs = {
             nomeCardapio: document.getElementById('configNome').value,
             logoUrl: document.getElementById('configLogoUrl').value,
@@ -559,14 +571,11 @@ window.salvarConfiguracoes = async function() {
             chavePix: document.getElementById('configChavePix').value,
             qrCodePix: document.getElementById('configQrCodePix').value
         };
-        
         await setDoc(doc(db, 'configuracoes', 'geral'), novasConfigs);
         configuracoes = novasConfigs;
-        
         showToast('Configurações salvas com sucesso!', 'success');
         hideLoading();
     } catch (error) {
-        console.error('Erro ao salvar configurações:', error);
         showToast('Erro ao salvar configurações', 'error');
         hideLoading();
     }
@@ -574,151 +583,35 @@ window.salvarConfiguracoes = async function() {
 
 window.resetarConfiguracoes = function() {
     if (!confirm('Tem certeza que deseja restaurar as configurações padrão?')) return;
-    
-    configuracoes = {
-        nomeCardapio: 'Xfood',
-        logoUrl: '#',
-        corPrimaria: '#3b82f6',
-        corSecundaria: '#64748b',
-        fonte: 'DM Sans',
-        tituloBemVindo: '😋 Bemvindos',
-        endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil',
-        whatsApp: '5554999999999',
-        status: 'aberto',
-        servicoLocal: true,
-        servicoRetirada: true,
-        servicoDelivery: true,
-        carrinhoAtivo: true,
-        chavePix: '',
-        qrCodePix: ''
-    };
-    
+    configuracoes = { nomeCardapio: 'Xfood', logoUrl: '#', corPrimaria: '#3b82f6', corSecundaria: '#64748b', fonte: 'DM Sans', tituloBemVindo: '😋 Bemvindos', endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil', whatsApp: '5554999999999', status: 'aberto', servicoLocal: true, servicoRetirada: true, servicoDelivery: true, carrinhoAtivo: true, chavePix: '', qrCodePix: '' };
     renderizarConfiguracoes();
     showToast('Configurações restauradas! Clique em Salvar para aplicar.', 'info');
 };
 
 // ===== PAGES =====
-
 function renderizarPages() {
     const pagesContainer = document.getElementById('pagesContainer');
     if (!pagesContainer) return;
-    
     const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
-    
     pagesContainer.innerHTML = `
-        <div class="pages-intro">
-            <h3>📄 Links das Páginas</h3>
-            <p>Compartilhe estes links com seus clientes ou exiba em telões</p>
-        </div>
-        
+        <div class="pages-intro"><h3>📄 Links das Páginas</h3><p>Compartilhe estes links com seus clientes ou exiba em telões</p></div>
         <div class="pages-grid">
             <div class="page-card">
-                <div class="page-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="9" y1="3" x2="9" y2="21"></line>
-                    </svg>
-                </div>
+                <div class="page-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div>
                 <h4>Cardápio Digital</h4>
                 <p>Página principal onde clientes visualizam produtos e fazem pedidos</p>
-                <div class="page-url">
-                    <input type="text" value="${baseUrl}index.html" readonly class="url-input" id="urlCardapio">
-                    <button class="btn-copy" onclick="copiarUrl('urlCardapio')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                        Copiar
-                    </button>
-                </div>
-                <div class="page-actions">
-                    <a href="${baseUrl}index.html" target="_blank" class="btn-page">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                        Abrir Cardápio
-                    </a>
-                    <button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}index.html')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        Gerar QR Code
-                    </button>
-                </div>
+                <div class="page-url"><input type="text" value="${baseUrl}index.html" readonly class="url-input" id="urlCardapio"><button class="btn-copy" onclick="copiarUrl('urlCardapio')">Copiar</button></div>
+                <div class="page-actions"><a href="${baseUrl}index.html" target="_blank" class="btn-page">Abrir Cardápio</a><button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}index.html')">Gerar QR Code</button></div>
             </div>
-            
             <div class="page-card">
-                <div class="page-icon orange">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                </div>
+                <div class="page-icon orange"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
                 <h4>Acompanhamento de Pedidos</h4>
                 <p>Telão público mostrando todos os pedidos em tempo real</p>
-                <div class="page-url">
-                    <input type="text" value="${baseUrl}Pedidos.html" readonly class="url-input" id="urlPedidos">
-                    <button class="btn-copy" onclick="copiarUrl('urlPedidos')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                        Copiar
-                    </button>
-                </div>
-                <div class="page-actions">
-                    <a href="${baseUrl}Pedidos.html" target="_blank" class="btn-page">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                        Abrir Acompanhamento
-                    </a>
-                    <button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}Pedidos.html')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        Gerar QR Code
-                    </button>
-                </div>
+                <div class="page-url"><input type="text" value="${baseUrl}Pedidos.html" readonly class="url-input" id="urlPedidos"><button class="btn-copy" onclick="copiarUrl('urlPedidos')">Copiar</button></div>
+                <div class="page-actions"><a href="${baseUrl}Pedidos.html" target="_blank" class="btn-page">Abrir Acompanhamento</a><button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}Pedidos.html')">Gerar QR Code</button></div>
             </div>
         </div>
-        
-        <div class="pages-tips">
-            <h4>💡 Dicas de Uso</h4>
-            <ul>
-                <li><strong>Cardápio Digital:</strong> Compartilhe por WhatsApp, redes sociais ou imprima QR Code nas mesas</li>
-                <li><strong>Acompanhamento:</strong> Exiba em TV/monitor para clientes acompanharem seus pedidos</li>
-                <li><strong>QR Codes:</strong> Gere e imprima para facilitar o acesso dos clientes</li>
-            </ul>
-        </div>
-        
-        <div class="modal" id="qrModal" style="display: none;">
-            <div class="modal-overlay" onclick="fecharQRModal()"></div>
-            <div class="modal-content qr-modal-content">
-                <button class="modal-close" onclick="fecharQRModal()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-                <h3>QR Code Gerado</h3>
-                <div id="qrCodeContainer"></div>
-                <p class="qr-instructions">Escaneie ou clique com botão direito para salvar</p>
-            </div>
-        </div>
+        <div class="modal" id="qrModal" style="display: none;"><div class="modal-overlay" onclick="fecharQRModal()"></div><div class="modal-content qr-modal-content"><button class="modal-close" onclick="fecharQRModal()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><h3>QR Code Gerado</h3><div id="qrCodeContainer"></div><p class="qr-instructions">Escaneie ou clique com botão direito para salvar</p></div></div>
     `;
 }
 
@@ -726,203 +619,65 @@ window.copiarUrl = function(inputId) {
     const input = document.getElementById(inputId);
     input.select();
     document.execCommand('copy');
-    showToast('Link copiado para a área de transferência!', 'success');
+    showToast('Link copiado!', 'success');
 };
 
 window.gerarQRCode = function(url) {
     const modal = document.getElementById('qrModal');
     const container = document.getElementById('qrCodeContainer');
-    const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(url)}`;
-    container.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; border-radius: 8px;">`;
+    container.innerHTML = `<img src="https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(url)}" alt="QR Code" style="max-width: 100%; border-radius: 8px;">`;
     modal.style.display = 'flex';
 };
 
-window.fecharQRModal = function() {
-    document.getElementById('qrModal').style.display = 'none';
-};
+window.fecharQRModal = function() { document.getElementById('qrModal').style.display = 'none'; };
 
 // ===== DASHBOARD =====
-
 function calcularRankingProdutos() {
     const contagemProdutos = {};
-    
     pedidos.forEach(pedido => {
         pedido.itens.forEach(item => {
             if (!contagemProdutos[item.nome]) {
                 const produtoOriginal = produtos.find(p => p.nome === item.nome);
-                contagemProdutos[item.nome] = {
-                    nome: item.nome,
-                    quantidade: 0,
-                    categoria: produtoOriginal?.categoria || 'Sem categoria'
-                };
+                contagemProdutos[item.nome] = { nome: item.nome, quantidade: 0, categoria: produtoOriginal?.categoria || 'Sem categoria' };
             }
             contagemProdutos[item.nome].quantidade += item.quantidade;
         });
     });
-    
-    return Object.values(contagemProdutos)
-        .sort((a, b) => b.quantidade - a.quantidade)
-        .slice(0, 10);
+    return Object.values(contagemProdutos).sort((a, b) => b.quantidade - a.quantidade).slice(0, 10);
 }
 
 function atualizarDashboard() {
     const dashboardContainer = document.getElementById('dashboardContainer');
     if (!dashboardContainer) return;
-    
     const totalProdutos = produtos.length;
     const produtosAtivos = produtos.filter(p => p.ativo !== false).length;
     const produtosInativos = totalProdutos - produtosAtivos;
-    
     const totalPedidos = pedidos.length;
     const pedidosNovos = pedidos.filter(p => p.status === 'novo').length;
     const pedidosPreparando = pedidos.filter(p => p.status === 'preparando').length;
     const pedidosProntos = pedidos.filter(p => p.status === 'pronto').length;
-    
     const produtosPorCategoria = {};
     produtos.forEach(p => {
         const cat = p.categoria || 'Sem categoria';
         produtosPorCategoria[cat] = (produtosPorCategoria[cat] || 0) + 1;
     });
-    
     const rankingProdutos = calcularRankingProdutos();
     const carrinhoAtivo = configuracoes.carrinhoAtivo !== false;
     
     dashboardContainer.innerHTML = `
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="9" y1="3" x2="9" y2="21"></line>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Total de Produtos</span>
-                    <span class="stat-value">${totalProdutos}</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon green">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Produtos Ativos</span>
-                    <span class="stat-value">${produtosAtivos}</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon gray">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Produtos Inativos</span>
-                    <span class="stat-value">${produtosInativos}</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon orange">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">Total de Pedidos</span>
-                    <span class="stat-value">${totalPedidos}</span>
-                </div>
-            </div>
+            <div class="stat-card"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div><div class="stat-info"><span class="stat-label">Total de Produtos</span><span class="stat-value">${totalProdutos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></div><div class="stat-info"><span class="stat-label">Produtos Ativos</span><span class="stat-value">${produtosAtivos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon gray"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></div><div class="stat-info"><span class="stat-label">Produtos Inativos</span><span class="stat-value">${produtosInativos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="stat-info"><span class="stat-label">Total de Pedidos</span><span class="stat-value">${totalPedidos}</span></div></div>
         </div>
-        
         <div class="charts-grid">
-            <div class="chart-card">
-                <h3 class="chart-title">Produtos por Categoria</h3>
-                <div class="chart-bars">
-                    ${Object.entries(produtosPorCategoria).map(([cat, count]) => {
-                        const percentage = (count / totalProdutos) * 100;
-                        return `
-                            <div class="chart-bar-item">
-                                <div class="chart-bar-label"><span>${cat}</span><span>${count}</span></div>
-                                <div class="chart-bar-track"><div class="chart-bar-fill" style="width: ${percentage}%"></div></div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-            <div class="chart-card">
-                <h3 class="chart-title">Status dos Pedidos</h3>
-                <div class="chart-bars">
-                    <div class="chart-bar-item">
-                        <div class="chart-bar-label"><span>Novos</span><span>${pedidosNovos}</span></div>
-                        <div class="chart-bar-track"><div class="chart-bar-fill blue" style="width: ${totalPedidos > 0 ? (pedidosNovos / totalPedidos) * 100 : 0}%"></div></div>
-                    </div>
-                    <div class="chart-bar-item">
-                        <div class="chart-bar-label"><span>Preparando</span><span>${pedidosPreparando}</span></div>
-                        <div class="chart-bar-track"><div class="chart-bar-fill orange" style="width: ${totalPedidos > 0 ? (pedidosPreparando / totalPedidos) * 100 : 0}%"></div></div>
-                    </div>
-                    <div class="chart-bar-item">
-                        <div class="chart-bar-label"><span>Prontos</span><span>${pedidosProntos}</span></div>
-                        <div class="chart-bar-track"><div class="chart-bar-fill green" style="width: ${totalPedidos > 0 ? (pedidosProntos / totalPedidos) * 100 : 0}%"></div></div>
-                    </div>
-                </div>
-            </div>
+            <div class="chart-card"><h3 class="chart-title">Produtos por Categoria</h3><div class="chart-bars">${Object.entries(produtosPorCategoria).map(([cat, count]) => { const percentage = (count / totalProdutos) * 100; return `<div class="chart-bar-item"><div class="chart-bar-label"><span>${cat}</span><span>${count}</span></div><div class="chart-bar-track"><div class="chart-bar-fill" style="width: ${percentage}%"></div></div></div>`; }).join('')}</div></div>
+            <div class="chart-card"><h3 class="chart-title">Status dos Pedidos</h3><div class="chart-bars"><div class="chart-bar-item"><div class="chart-bar-label"><span>Novos</span><span>${pedidosNovos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill blue" style="width: ${totalPedidos > 0 ? (pedidosNovos / totalPedidos) * 100 : 0}%"></div></div></div><div class="chart-bar-item"><div class="chart-bar-label"><span>Preparando</span><span>${pedidosPreparando}</span></div><div class="chart-bar-track"><div class="chart-bar-fill orange" style="width: ${totalPedidos > 0 ? (pedidosPreparando / totalPedidos) * 100 : 0}%"></div></div></div><div class="chart-bar-item"><div class="chart-bar-label"><span>Prontos</span><span>${pedidosProntos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill green" style="width: ${totalPedidos > 0 ? (pedidosProntos / totalPedidos) * 100 : 0}%"></div></div></div></div></div>
         </div>
-        
         <div class="ranking-section">
-            <h3 class="chart-title">
-                🏆 Ranking de Produtos Mais Pedidos
-                ${!carrinhoAtivo ? 
-                    '<span class="ranking-status disabled">Ranking Indisponível</span>' : 
-                    '<span class="ranking-status enabled">Ranking Ativado</span>'
-                }
-            </h3>
-            ${!carrinhoAtivo ? `
-                <div class="ranking-disabled-message">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <p>O carrinho de compras está desativado.</p>
-                    <p>Ative o carrinho nas <a href="#" onclick="navegarParaConfiguracoes()">Configurações</a> para habilitar o ranking de produtos.</p>
-                </div>
-            ` : rankingProdutos.length === 0 ? `
-                <div class="ranking-disabled-message">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    <p>Nenhum pedido registrado ainda.</p>
-                    <p>Os produtos mais pedidos aparecerão aqui assim que houver pedidos.</p>
-                </div>
-            ` : `
-                <div class="ranking-list">
-                    ${rankingProdutos.map((produto, index) => {
-                        const maxQuantidade = rankingProdutos[0].quantidade;
-                        const percentage = (produto.quantidade / maxQuantidade) * 100;
-                        let medalColor = '#64748b';
-                        if (index === 0) medalColor = '#fbbf24';
-                        else if (index === 1) medalColor = '#9ca3af';
-                        else if (index === 2) medalColor = '#cd7f32';
-                        return `
-                            <div class="ranking-item">
-                                <div class="ranking-position" style="background-color: ${medalColor}">${index + 1}</div>
-                                <div class="ranking-info">
-                                    <div class="ranking-product-name">${produto.nome}</div>
-                                    <div class="ranking-product-category">${produto.categoria}</div>
-                                </div>
-                                <div class="ranking-bar"><div class="ranking-bar-fill" style="width: ${percentage}%"></div></div>
-                                <div class="ranking-quantity">${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `}
+            <h3 class="chart-title">🏆 Ranking de Produtos Mais Pedidos ${!carrinhoAtivo ? '<span class="ranking-status disabled">Ranking Indisponível</span>' : '<span class="ranking-status enabled">Ranking Ativado</span>'}</h3>
+            ${!carrinhoAtivo ? `<div class="ranking-disabled-message"><p>O carrinho de compras está desativado.</p></div>` : rankingProdutos.length === 0 ? `<div class="ranking-disabled-message"><p>Nenhum pedido registrado ainda.</p></div>` : `<div class="ranking-list">${rankingProdutos.map((produto, index) => { const maxQuantidade = rankingProdutos[0].quantidade; const percentage = (produto.quantidade / maxQuantidade) * 100; let medalColor = '#64748b'; if (index === 0) medalColor = '#fbbf24'; else if (index === 1) medalColor = '#9ca3af'; else if (index === 2) medalColor = '#cd7f32'; return `<div class="ranking-item"><div class="ranking-position" style="background-color: ${medalColor}">${index + 1}</div><div class="ranking-info"><div class="ranking-product-name">${produto.nome}</div><div class="ranking-product-category">${produto.categoria}</div></div><div class="ranking-bar"><div class="ranking-bar-fill" style="width: ${percentage}%"></div></div><div class="ranking-quantity">${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}</div></div>`; }).join('')}</div>`}
         </div>
     `;
 }
@@ -934,84 +689,40 @@ window.navegarParaConfiguracoes = function() {
 };
 
 // ===== CATEGORIAS =====
-
 async function carregarCategorias() {
     try {
         const categoriasRef = collection(db, 'categorias');
         onSnapshot(categoriasRef, (snapshot) => {
             categorias = [];
-            snapshot.forEach((doc) => {
-                categorias.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => { categorias.push({ id: doc.id, ...doc.data() }); });
             renderizarCategorias();
             atualizarSelectCategorias();
             renderizarFiltrosCategorias();
         });
     } catch (error) {
-        console.error('Erro ao carregar categorias:', error);
         showToast('Erro ao carregar categorias', 'error');
     }
 }
 
 function renderizarCategorias() {
     if (!categoriesList) return;
-    
     if (categorias.length === 0) {
-        categoriesList.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
-                <p>Nenhuma categoria cadastrada</p>
-            </div>
-        `;
+        categoriesList.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;"><p>Nenhuma categoria cadastrada</p></div>`;
         return;
     }
-    
     categoriesList.innerHTML = categorias.map(cat => {
         const produtosDaCategoria = produtos.filter(p => p.categoria === cat.nome);
         const isExpandida = categoriaExpandida === cat.id;
-        
         return `
             <div class="category-item-wrapper">
                 <div class="category-item" onclick="window.toggleCategoria('${cat.id}')">
-                    <div class="category-info">
-                        <span class="category-name">${cat.nome}</span>
-                        <span class="category-count">${produtosDaCategoria.length} produto(s)</span>
-                    </div>
+                    <div class="category-info"><span class="category-name">${cat.nome}</span><span class="category-count">${produtosDaCategoria.length} produto(s)</span></div>
                     <div class="category-actions" onclick="event.stopPropagation()">
-                        <button class="btn-icon-sm" onclick="window.editarCategoria('${cat.id}')" title="Editar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                        <button class="btn-icon-sm danger" onclick="window.excluirCategoria('${cat.id}')" title="Excluir">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                        <button class="btn-icon-sm" title="${isExpandida ? 'Recolher' : 'Expandir'}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: ${isExpandida ? 'rotate(180deg)' : 'rotate(0)'}; transition: transform 0.3s;">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
+                        <button class="btn-icon-sm" onclick="window.editarCategoria('${cat.id}')">✏️</button>
+                        <button class="btn-icon-sm danger" onclick="window.excluirCategoria('${cat.id}')">🗑️</button>
                     </div>
                 </div>
-                ${isExpandida ? `
-                    <div class="category-products">
-                        ${produtosDaCategoria.length > 0 ? 
-                            produtosDaCategoria.map(p => `
-                                <div class="category-product-item">
-                                    <span>${p.nome}</span>
-                                    <span class="category-product-price">R$ ${formatarPreco(p.preco)}</span>
-                                    <span class="category-product-status ${p.ativo !== false ? 'active' : 'inactive'}">
-                                        ${p.ativo !== false ? 'Ativo' : 'Inativo'}
-                                    </span>
-                                </div>
-                            `).join('') :
-                            '<p style="color: #666; padding: 16px; text-align: center;">Nenhum produto nesta categoria</p>'
-                        }
-                    </div>
-                ` : ''}
+                ${isExpandida ? `<div class="category-products">${produtosDaCategoria.length > 0 ? produtosDaCategoria.map(p => `<div class="category-product-item"><span>${p.nome}</span><span class="category-product-price">R$ ${formatarPreco(p.preco)}</span><span class="category-product-status ${p.ativo !== false ? 'active' : 'inactive'}">${p.ativo !== false ? 'Ativo' : 'Inativo'}</span></div>`).join('') : '<p style="color: #666; padding: 16px; text-align: center;">Nenhum produto nesta categoria</p>'}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -1025,10 +736,7 @@ window.toggleCategoria = function(categoriaId) {
 function atualizarSelectCategorias() {
     const select = document.getElementById('productCategory');
     if (!select) return;
-    select.innerHTML = `
-        <option value="">Selecione uma categoria</option>
-        ${categorias.map(cat => `<option value="${cat.nome}">${cat.nome}</option>`).join('')}
-    `;
+    select.innerHTML = `<option value="">Selecione uma categoria</option>${categorias.map(cat => `<option value="${cat.nome}">${cat.nome}</option>`).join('')}`;
 }
 
 function abrirModalCategoria(categoriaId = null) {
@@ -1057,53 +765,40 @@ async function salvarCategoria(e) {
         showLoading();
         if (editandoCategoria) {
             await updateDoc(doc(db, 'categorias', editandoCategoria), { nome });
-            showToast('Categoria atualizada com sucesso!', 'success');
+            showToast('Categoria atualizada!', 'success');
         } else {
             await addDoc(collection(db, 'categorias'), { nome });
-            showToast('Categoria criada com sucesso!', 'success');
+            showToast('Categoria criada!', 'success');
         }
         fecharModalCategoria();
         hideLoading();
     } catch (error) {
-        console.error('Erro ao salvar categoria:', error);
         showToast('Erro ao salvar categoria', 'error');
         hideLoading();
     }
 }
 
 window.editarCategoria = function(categoriaId) { abrirModalCategoria(categoriaId); };
-
 window.excluirCategoria = async function(categoriaId) {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     try {
         showLoading();
         await deleteDoc(doc(db, 'categorias', categoriaId));
-        showToast('Categoria excluída com sucesso!', 'success');
+        showToast('Categoria excluída!', 'success');
         hideLoading();
     } catch (error) {
-        console.error('Erro ao excluir categoria:', error);
         showToast('Erro ao excluir categoria', 'error');
         hideLoading();
     }
 };
 
 // ===== PRODUTOS =====
-
 function renderizarFiltrosCategorias() {
     const filtrosContainer = document.getElementById('categoryFilters');
     if (!filtrosContainer) return;
     filtrosContainer.innerHTML = `
-        <button class="category-filter-btn ${filtroCategoriaProduto === 'all' ? 'active' : ''}" onclick="window.filtrarPorCategoria('all')">
-            Todos (${produtos.length})
-        </button>
-        ${categorias.map(cat => {
-            const count = produtos.filter(p => p.categoria === cat.nome).length;
-            return `
-                <button class="category-filter-btn ${filtroCategoriaProduto === cat.nome ? 'active' : ''}" onclick="window.filtrarPorCategoria('${cat.nome}')">
-                    ${cat.nome} (${count})
-                </button>
-            `;
-        }).join('')}
+        <button class="category-filter-btn ${filtroCategoriaProduto === 'all' ? 'active' : ''}" onclick="window.filtrarPorCategoria('all')">Todos (${produtos.length})</button>
+        ${categorias.map(cat => { const count = produtos.filter(p => p.categoria === cat.nome).length; return `<button class="category-filter-btn ${filtroCategoriaProduto === cat.nome ? 'active' : ''}" onclick="window.filtrarPorCategoria('${cat.nome}')">${cat.nome} (${count})</button>`; }).join('')}
     `;
 }
 
@@ -1118,95 +813,51 @@ async function carregarProdutos() {
         const produtosRef = collection(db, 'produtos');
         onSnapshot(produtosRef, (snapshot) => {
             produtos = [];
-            snapshot.forEach((doc) => {
-                produtos.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => { produtos.push({ id: doc.id, ...doc.data() }); });
             renderizarFiltrosCategorias();
             renderizarProdutos();
             atualizarDashboard();
         });
     } catch (error) {
-        console.error('Erro ao carregar produtos:', error);
         showToast('Erro ao carregar produtos', 'error');
     }
 }
 
 function renderizarProdutos() {
     if (!productsGrid) return;
-    
     let produtosFiltrados = produtos;
-    if (filtroCategoriaProduto !== 'all') {
-        produtosFiltrados = produtos.filter(p => p.categoria === filtroCategoriaProduto);
-    }
+    if (filtroCategoriaProduto !== 'all') produtosFiltrados = produtos.filter(p => p.categoria === filtroCategoriaProduto);
     
     if (produtosFiltrados.length === 0) {
-        productsGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #666;">
-                <p style="font-size: 1.1rem;">Nenhum produto encontrado${filtroCategoriaProduto !== 'all' ? ' nesta categoria' : ''}</p>
-            </div>
-        `;
+        productsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #666;"><p>Nenhum produto encontrado${filtroCategoriaProduto !== 'all' ? ' nesta categoria' : ''}</p></div>`;
         return;
     }
     
     productsGrid.innerHTML = produtosFiltrados.map(produto => {
         const isAtivo = produto.ativo !== false;
-        
+        const qtdAdicionais = produto.adicionais ? produto.adicionais.length : 0;
         const imagemHTML = produto.imagem ? 
-            `<img 
-                src="${produto.imagem}" 
-                alt="${produto.nome}"
-                class="product-image-admin"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-            >
-            <div class="placeholder-image" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <span>Sem imagem</span>
-            </div>` : 
-            `<div class="placeholder-image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <span>Sem imagem</span>
-            </div>`;
+            `<img src="${produto.imagem}" alt="${produto.nome}" class="product-image-admin" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="placeholder-image" style="display: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Sem imagem</span></div>` : 
+            `<div class="placeholder-image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Sem imagem</span></div>`;
         
         return `
             <div class="product-card-admin ${!isAtivo ? 'product-inactive' : ''}">
-                <button 
-                    class="btn-visibility ${isAtivo ? 'active' : ''}" 
-                    onclick="window.toggleVisibilidadeProduto('${produto.id}', ${isAtivo})"
-                    title="${isAtivo ? 'Ocultar do cardápio' : 'Mostrar no cardápio'}"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        ${isAtivo ? 
-                            '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>' :
-                            '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
-                        }
-                    </svg>
+                <button class="btn-visibility ${isAtivo ? 'active' : ''}" onclick="window.toggleVisibilidadeProduto('${produto.id}', ${isAtivo})" title="${isAtivo ? 'Ocultar' : 'Mostrar'}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${isAtivo ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'}</svg>
                 </button>
                 ${imagemHTML}
                 <div class="product-info-admin">
                     <h3 class="product-name-admin">${produto.nome}</h3>
                     <p class="product-category-admin">${produto.categoria || 'Sem categoria'}</p>
+                    ${qtdAdicionais > 0 ? `<p style="font-size:0.78rem; color: #3b82f6; font-weight:600; margin: 4px 0 0;">🔧 ${qtdAdicionais} adicional(is)</p>` : ''}
                     <div class="product-price-admin">R$ ${formatarPreco(produto.preco)}</div>
                     <div class="product-actions">
                         <button class="btn-icon" onclick="window.editarProduto('${produto.id}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             Editar
                         </button>
                         <button class="btn-icon danger" onclick="window.excluirProduto('${produto.id}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Excluir
                         </button>
                     </div>
@@ -1219,37 +870,31 @@ function renderizarProdutos() {
 window.toggleVisibilidadeProduto = async function(produtoId, ativoAtual) {
     try {
         await updateDoc(doc(db, 'produtos', produtoId), { ativo: !ativoAtual });
-        showToast(`Produto ${!ativoAtual ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+        showToast(`Produto ${!ativoAtual ? 'ativado' : 'desativado'}!`, 'success');
     } catch (error) {
-        console.error('Erro ao alterar visibilidade:', error);
-        showToast('Erro ao alterar visibilidade do produto', 'error');
+        showToast('Erro ao alterar visibilidade', 'error');
     }
 };
 
-// ─────────────────────────────────────────────
-// MODAL PRODUTO — abre com campo URL de imagem
-// ─────────────────────────────────────────────
+// ===== MODAL PRODUTO COM ADICIONAIS =====
 
 function abrirModalProduto(produtoId = null) {
     editandoProduto = produtoId;
-
-    // Injeta o campo de URL de imagem no formulário se ainda não existir
     injetarCampoImagemUrl();
+    injetarSecaoAdicionais();
 
     if (!produtoId) {
         if (modalTitle) modalTitle.textContent = 'Novo Produto';
         productForm.reset();
         limparPreviewImagem();
+        adicionaisTemp = [];
+        renderizarAdicionaisAdmin();
         productModal.classList.add('active');
         return;
     }
 
     const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) {
-        console.error('Produto não encontrado:', produtoId);
-        showToast('Erro: produto não encontrado', 'error');
-        return;
-    }
+    if (!produto) { showToast('Erro: produto não encontrado', 'error'); return; }
 
     if (modalTitle) modalTitle.textContent = 'Editar Produto';
     document.getElementById('productName').value = produto.nome ?? '';
@@ -1258,14 +903,12 @@ function abrirModalProduto(produtoId = null) {
     document.getElementById('productDescription').value = produto.descricao ?? '';
     document.getElementById('productActive').checked = produto.ativo !== false;
 
-    // Preenche campo URL se a imagem for uma URL externa (não base64)
     const urlInput = document.getElementById('productImageUrl');
     if (urlInput) {
         const isUrl = produto.imagem && produto.imagem.startsWith('http');
         urlInput.value = isUrl ? produto.imagem : '';
     }
 
-    // Preview
     if (imagePreview) {
         if (produto.imagem) {
             imagePreview.innerHTML = `<img src="${produto.imagem}" alt="Preview">`;
@@ -1275,61 +918,157 @@ function abrirModalProduto(produtoId = null) {
         }
     }
 
+    // Carregar adicionais existentes
+    adicionaisTemp = produto.adicionais ? JSON.parse(JSON.stringify(produto.adicionais)) : [];
+    renderizarAdicionaisAdmin();
+
     productModal.classList.add('active');
 }
 
-/**
- * Injeta dinamicamente o campo "URL da Imagem" no modal do produto,
- * logo abaixo do campo de upload de arquivo, se ainda não existir.
- */
 function injetarCampoImagemUrl() {
-    if (document.getElementById('productImageUrl')) return; // já existe
-
+    if (document.getElementById('productImageUrl')) return;
     const fileFormGroup = productImageInput?.closest('.form-group');
     if (!fileFormGroup) return;
-
-    // Altera o label do campo de arquivo para deixar claro que são dois modos
     const labelArquivo = fileFormGroup.querySelector('label');
-    if (labelArquivo) labelArquivo.textContent = 'Imagem do Produto — Upload de Arquivo';
-
-    // Cria novo form-group para a URL
+    if (labelArquivo) labelArquivo.textContent = 'Imagem — Upload de Arquivo';
     const urlGroup = document.createElement('div');
     urlGroup.className = 'form-group';
     urlGroup.id = 'formGroupImageUrl';
     urlGroup.innerHTML = `
-        <label>Imagem do Produto — URL Externa</label>
-        <input 
-            type="url" 
-            id="productImageUrl" 
-            placeholder="https://exemplo.com/imagem.png  |  .jpg  |  .svg  |  ..."
-            style="width:100%"
-        >
-        <small style="color:#888">Cole aqui um link direto para a imagem (PNG, JPG, SVG, WEBP, GIF…). 
-        Se preencher tanto URL quanto arquivo, o <strong>arquivo</strong> tem prioridade.</small>
+        <label>Imagem — URL Externa</label>
+        <input type="url" id="productImageUrl" placeholder="https://exemplo.com/imagem.png" style="width:100%">
+        <small style="color:#888">Cole aqui um link direto para a imagem. O arquivo tem prioridade sobre a URL.</small>
     `;
-
-    // Insere logo após o form-group do arquivo
     fileFormGroup.insertAdjacentElement('afterend', urlGroup);
 }
+
+// ─────────────────────────────────────────────
+// SEÇÃO DE ADICIONAIS NO MODAL
+// ─────────────────────────────────────────────
+
+function injetarSecaoAdicionais() {
+    if (document.getElementById('adminExtrasContainer')) return;
+
+    // Encontra o form-group do checkbox "ativo" para inserir depois
+    const activoGroup = document.getElementById('productActive')?.closest('.form-group');
+    if (!activoGroup) return;
+
+    const extrasGroup = document.createElement('div');
+    extrasGroup.className = 'form-group';
+    extrasGroup.id = 'adminExtrasContainer';
+    extrasGroup.innerHTML = `
+        <label>Adicionais do Produto</label>
+        <div class="extras-admin-section">
+            <div class="extras-admin-header">
+                <span id="extrasCountLabel">Nenhum adicional</span>
+                <button type="button" class="btn-add-extra" onclick="window.adicionarNovoAdicional()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Adicionar
+                </button>
+            </div>
+            <div class="extras-admin-list" id="extrasAdminList">
+                <p class="extras-empty-msg">Nenhum adicional cadastrado para este produto.</p>
+            </div>
+        </div>
+        <small style="color:#888">Adicionais aparecem no cardápio para o cliente calcular o preço final.</small>
+    `;
+
+    activoGroup.insertAdjacentElement('afterend', extrasGroup);
+}
+
+function renderizarAdicionaisAdmin() {
+    const list = document.getElementById('extrasAdminList');
+    const countLabel = document.getElementById('extrasCountLabel');
+    if (!list) return;
+
+    if (countLabel) {
+        countLabel.textContent = adicionaisTemp.length === 0 
+            ? 'Nenhum adicional' 
+            : `${adicionaisTemp.length} adicional(is)`;
+    }
+
+    if (adicionaisTemp.length === 0) {
+        list.innerHTML = `<p class="extras-empty-msg">Nenhum adicional cadastrado para este produto.</p>`;
+        return;
+    }
+
+    list.innerHTML = adicionaisTemp.map((ad, index) => `
+        <div class="extra-admin-item" data-index="${index}">
+            <input 
+                type="text" 
+                class="extra-nome-input" 
+                placeholder="Nome (ex: Cebola extra)" 
+                value="${ad.nome || ''}"
+                oninput="window.atualizarAdicionalTemp(${index}, 'nome', this.value)"
+            >
+            <div class="extra-preco-wrapper">
+                <span>R$</span>
+                <input 
+                    type="number" 
+                    class="extra-preco-input" 
+                    placeholder="0,00" 
+                    step="0.01" 
+                    min="0"
+                    value="${ad.preco || 0}"
+                    oninput="window.atualizarAdicionalTemp(${index}, 'preco', this.value)"
+                >
+            </div>
+            <button type="button" class="btn-remove-extra" onclick="window.removerAdicionalTemp(${index})" title="Remover adicional">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
+        </div>
+    `).join('');
+}
+
+window.adicionarNovoAdicional = function() {
+    adicionaisTemp.push({ nome: '', preco: 0 });
+    renderizarAdicionaisAdmin();
+    // Foca no último input de nome
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.extra-nome-input');
+        if (inputs.length > 0) inputs[inputs.length - 1].focus();
+    }, 50);
+};
+
+window.atualizarAdicionalTemp = function(index, campo, valor) {
+    if (!adicionaisTemp[index]) return;
+    if (campo === 'preco') {
+        adicionaisTemp[index][campo] = parseFloat(valor) || 0;
+    } else {
+        adicionaisTemp[index][campo] = valor;
+    }
+    // Atualiza só o contador sem re-renderizar tudo (evita perder o foco)
+    const countLabel = document.getElementById('extrasCountLabel');
+    if (countLabel) {
+        countLabel.textContent = adicionaisTemp.length === 0 ? 'Nenhum adicional' : `${adicionaisTemp.length} adicional(is)`;
+    }
+};
+
+window.removerAdicionalTemp = function(index) {
+    adicionaisTemp.splice(index, 1);
+    renderizarAdicionaisAdmin();
+};
 
 function fecharModalProduto() {
     productModal.classList.remove('active');
     productForm.reset();
     limparPreviewImagem();
-    // Limpa o campo URL também
     const urlInput = document.getElementById('productImageUrl');
     if (urlInput) urlInput.value = '';
+    adicionaisTemp = [];
     editandoProduto = null;
 }
 
 function limparPreviewImagem() {
-    if (imagePreview) {
-        imagePreview.innerHTML = '';
-        imagePreview.classList.remove('active');
-    }
+    if (imagePreview) { imagePreview.innerHTML = ''; imagePreview.classList.remove('active'); }
 }
 
-// Preview ao selecionar arquivo
 function previewImagem(e) {
     const file = e.target.files[0];
     if (file && imagePreview) {
@@ -1342,26 +1081,18 @@ function previewImagem(e) {
     }
 }
 
-// Preview ao digitar URL
 function previewImagemUrl(url) {
     if (!imagePreview) return;
     if (!url) {
-        // Se o campo URL for apagado mas houver arquivo, não limpa
         if (!productImageInput?.files?.length) limparPreviewImagem();
         return;
     }
-    imagePreview.innerHTML = `
-        <img 
-            src="${url}" 
-            alt="Preview" 
-            onerror="this.parentElement.innerHTML='<span style=color:#e53e3e>URL inválida ou imagem inacessível</span>'"
-        >
-    `;
+    imagePreview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=color:#e53e3e>URL inválida</span>'">`;
     imagePreview.classList.add('active');
 }
 
 // ─────────────────────────────────────────────
-// SALVAR PRODUTO — lida com arquivo OU url
+// SALVAR PRODUTO — inclui adicionais
 // ─────────────────────────────────────────────
 
 async function salvarProduto(e) {
@@ -1374,33 +1105,35 @@ async function salvarProduto(e) {
     const ativo = document.getElementById('productActive').checked;
     const imagemFile = productImageInput.files[0];
     const imagemUrlDigitada = (document.getElementById('productImageUrl')?.value || '').trim();
+
+    // Filtra adicionais com nome preenchido
+    const adicionaisValidos = adicionaisTemp.filter(ad => ad.nome && ad.nome.trim() !== '');
     
     try {
         showLoading();
         
         let imagemURL = null;
-        
         if (imagemFile) {
-            // Prioridade 1: arquivo enviado (PNG, JPG, SVG, etc.)
             try {
                 const storageRef = ref(storage, `produtos/${Date.now()}_${imagemFile.name}`);
                 await uploadBytes(storageRef, imagemFile);
                 imagemURL = await getDownloadURL(storageRef);
             } catch (storageError) {
-                console.warn('Erro ao fazer upload da imagem (Storage não configurado):', storageError);
+                console.warn('Erro ao fazer upload:', storageError);
                 imagemURL = null;
-                showToast('Produto salvo sem imagem (Storage não configurado)', 'success');
             }
         } else if (imagemUrlDigitada) {
-            // Prioridade 2: URL externa digitada
             imagemURL = imagemUrlDigitada;
         } else if (editandoProduto) {
-            // Prioridade 3: manter imagem existente
             const produtoAntigo = produtos.find(p => p.id === editandoProduto);
             imagemURL = produtoAntigo?.imagem || null;
         }
         
-        const dadosProduto = { nome, preco, categoria, descricao, ativo, imagem: imagemURL };
+        const dadosProduto = { 
+            nome, preco, categoria, descricao, ativo, 
+            imagem: imagemURL,
+            adicionais: adicionaisValidos
+        };
         
         if (editandoProduto) {
             await updateDoc(doc(db, 'produtos', editandoProduto), dadosProduto);
@@ -1426,115 +1159,63 @@ window.excluirProduto = async function(produtoId) {
     try {
         showLoading();
         await deleteDoc(doc(db, 'produtos', produtoId));
-        showToast('Produto excluído com sucesso!', 'success');
+        showToast('Produto excluído!', 'success');
         hideLoading();
     } catch (error) {
-        console.error('Erro ao excluir produto:', error);
         showToast('Erro ao excluir produto', 'error');
         hideLoading();
     }
 };
 
 // ===== PEDIDOS =====
-
 async function carregarPedidos() {
     try {
         const pedidosRef = collection(db, 'pedidos');
         const q = query(pedidosRef, orderBy('data', 'desc'));
         onSnapshot(q, (snapshot) => {
             pedidos = [];
-            snapshot.forEach((doc) => {
-                pedidos.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => { pedidos.push({ id: doc.id, ...doc.data() }); });
             filtrarPedidos();
             atualizarDashboard();
         });
     } catch (error) {
-        console.error('Erro ao carregar pedidos:', error);
         showToast('Erro ao carregar pedidos', 'error');
     }
 }
 
 function filtrarPedidos() {
     let pedidosFiltrados = pedidos;
-    if (filtroStatusPedido !== 'all') {
-        pedidosFiltrados = pedidos.filter(p => p.status === filtroStatusPedido);
-    }
+    if (filtroStatusPedido !== 'all') pedidosFiltrados = pedidos.filter(p => p.status === filtroStatusPedido);
     renderizarPedidos(pedidosFiltrados);
 }
 
 function renderizarPedidos(pedidosParaExibir) {
     if (!ordersList) return;
-    
     if (pedidosParaExibir.length === 0) {
-        ordersList.innerHTML = `
-            <div style="text-align: center; padding: 60px; color: #666;">
-                <p style="font-size: 1.1rem;">Nenhum pedido encontrado</p>
-            </div>
-        `;
+        ordersList.innerHTML = `<div style="text-align: center; padding: 60px; color: #666;"><p>Nenhum pedido encontrado</p></div>`;
         return;
     }
-    
     ordersList.innerHTML = pedidosParaExibir.map(pedido => {
-        const dataFormatada = pedido.data ? 
-            new Date(pedido.data.seconds * 1000).toLocaleString('pt-BR') : 
-            'Data não disponível';
-        
+        const dataFormatada = pedido.data ? new Date(pedido.data.seconds * 1000).toLocaleString('pt-BR') : 'Data não disponível';
         const statusLog = [
             { status: 'novo', label: 'Novo', ativo: true },
             { status: 'preparando', label: 'Preparando', ativo: pedido.status === 'preparando' || pedido.status === 'pronto' },
             { status: 'pronto', label: 'Pronto', ativo: pedido.status === 'pronto' }
         ];
-        
         return `
             <div class="order-card">
                 <div class="order-header">
-                    <div>
-                        <div class="order-number">Pedido #${pedido.id.substring(0, 8).toUpperCase()}</div>
-                        <div class="order-time">${dataFormatada}</div>
-                    </div>
+                    <div><div class="order-number">Pedido #${pedido.id.substring(0, 8).toUpperCase()}</div><div class="order-time">${dataFormatada}</div></div>
                     <span class="order-status ${pedido.status}">${pedido.status}</span>
                 </div>
-                <div class="order-process-log">
-                    ${statusLog.map((s, index) => `
-                        <div class="process-step ${s.ativo ? 'active' : ''}">
-                            <div class="process-dot"></div>
-                            <span class="process-label">${s.label}</span>
-                        </div>
-                        ${index < statusLog.length - 1 ? '<div class="process-line"></div>' : ''}
-                    `).join('')}
-                </div>
-                <div class="order-items">
-                    ${pedido.itens.map(item => `
-                        <div class="order-item">
-                            <div>
-                                <span class="order-item-name">${item.nome}</span>
-                                <span class="order-item-qty">x${item.quantidade}</span>
-                            </div>
-                            <span class="order-item-price">R$ ${formatarPreco(item.preco * item.quantidade)}</span>
-                        </div>
-                    `).join('')}
-                </div>
+                <div class="order-process-log">${statusLog.map((s, index) => `<div class="process-step ${s.ativo ? 'active' : ''}"><div class="process-dot"></div><span class="process-label">${s.label}</span></div>${index < statusLog.length - 1 ? '<div class="process-line"></div>' : ''}`).join('')}</div>
+                <div class="order-items">${pedido.itens.map(item => `<div class="order-item"><div><span class="order-item-name">${item.nome}</span><span class="order-item-qty">x${item.quantidade}</span></div><span class="order-item-price">R$ ${formatarPreco(item.preco * item.quantidade)}</span></div>`).join('')}</div>
                 <div class="order-footer">
                     <div class="order-total">Total: <span>R$ ${formatarPreco(pedido.total)}</span></div>
                     <div class="order-actions">
-                        ${pedido.status === 'novo' ? `
-                            <button class="btn-status preparando" onclick="window.atualizarStatusPedido('${pedido.id}', 'preparando')">
-                                Iniciar Preparo
-                            </button>
-                        ` : ''}
-                        ${pedido.status === 'preparando' ? `
-                            <button class="btn-status pronto" onclick="window.atualizarStatusPedido('${pedido.id}', 'pronto')">
-                                Marcar como Pronto
-                            </button>
-                        ` : ''}
-                        <button class="btn-status danger" onclick="window.excluirPedido('${pedido.id}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            Excluir
-                        </button>
+                        ${pedido.status === 'novo' ? `<button class="btn-status preparando" onclick="window.atualizarStatusPedido('${pedido.id}', 'preparando')">Iniciar Preparo</button>` : ''}
+                        ${pedido.status === 'preparando' ? `<button class="btn-status pronto" onclick="window.atualizarStatusPedido('${pedido.id}', 'pronto')">Marcar como Pronto</button>` : ''}
+                        <button class="btn-status danger" onclick="window.excluirPedido('${pedido.id}')">Excluir</button>
                     </div>
                 </div>
             </div>
@@ -1544,66 +1225,49 @@ function renderizarPedidos(pedidosParaExibir) {
 
 window.atualizarStatusPedido = async function(pedidoId, novoStatus) {
     try {
-        await updateDoc(doc(db, 'pedidos', pedidoId), { 
-            status: novoStatus,
-            dataAtualizacao: serverTimestamp()
-        });
+        await updateDoc(doc(db, 'pedidos', pedidoId), { status: novoStatus, dataAtualizacao: serverTimestamp() });
         showToast(`Pedido marcado como ${novoStatus}!`, 'success');
     } catch (error) {
-        console.error('Erro ao atualizar status:', error);
-        showToast('Erro ao atualizar status do pedido', 'error');
+        showToast('Erro ao atualizar status', 'error');
     }
 };
 
 window.excluirPedido = async function(pedidoId) {
-    if (!confirm('Tem certeza que deseja excluir este pedido? Ele será removido permanentemente.')) return;
+    if (!confirm('Tem certeza que deseja excluir este pedido?')) return;
     try {
         showLoading();
         await deleteDoc(doc(db, 'pedidos', pedidoId));
-        showToast('Pedido excluído com sucesso!', 'success');
+        showToast('Pedido excluído!', 'success');
         hideLoading();
     } catch (error) {
-        console.error('Erro ao excluir pedido:', error);
         showToast('Erro ao excluir pedido', 'error');
         hideLoading();
     }
 };
 
 window.limparTodosPedidos = async function() {
-    if (!confirm('⚠️ ATENÇÃO! Isso irá excluir TODOS os pedidos permanentemente. Tem certeza?')) return;
+    if (!confirm('⚠️ Isso irá excluir TODOS os pedidos permanentemente. Confirma?')) return;
     if (!confirm('Confirme novamente: Deseja realmente excluir TODOS os pedidos?')) return;
-    
     try {
         showLoading();
         const pedidosRef = collection(db, 'pedidos');
         const snapshot = await getDocs(pedidosRef);
         const promises = [];
-        snapshot.forEach((docSnap) => {
-            promises.push(deleteDoc(doc(db, 'pedidos', docSnap.id)));
-        });
+        snapshot.forEach((docSnap) => { promises.push(deleteDoc(doc(db, 'pedidos', docSnap.id))); });
         await Promise.all(promises);
-        showToast(`${promises.length} pedidos excluídos com sucesso!`, 'success');
+        showToast(`${promises.length} pedidos excluídos!`, 'success');
         hideLoading();
     } catch (error) {
-        console.error('Erro ao limpar pedidos:', error);
         showToast('Erro ao limpar pedidos', 'error');
         hideLoading();
     }
 };
 
 // ===== UTILITÁRIOS =====
-
-function formatarPreco(valor) {
-    return parseFloat(valor).toFixed(2).replace('.', ',');
-}
-
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
+function formatarPreco(valor) { return parseFloat(valor).toFixed(2).replace('.', ','); }
+function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 function showLoading() { loading.classList.add('active'); }
 function hideLoading() { loading.classList.remove('active'); }
-
 function showToast(message, type = 'success') {
     toast.textContent = message;
     toast.className = `toast ${type} active`;
