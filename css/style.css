@@ -1270,3 +1270,42 @@ body {
         max-height: 92vh;
     }
 }  
+
+/* ========================================
+   Header com imagem de fundo
+   Adicione no final do seu style.css
+======================================== */
+
+.header {
+    background: url('/img/bg.webp') center center / cover no-repeat !important;
+    border-bottom: none;
+    backdrop-filter: none;
+}
+
+/* Overlay escuro para o logo ficar legível */
+.header .container {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    border-radius: 0;
+    padding: 20px;
+}
+
+/* Logo branco para contrastar com a imagem */
+.logo-text {
+    color: white !important;
+}
+
+.logo-img {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Botão do carrinho branco */
+.cart-toggle {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.cart-toggle:hover {
+    background: rgba(255, 255, 255, 0.35) !important;
+}
