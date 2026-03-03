@@ -1,134 +1,94 @@
 // admin.js
-// JavaScript para a página de administração
+// JavaScript para a pagina de administracao — X-Food
 
 import { db, auth, storage } from './firebase-config.js';
-import { 
-    signInWithEmailAndPassword, 
-    signOut,
-    onAuthStateChanged 
+import {
+    signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
-import { 
-    collection, 
-    getDocs, 
-    addDoc, 
-    doc,
-    updateDoc,
-    deleteDoc,
-    onSnapshot,
-    query,
-    where,
-    orderBy,
-    serverTimestamp,
-    setDoc,
-    getDoc
+import {
+    collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import {
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject
+    ref, uploadBytes, getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js';
 
-// Estado da aplicação
-let produtos = [];
-let categorias = [];
-let pedidos = [];
-let editandoProduto = null;
-let editandoCategoria = null;
-let filtroStatusPedido = 'all';
-let filtroCategoriaProduto = 'all';
-let categoriaExpandida = null;
+// ─── Estado ──────────────────────────────────────────────────────────────────
+let produtos = [], categorias = [], pedidos = [];
+let editandoProduto = null, editandoCategoria = null;
+let filtroStatusPedido = 'all', filtroCategoriaProduto = 'all';
+let categoriaExpandida = null, adicionaisTemp = [];
+let abaConfigAtiva = 'aparencia';
 
-// Lista de adicionais sendo editada no modal de produto
-let adicionaisTemp = [];
-
+// ─── Configuracoes DEFAULT — tudo desativado por padrao ──────────────────────
 let configuracoes = {
-    nomeCardapio: 'Xfood',
-    logoUrl: 'https://i.postimg.cc/cLZ64xCm/logo.jpg',
-    corPrimaria: '#3b82f6',
-    corSecundaria: '#64748b',
-    fonte: 'DM Sans',
-    tituloBemVindo: '😋 Bemvindos',
-    endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil',
-    whatsApp: '5554999999999',
-    status: 'aberto',
-    servicoLocal: true,
-    servicoRetirada: true,
-    servicoDelivery: true,
-    carrinhoAtivo: true,
-    chavePix: '',
-    qrCodePix: ''
+    nomeCardapio:    'X-Food',
+    logoUrl:         'img/logo.jpg',
+    logoLink:        '',
+    corPrimaria:     '#3b82f6',
+    corSecundaria:   '#64748b',
+    fonte:           'DM Sans',
+    tituloBemVindo:  'Bem-vindos',
+    endereco:        '',
+    whatsApp:        '',
+    whatsAppAtivo:   false,
+    status:          'fechado',
+    servicoLocal:    false,
+    servicoRetirada: false,
+    servicoDelivery: false,
+    carrinhoAtivo:   false,
+    chavePix:        '',
+    qrCodePix:       '',
+    qrCodeMenu:      '',
+    dominios:        ''
 };
 
-// Elementos do DOM
-const loginScreen = document.getElementById('loginScreen');
+// ─── DOM ─────────────────────────────────────────────────────────────────────
+const loginScreen    = document.getElementById('loginScreen');
 const adminDashboard = document.getElementById('adminDashboard');
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const btnLogout = document.getElementById('btnLogout');
-const loading = document.getElementById('loading');
-const toast = document.getElementById('toast');
-
-const navItems = document.querySelectorAll('.nav-item');
-const contentSections = document.querySelectorAll('.content-section');
-
-const productsGrid = document.getElementById('productsGrid');
-const btnAddProduct = document.getElementById('btnAddProduct');
-const productModal = document.getElementById('productModal');
-const productForm = document.getElementById('productForm');
-const closeProductModal = document.getElementById('closeProductModal');
+const loginForm      = document.getElementById('loginForm');
+const loginError     = document.getElementById('loginError');
+const btnLogout      = document.getElementById('btnLogout');
+const loading        = document.getElementById('loading');
+const toast          = document.getElementById('toast');
+const navItems       = document.querySelectorAll('.nav-item');
+const contentSections= document.querySelectorAll('.content-section');
+const productsGrid   = document.getElementById('productsGrid');
+const btnAddProduct  = document.getElementById('btnAddProduct');
+const productModal   = document.getElementById('productModal');
+const productForm    = document.getElementById('productForm');
+const closeProductModal  = document.getElementById('closeProductModal');
 const cancelProductModal = document.getElementById('cancelProductModal');
-const modalTitle = document.getElementById('modalTitle');
+const modalTitle     = document.getElementById('modalTitle');
 const productImageInput = document.getElementById('productImage');
-const imagePreview = document.getElementById('imagePreview');
-
+const imagePreview   = document.getElementById('imagePreview');
 const categoriesList = document.getElementById('categoriesList');
 const btnAddCategory = document.getElementById('btnAddCategory');
-const categoryModal = document.getElementById('categoryModal');
-const categoryForm = document.getElementById('categoryForm');
-const closeCategoryModal = document.getElementById('closeCategoryModal');
+const categoryModal  = document.getElementById('categoryModal');
+const categoryForm   = document.getElementById('categoryForm');
+const closeCategoryModal  = document.getElementById('closeCategoryModal');
 const cancelCategoryModal = document.getElementById('cancelCategoryModal');
-
-const ordersList = document.getElementById('ordersList');
+const ordersList    = document.getElementById('ordersList');
 const filterButtons = document.querySelectorAll('.filter-btn');
 
-window.addEventListener('DOMContentLoaded', () => {
-    initApp();
-    injetarEstilosAdicionais();
-});
+// ─── Init ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => { initApp(); injetarEstilosExtras(); });
 
 function initApp() {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            mostrarDashboard();
-            carregarDados();
-        } else {
-            mostrarLogin();
-        }
-    });
+    onAuthStateChanged(auth, u => { if (u) { mostrarDashboard(); carregarDados(); } else mostrarLogin(); });
     setupEventListeners();
 }
+function mostrarLogin()     { loginScreen.style.display='flex'; adminDashboard.style.display='none'; }
+function mostrarDashboard() { loginScreen.style.display='none'; adminDashboard.style.display='flex'; }
 
-function mostrarLogin() {
-    loginScreen.style.display = 'flex';
-    adminDashboard.style.display = 'none';
-}
-
-function mostrarDashboard() {
-    loginScreen.style.display = 'none';
-    adminDashboard.style.display = 'flex';
-}
-
-loginForm.addEventListener('submit', async (e) => {
+loginForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
     try {
         showLoading();
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
         loginError.classList.remove('active');
         hideLoading();
-    } catch (error) {
+    } catch {
         loginError.textContent = 'E-mail ou senha incorretos';
         loginError.classList.add('active');
         hideLoading();
@@ -136,47 +96,34 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 btnLogout.addEventListener('click', async () => {
-    try {
-        await signOut(auth);
-        mostrarLogin();
-        showToast('Logout realizado com sucesso', 'success');
-    } catch (error) {
-        showToast('Erro ao fazer logout', 'error');
-    }
+    try { await signOut(auth); mostrarLogin(); showToast('Logout realizado!','success'); }
+    catch { showToast('Erro ao sair','error'); }
 });
 
 function setupEventListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
-            const section = item.dataset.section;
-            navItems.forEach(nav => nav.classList.remove('active'));
+            const sec = item.dataset.section;
+            navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active');
-            contentSections.forEach(sec => sec.classList.remove('active'));
-            document.getElementById(`section${capitalize(section)}`).classList.add('active');
-            if (section === 'dashboard') atualizarDashboard();
-            else if (section === 'configuracoes') renderizarConfiguracoes();
-            else if (section === 'pages') renderizarPages();
-            else if (section === 'produtos') renderizarFiltrosCategorias();
+            contentSections.forEach(s => s.classList.remove('active'));
+            document.getElementById('section'+capitalize(sec))?.classList.add('active');
+            if (sec==='dashboard')     atualizarDashboard();
+            else if (sec==='configuracoes') renderizarConfiguracoes();
+            else if (sec==='pages')    renderizarPages();
+            else if (sec==='produtos') renderizarFiltrosCategorias();
         });
     });
-
     btnAddProduct.addEventListener('click', () => abrirModalProduto());
-    if (closeProductModal) closeProductModal.addEventListener('click', fecharModalProduto);
+    if (closeProductModal)  closeProductModal.addEventListener('click', fecharModalProduto);
     cancelProductModal.addEventListener('click', fecharModalProduto);
     productForm.addEventListener('submit', salvarProduto);
     productImageInput.addEventListener('change', previewImagem);
-
-    document.addEventListener('input', (e) => {
-        if (e.target && e.target.id === 'productImageUrl') {
-            previewImagemUrl(e.target.value.trim());
-        }
-    });
-
+    document.addEventListener('input', e => { if (e.target?.id==='productImageUrl') previewImagemUrl(e.target.value.trim()); });
     btnAddCategory.addEventListener('click', () => abrirModalCategoria());
-    if (closeCategoryModal) closeCategoryModal.addEventListener('click', fecharModalCategoria);
+    if (closeCategoryModal)  closeCategoryModal.addEventListener('click', fecharModalCategoria);
     cancelCategoryModal.addEventListener('click', fecharModalCategoria);
     categoryForm.addEventListener('submit', salvarCategoria);
-
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
@@ -185,13 +132,8 @@ function setupEventListeners() {
             filtrarPedidos();
         });
     });
-
-    productModal.addEventListener('click', (e) => {
-        if (e.target === productModal) fecharModalProduto();
-    });
-    categoryModal.addEventListener('click', (e) => {
-        if (e.target === categoryModal) fecharModalCategoria();
-    });
+    productModal.addEventListener('click',  e => { if (e.target===productModal)  fecharModalProduto(); });
+    categoryModal.addEventListener('click', e => { if (e.target===categoryModal) fecharModalCategoria(); });
 }
 
 async function carregarDados() {
@@ -202,1076 +144,857 @@ async function carregarDados() {
     atualizarDashboard();
 }
 
-// ===== ESTILOS PARA ADICIONAIS NO ADMIN =====
-
-function injetarEstilosAdicionais() {
+// ─── ESTILOS EXTRAS ──────────────────────────────────────────────────────────
+function injetarEstilosExtras() {
     if (document.getElementById('adminExtrasStyles')) return;
-    const style = document.createElement('style');
-    style.id = 'adminExtrasStyles';
-    style.textContent = `
-        .extras-admin-section {
-            border: 2px dashed #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 4px;
-        }
-
-        .extras-admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .extras-admin-header span {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .btn-add-extra {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-add-extra:hover { background: #2563eb; }
-
-        .extras-admin-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .extra-admin-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px 12px;
-            animation: fadeSlideIn 0.2s ease;
-        }
-
-        @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .extra-admin-item input[type="text"],
-        .extra-admin-item input[type="number"] {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 7px 10px;
-            font-size: 0.85rem;
-            background: white;
-            color: #1e293b;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .extra-admin-item input[type="text"]:focus,
-        .extra-admin-item input[type="number"]:focus {
-            border-color: #3b82f6;
-        }
-
-        .extra-nome-input { flex: 1; min-width: 0; }
-        .extra-preco-input { width: 90px; flex-shrink: 0; }
-
-        .extra-preco-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .extra-preco-wrapper span {
-            font-size: 0.85rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .btn-remove-extra {
-            background: transparent;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: background 0.2s;
-        }
-        .btn-remove-extra:hover { background: #fee2e2; }
-
-        .extras-empty-msg {
-            text-align: center;
-            color: #94a3b8;
-            font-size: 0.85rem;
-            padding: 12px 0 4px;
-        }
+    const s = document.createElement('style');
+    s.id = 'adminExtrasStyles';
+    s.textContent = `
+    .config-tabs-nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:24px;background:var(--bg-elevated,#1a1e28);border:1px solid var(--border);border-radius:10px;padding:6px;}
+    .config-tab-btn{flex:1;min-width:90px;padding:9px 12px;background:transparent;border:none;border-radius:7px;font-size:.8rem;font-weight:600;font-family:inherit;color:var(--text-muted,#505868);cursor:pointer;transition:all .18s ease;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;}
+    .config-tab-btn:hover{background:var(--bg-hover,rgba(255,255,255,.04));color:var(--text-primary,#f0f2f7);}
+    .config-tab-btn.active{background:rgba(245,158,11,.12);color:var(--accent,#f59e0b);box-shadow:0 0 0 1px rgba(245,158,11,.25);}
+    .config-tab-panel{display:none;}
+    .config-tab-panel.active{display:block;animation:sectionFade .2s ease;}
+    .config-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+    .config-switch input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0;}
+    .config-switch .slider{position:relative;width:44px;height:24px;background:var(--bg-base,#0d0f14);border:1px solid var(--border);border-radius:12px;transition:all .2s;flex-shrink:0;}
+    .config-switch .slider:before{content:'';position:absolute;height:18px;width:18px;left:2px;top:2px;background:var(--text-muted,#505868);border-radius:50%;transition:all .2s;}
+    .config-switch input:checked + .slider{background:rgba(16,185,129,.15);border-color:#10b981;}
+    .config-switch input:checked + .slider:before{transform:translateX(20px);background:#10b981;}
+    .switch-label{font-size:.875rem;font-weight:500;color:var(--text-primary);}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;transition:border-color .18s;}
+    .toggle-row:hover{border-color:var(--border-strong);}
+    .toggle-left{display:flex;flex-direction:column;gap:3px;}
+    .toggle-left strong{font-size:.875rem;font-weight:600;color:var(--text-primary);}
+    .toggle-left span{font-size:.75rem;color:var(--text-muted);}
+    .qr-preview-box{margin-top:10px;text-align:center;}
+    .qr-preview-box img{max-width:160px;border-radius:8px;border:1px solid var(--border);}
+    .dominios-list{display:flex;flex-direction:column;gap:7px;margin-top:8px;}
+    .dominio-item{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:7px;padding:10px 13px;font-size:.8rem;}
+    .dominio-item a{color:var(--accent,#f59e0b);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .dominio-item a:hover{text-decoration:underline;}
+    .extras-admin-section{border:1px dashed var(--border-strong,rgba(255,255,255,.14));border-radius:10px;padding:14px;background:var(--bg-elevated);}
+    .extras-admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .extras-admin-header span{font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+    .extras-admin-list{display:flex;flex-direction:column;gap:8px;}
+    .extra-admin-item{display:flex;align-items:center;gap:8px;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;animation:fadeSlideIn .15s ease;}
+    @keyframes fadeSlideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+    .extra-admin-item input[type="text"],.extra-admin-item input[type="number"]{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.85rem;color:var(--text-primary);font-family:inherit;outline:none;transition:border-color .18s;}
+    .extra-admin-item input:focus{border-color:var(--accent);}
+    .extra-nome-input{flex:1;min-width:0;}
+    .extra-preco-input{width:90px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+    .extra-preco-wrapper{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .extra-preco-wrapper span{font-size:.8rem;color:var(--text-muted);}
+    .btn-add-extra{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.12);color:var(--accent,#f59e0b);border:1px solid rgba(245,158,11,.25);padding:6px 12px;border-radius:6px;font-size:.8rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .18s;}
+    .btn-add-extra:hover{background:var(--accent);color:#0d0f14;}
+    .btn-remove-extra{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;flex-shrink:0;transition:all .18s;}
+    .btn-remove-extra:hover{background:var(--danger-dim,rgba(239,68,68,.12));color:var(--danger,#ef4444);}
+    .extras-empty-msg{text-align:center;color:var(--text-muted);font-size:.78rem;padding:12px 0 4px;}
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(s);
 }
 
-// ===== CONFIGURAÇÕES =====
-
+// ─── CONFIGURACOES ────────────────────────────────────────────────────────────
 async function carregarConfiguracoes() {
     try {
-        const configDoc = await getDoc(doc(db, 'configuracoes', 'geral'));
-        if (configDoc.exists()) configuracoes = { ...configuracoes, ...configDoc.data() };
-    } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
-    }
+        const snap = await getDoc(doc(db,'configuracoes','geral'));
+        if (snap.exists()) configuracoes = { ...configuracoes, ...snap.data() };
+    } catch(e) { console.error(e); }
 }
 
+window.mudarAbaConfig = function(aba) {
+    abaConfigAtiva = aba;
+    document.querySelectorAll('.config-tab-btn').forEach(b  => b.classList.toggle('active',  b.dataset.aba===aba));
+    document.querySelectorAll('.config-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.aba===aba));
+};
+
+function ck(v) { return v===true ? 'checked' : ''; }
+
+function tabBtn(id, label, icon) {
+    return `<button class="config-tab-btn ${abaConfigAtiva===id?'active':''}" data-aba="${id}" onclick="mudarAbaConfig('${id}')">${icon}${label}</button>`;
+}
+
+function panelOpen(id)  { return `<div class="config-tab-panel ${abaConfigAtiva===id?'active':''}" data-aba="${id}">`; }
+function panelClose()   { return `</div>`; }
+
+const saveBtnHTML = `
+    <div class="config-actions">
+        <button class="btn-primary" onclick="salvarConfiguracoes()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Configurações
+        </button>
+    </div>`;
+
 function renderizarConfiguracoes() {
-    const configContainer = document.getElementById('configContainer');
-    if (!configContainer) return;
-    
-    configContainer.innerHTML = `
+    const cc = document.getElementById('configContainer');
+    if (!cc) return;
+    const cfg = configuracoes;
+
+    cc.innerHTML = `
+    <!-- MINI-ABAS NAV -->
+    <div class="config-tabs-nav">
+        ${tabBtn('aparencia',       'Aparência',       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>')}
+        ${tabBtn('info',            'Informações',     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>')}
+        ${tabBtn('servicos',        'Serviços',        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>')}
+        ${tabBtn('funcionalidades', 'Funcionalidades', '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>')}
+        ${tabBtn('pagamento',       'Pagamento',       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>')}
+        ${tabBtn('qr',              'QR / Links',      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>')}
+    </div>
+
+    <!-- ── ABA APARENCIA ── -->
+    ${panelOpen('aparencia')}
         <div class="config-section">
-            <h3 class="config-title">🎨 Aparência do Cardápio</h3>
+            <h3 class="config-title">🎨 Identidade Visual</h3>
             <div class="config-grid">
                 <div class="config-field">
                     <label>Nome do Cardápio</label>
-                    <input type="text" id="configNome" value="${configuracoes.nomeCardapio || 'Xfood'}" class="config-input">
-                </div>
-                <div class="config-field full-width">
-                    <label>Logo do Estabelecimento</label>
-                    <div class="upload-zone">
-                        <input type="file" id="logoFileInput" accept="image/*" style="display: none;">
-                        <button type="button" class="btn-upload" id="btnUploadLogo">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            Fazer Upload
-                        </button>
-                        <span class="upload-divider">ou</span>
-                        <input type="text" id="configLogoUrl" value="${configuracoes.logoUrl || '#'}" class="config-input" placeholder="Cole a URL da imagem">
-                    </div>
-                    <div id="logoPreviewContainer" class="preview-container">
-                        ${configuracoes.logoUrl && configuracoes.logoUrl !== '#' ? `<div class="image-preview-uploaded"><img src="${configuracoes.logoUrl}" alt="Logo Preview"></div>` : ''}
-                    </div>
-                    <small>Formatos: JPG, PNG, GIF, WEBP (máx 5MB)</small>
+                    <input type="text" id="configNome" value="${cfg.nomeCardapio||'X-Food'}" class="config-input">
                 </div>
                 <div class="config-field">
                     <label>Cor Primária</label>
-                    <input type="color" id="configCorPrimaria" value="${configuracoes.corPrimaria || '#3b82f6'}" class="config-input">
+                    <input type="color" id="configCorPrimaria" value="${cfg.corPrimaria||'#3b82f6'}" class="config-input">
                 </div>
                 <div class="config-field">
                     <label>Cor Secundária</label>
-                    <input type="color" id="configCorSecundaria" value="${configuracoes.corSecundaria || '#64748b'}" class="config-input">
+                    <input type="color" id="configCorSecundaria" value="${cfg.corSecundaria||'#64748b'}" class="config-input">
+                </div>
+                <div class="config-field">
+                    <label>Fonte</label>
+                    <select id="configFonte" class="config-input">
+                        <option value="DM Sans"    ${cfg.fonte==='DM Sans'?'selected':''}>DM Sans</option>
+                        <option value="Roboto"     ${cfg.fonte==='Roboto'?'selected':''}>Roboto</option>
+                        <option value="Open Sans"  ${cfg.fonte==='Open Sans'?'selected':''}>Open Sans</option>
+                        <option value="Montserrat" ${cfg.fonte==='Montserrat'?'selected':''}>Montserrat</option>
+                        <option value="Poppins"    ${cfg.fonte==='Poppins'?'selected':''}>Poppins</option>
+                    </select>
                 </div>
                 <div class="config-field full-width">
-                    <label>Fonte do Cardápio</label>
-                    <select id="configFonte" class="config-input">
-                        <option value="DM Sans" ${configuracoes.fonte === 'DM Sans' ? 'selected' : ''}>DM Sans</option>
-                        <option value="Roboto" ${configuracoes.fonte === 'Roboto' ? 'selected' : ''}>Roboto</option>
-                        <option value="Open Sans" ${configuracoes.fonte === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
-                        <option value="Montserrat" ${configuracoes.fonte === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
-                        <option value="Poppins" ${configuracoes.fonte === 'Poppins' ? 'selected' : ''}>Poppins</option>
-                    </select>
+                    <label>🖼️ Logo — URL da Imagem</label>
+                    <input type="url" id="configLogoUrl" value="${cfg.logoUrl||'img/logo.jpg'}" class="config-input"
+                        placeholder="https://... ou img/logo.jpg">
+                    <small>Use <strong>img/logo.jpg</strong> para a pasta local, ou cole uma URL externa.</small>
+                    <div id="logoPreviewContainer" style="margin-top:8px;">
+                        ${cfg.logoUrl ? `<div class="image-preview-uploaded"><img src="${cfg.logoUrl}" style="max-height:72px;border-radius:8px;"></div>` : ''}
+                    </div>
+                </div>
+                <div class="config-field full-width">
+                    <label>🔗 Logo — Link ao Clicar <span style="color:var(--text-muted);font-weight:400">(opcional)</span></label>
+                    <input type="url" id="configLogoLink" value="${cfg.logoLink||''}" class="config-input"
+                        placeholder="https://seusite.com.br">
+                    <small>Quando preenchido, a logo vira um link clicável.</small>
                 </div>
             </div>
         </div>
+        ${saveBtnHTML}
+    ${panelClose()}
+
+    <!-- ── ABA INFORMACOES ── -->
+    ${panelOpen('info')}
         <div class="config-section">
-            <h3 class="config-title">🏠 Informações do Estabelecimento</h3>
+            <h3 class="config-title">🏠 Estabelecimento</h3>
             <div class="config-grid">
                 <div class="config-field full-width">
                     <label>Título de Boas-Vindas</label>
-                    <input type="text" id="configTituloBemVindo" value="${configuracoes.tituloBemVindo || '😋 Bemvindos'}" class="config-input" placeholder="😋 Bemvindos">
+                    <input type="text" id="configTituloBemVindo" value="${cfg.tituloBemVindo||'Bem-vindos'}" class="config-input">
                 </div>
                 <div class="config-field full-width">
                     <label>Endereço Completo</label>
-                    <input type="text" id="configEndereco" value="${configuracoes.endereco || ''}" class="config-input" placeholder="Rua, Número - Bairro, Cidade - Estado, CEP">
+                    <input type="text" id="configEndereco" value="${cfg.endereco||''}" class="config-input"
+                        placeholder="Rua Exemplo, 123 - Cidade - UF">
                 </div>
                 <div class="config-field">
-                    <label>Número WhatsApp</label>
-                    <input type="text" id="configWhatsApp" value="${configuracoes.whatsApp || ''}" class="config-input" placeholder="5554999999999">
-                    <small>Formato: DDI + DDD + Número (sem espaços)</small>
-                </div>
-                <div class="config-field">
-                    <label>Status do Estabelecimento</label>
+                    <label>Status</label>
                     <select id="configStatus" class="config-input">
-                        <option value="aberto" ${(configuracoes.status || 'aberto') === 'aberto' ? 'selected' : ''}>🟢 Aberto</option>
-                        <option value="fechado" ${configuracoes.status === 'fechado' ? 'selected' : ''}>🔴 Fechado</option>
+                        <option value="aberto"  ${cfg.status==='aberto'?'selected':''}>🟢 Aberto</option>
+                        <option value="fechado" ${cfg.status!=='aberto'?'selected':''}>🔴 Fechado</option>
                     </select>
                 </div>
             </div>
         </div>
         <div class="config-section">
-            <h3 class="config-title">🏷️ Serviços Disponíveis</h3>
-            <div class="config-grid">
-                <div class="config-field">
-                    <label class="config-switch">
-                        <input type="checkbox" id="configServicoLocal" ${configuracoes.servicoLocal !== false ? 'checked' : ''}>
-                        <span class="slider"></span>
-                        <span class="switch-label">🏠 No local</span>
-                    </label>
-                </div>
-                <div class="config-field">
-                    <label class="config-switch">
-                        <input type="checkbox" id="configServicoRetirada" ${configuracoes.servicoRetirada !== false ? 'checked' : ''}>
-                        <span class="slider"></span>
-                        <span class="switch-label">🚗 Retirada</span>
-                    </label>
-                </div>
-                <div class="config-field">
-                    <label class="config-switch">
-                        <input type="checkbox" id="configServicoDelivery" ${configuracoes.servicoDelivery !== false ? 'checked' : ''}>
-                        <span class="slider"></span>
-                        <span class="switch-label">🛵 Delivery</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div class="config-section">
-            <h3 class="config-title">🛒 Funcionalidades</h3>
+            <h3 class="config-title">💬 WhatsApp</h3>
             <div class="config-grid">
                 <div class="config-field full-width">
-                    <label class="config-switch">
-                        <input type="checkbox" id="configCarrinho" ${configuracoes.carrinhoAtivo !== false ? 'checked' : ''}>
-                        <span class="slider"></span>
-                        <span class="switch-label">Ativar Carrinho de Compras</span>
-                    </label>
-                    <small>Se desativado, clientes não poderão fazer pedidos pelo site</small>
+                    <div class="toggle-row">
+                        <div class="toggle-left">
+                            <strong>Botão WhatsApp no site</strong>
+                            <span>Exibe ou oculta o botão para os clientes. Desativado por padrão.</span>
+                        </div>
+                        <label class="config-switch">
+                            <input type="checkbox" id="configWhatsAppAtivo" ${ck(cfg.whatsAppAtivo)}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="config-field">
+                    <label>Número WhatsApp</label>
+                    <input type="text" id="configWhatsApp" value="${cfg.whatsApp||''}" class="config-input"
+                        placeholder="5554999999999">
+                    <small>DDI + DDD + Número, sem espaços</small>
                 </div>
             </div>
         </div>
+        ${saveBtnHTML}
+    ${panelClose()}
+
+    <!-- ── ABA SERVICOS ── -->
+    ${panelOpen('servicos')}
+        <div class="config-section">
+            <h3 class="config-title">🏷️ Tipos de Atendimento</h3>
+            <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:18px;">Ative apenas os serviços que seu estabelecimento oferece. Todos desativados por padrão.</p>
+            <div class="config-grid">
+                <div class="config-field full-width">
+                    <div class="toggle-row">
+                        <div class="toggle-left">
+                            <strong>🏠 No Local</strong>
+                            <span>Cliente consome no estabelecimento</span>
+                        </div>
+                        <label class="config-switch">
+                            <input type="checkbox" id="configServicoLocal" ${ck(cfg.servicoLocal)}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="config-field full-width">
+                    <div class="toggle-row">
+                        <div class="toggle-left">
+                            <strong>🚗 Retirada</strong>
+                            <span>Cliente retira o pedido no local</span>
+                        </div>
+                        <label class="config-switch">
+                            <input type="checkbox" id="configServicoRetirada" ${ck(cfg.servicoRetirada)}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="config-field full-width">
+                    <div class="toggle-row">
+                        <div class="toggle-left">
+                            <strong>🛵 Delivery</strong>
+                            <span>Entrega no endereço do cliente</span>
+                        </div>
+                        <label class="config-switch">
+                            <input type="checkbox" id="configServicoDelivery" ${ck(cfg.servicoDelivery)}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ${saveBtnHTML}
+    ${panelClose()}
+
+    <!-- ── ABA FUNCIONALIDADES ── -->
+    ${panelOpen('funcionalidades')}
+        <div class="config-section">
+            <h3 class="config-title">⚙️ Funcionalidades do Cardápio</h3>
+            <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:18px;">Controle o que fica visível para os clientes. Tudo desativado por padrão.</p>
+            <div class="config-grid">
+                <div class="config-field full-width">
+                    <div class="toggle-row">
+                        <div class="toggle-left">
+                            <strong>🛒 Carrinho de Compras</strong>
+                            <span>Clientes podem adicionar itens e fazer pedidos. Desativado por padrão.</span>
+                        </div>
+                        <label class="config-switch">
+                            <input type="checkbox" id="configCarrinho" ${ck(cfg.carrinhoAtivo)}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ${saveBtnHTML}
+    ${panelClose()}
+
+    <!-- ── ABA PAGAMENTO ── -->
+    ${panelOpen('pagamento')}
         <div class="config-section">
             <h3 class="config-title">💳 Pagamento PIX</h3>
             <div class="config-grid">
                 <div class="config-field">
                     <label>Chave PIX</label>
-                    <input type="text" id="configChavePix" value="${configuracoes.chavePix || ''}" class="config-input" placeholder="exemplo@email.com">
+                    <input type="text" id="configChavePix" value="${cfg.chavePix||''}" class="config-input"
+                        placeholder="email, CPF, telefone...">
                 </div>
                 <div class="config-field full-width">
-                    <label>QR Code PIX</label>
-                    <div class="upload-zone">
-                        <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
-                        <button type="button" class="btn-upload" id="btnUploadQR">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            Fazer Upload
-                        </button>
-                        <span class="upload-divider">ou</span>
-                        <input type="text" id="configQrCodePix" value="${configuracoes.qrCodePix || ''}" class="config-input" placeholder="Cole a URL da imagem do QR Code">
+                    <label>QR Code PIX — URL da imagem</label>
+                    <input type="url" id="configQrCodePix" value="${cfg.qrCodePix||''}" class="config-input"
+                        placeholder="https://... URL da imagem do QR Code">
+                    ${cfg.qrCodePix ? `<div class="qr-preview-box"><img src="${cfg.qrCodePix}" alt="QR PIX"></div>` : ''}
+                </div>
+            </div>
+        </div>
+        ${saveBtnHTML}
+    ${panelClose()}
+
+    <!-- ── ABA QR / LINKS ── -->
+    ${panelOpen('qr')}
+        <div class="config-section">
+            <h3 class="config-title">📱 QR Code do Menu</h3>
+            <div class="config-grid">
+                <div class="config-field full-width">
+                    <label>URL do Menu Digital</label>
+                    <input type="url" id="configMenuUrl" value="https://exceedparkcardapio.vercel.app/menu.html"
+                        class="config-input" readonly style="opacity:.55;cursor:default;">
+                    <small>Link do cardápio para compartilhar com clientes.</small>
+                </div>
+                <div class="config-field full-width">
+                    <label>QR Code do Menu — URL da imagem</label>
+                    <input type="url" id="configQrCodeMenu" value="${cfg.qrCodeMenu||''}" class="config-input"
+                        placeholder="https://... URL da imagem do QR Code"
+                        oninput="window.previewQrMenu(this.value)">
+                    <small>Cole a URL de um QR Code gerado externamente. Apenas para uso interno (imprimir / telão).</small>
+                    <div id="qrMenuPreviewContainer" class="qr-preview-box">
+                        ${cfg.qrCodeMenu
+                            ? `<img src="${cfg.qrCodeMenu}" alt="QR Menu">`
+                            : `<span style="font-size:.75rem;color:var(--text-muted);">Nenhuma imagem configurada</span>`}
                     </div>
-                    <div id="qrPreviewContainer" class="preview-container">
-                        ${configuracoes.qrCodePix ? `<div class="image-preview-uploaded"><img src="${configuracoes.qrCodePix}" alt="QR Code Preview"></div>` : ''}
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="https://exceedparkcardapio.vercel.app/menu.html" target="_blank"
+                            class="btn-secondary" style="font-size:.8rem;padding:7px 14px;text-decoration:none;">🔗 Abrir Menu</a>
+                        <button type="button" class="btn-secondary" style="font-size:.8rem;padding:7px 14px;"
+                            onclick="window.gerarQrMenuExterno()">⚙️ Gerar QR Code</button>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="config-section">
+            <h3 class="config-title">🌐 Domínios e Links do Projeto</h3>
+            <div class="config-grid">
+                <div class="config-field full-width">
+                    <label>Links <span style="color:var(--text-muted);font-weight:400;">(um por linha)</span></label>
+                    <textarea id="configDominios" rows="4" class="config-input"
+                        placeholder="https://exceedparkcardapio.vercel.app" style="resize:vertical;">${cfg.dominios||''}</textarea>
+                    <small>Atalhos para acessar rapidamente os links do projeto.</small>
+                </div>
+                <div class="config-field full-width" id="dominiosListContainer">
+                    ${renderizarListaDominios(cfg.dominios||'')}
                 </div>
             </div>
         </div>
         <div class="config-actions">
             <button class="btn-primary" onclick="salvarConfiguracoes()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Salvar Configurações
             </button>
             <button class="btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
         </div>
-    `;
-    setupLogoUpload();
+    ${panelClose()}`;
+
+    // Live previews
+    document.getElementById('configLogoUrl')?.addEventListener('input', e => {
+        const c = document.getElementById('logoPreviewContainer');
+        if (!c) return;
+        c.innerHTML = e.target.value
+            ? `<div class="image-preview-uploaded"><img src="${e.target.value}" style="max-height:72px;border-radius:8px;" onerror="this.parentElement.innerHTML='<span style=color:#ef4444;font-size:.8rem>URL inválida</span>'"></div>`
+            : '';
+    });
+
+    document.getElementById('configDominios')?.addEventListener('input', e => {
+        const c = document.getElementById('dominiosListContainer');
+        if (c) c.innerHTML = renderizarListaDominios(e.target.value);
+    });
 }
 
-function setupLogoUpload() {
-    const logoUploadBtn = document.getElementById('btnUploadLogo');
-    const logoFileInput = document.getElementById('logoFileInput');
-    const qrUploadBtn = document.getElementById('btnUploadQR');
-    const qrFileInput = document.getElementById('qrFileInput');
-    
-    if (logoUploadBtn && logoFileInput) {
-        logoUploadBtn.addEventListener('click', () => logoFileInput.click());
-        logoFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) await uploadImagem(file, 'logos', 'logoUrl');
-        });
-    }
-    if (qrUploadBtn && qrFileInput) {
-        qrUploadBtn.addEventListener('click', () => qrFileInput.click());
-        qrFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) await uploadImagem(file, 'pix', 'qrCodePix');
-        });
-    }
+function renderizarListaDominios(texto) {
+    if (!texto?.trim()) return '';
+    const links = texto.split('\n').map(l=>l.trim()).filter(Boolean);
+    if (!links.length) return '';
+    return `<div class="dominios-list">${links.map(lk=>`
+        <div class="dominio-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <a href="${lk}" target="_blank">${lk}</a>
+            <button onclick="navigator.clipboard.writeText('${lk}').then(()=>showToast('Copiado!','success'))"
+                style="background:transparent;border:none;cursor:pointer;color:var(--text-muted);padding:2px 6px;border-radius:4px;" title="Copiar">📋</button>
+        </div>`).join('')}</div>`;
 }
 
-async function uploadImagem(file, pasta, campoConfig) {
-    try {
-        if (!file.type.startsWith('image/')) { showToast('Por favor, selecione uma imagem válida', 'error'); return; }
-        if (file.size > 5 * 1024 * 1024) { showToast('Imagem muito grande! Máximo 5MB', 'error'); return; }
-        showLoading();
-        const timestamp = Date.now();
-        const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const storageRef = ref(storage, `${pasta}/${fileName}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
-        if (inputField) inputField.value = downloadURL;
-        const previewContainer = campoConfig === 'logoUrl' ? document.getElementById('logoPreviewContainer') : document.getElementById('qrPreviewContainer');
-        if (previewContainer) {
-            previewContainer.innerHTML = `<div class="image-preview-uploaded"><img src="${downloadURL}" alt="Preview"><button class="btn-remove-image" onclick="removerImagemPreview('${campoConfig}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Remover</button></div>`;
-        }
-        configuracoes[campoConfig] = downloadURL;
-        showToast('Imagem enviada com sucesso!', 'success');
-        hideLoading();
-    } catch (error) {
-        console.error('Erro ao fazer upload:', error);
-        showToast('Erro ao enviar imagem.', 'error');
-        hideLoading();
-    }
-}
-
-window.removerImagemPreview = function(campoConfig) {
-    const inputField = document.getElementById(`config${capitalizeFirst(campoConfig)}`);
-    if (inputField) inputField.value = '';
-    const previewContainer = campoConfig === 'logoUrl' ? document.getElementById('logoPreviewContainer') : document.getElementById('qrPreviewContainer');
-    if (previewContainer) previewContainer.innerHTML = '';
-    showToast('Imagem removida. Clique em Salvar para aplicar.', 'info');
+window.previewQrMenu = function(url) {
+    const c = document.getElementById('qrMenuPreviewContainer');
+    if (!c) return;
+    c.innerHTML = url
+        ? `<img src="${url}" alt="QR Menu" onerror="this.parentElement.innerHTML='<span style=font-size:.75rem;color:#ef4444>URL inválida</span>'">`
+        : `<span style="font-size:.75rem;color:var(--text-muted);">Nenhuma imagem configurada</span>`;
 };
 
-function capitalizeFirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+window.gerarQrMenuExterno = function() {
+    window.open('https://www.qr-code-generator.com/?url='+encodeURIComponent('https://exceedparkcardapio.vercel.app/menu.html'),'_blank');
+};
+
+function getValOr(id, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return fallback;
+    return el.type==='checkbox' ? el.checked : (el.value ?? fallback);
+}
 
 window.salvarConfiguracoes = async function() {
     try {
         showLoading();
-        const novasConfigs = {
-            nomeCardapio: document.getElementById('configNome').value,
-            logoUrl: document.getElementById('configLogoUrl').value,
-            corPrimaria: document.getElementById('configCorPrimaria').value,
-            corSecundaria: document.getElementById('configCorSecundaria').value,
-            fonte: document.getElementById('configFonte').value,
-            tituloBemVindo: document.getElementById('configTituloBemVindo').value,
-            endereco: document.getElementById('configEndereco').value,
-            whatsApp: document.getElementById('configWhatsApp').value,
-            status: document.getElementById('configStatus').value,
-            servicoLocal: document.getElementById('configServicoLocal').checked,
-            servicoRetirada: document.getElementById('configServicoRetirada').checked,
-            servicoDelivery: document.getElementById('configServicoDelivery').checked,
-            carrinhoAtivo: document.getElementById('configCarrinho').checked,
-            chavePix: document.getElementById('configChavePix').value,
-            qrCodePix: document.getElementById('configQrCodePix').value
+        const n = {
+            nomeCardapio:    getValOr('configNome',           configuracoes.nomeCardapio),
+            logoUrl:         getValOr('configLogoUrl',        configuracoes.logoUrl) || 'img/logo.jpg',
+            logoLink:        getValOr('configLogoLink',       configuracoes.logoLink),
+            corPrimaria:     getValOr('configCorPrimaria',    configuracoes.corPrimaria),
+            corSecundaria:   getValOr('configCorSecundaria',  configuracoes.corSecundaria),
+            fonte:           getValOr('configFonte',          configuracoes.fonte),
+            tituloBemVindo:  getValOr('configTituloBemVindo', configuracoes.tituloBemVindo),
+            endereco:        getValOr('configEndereco',       configuracoes.endereco),
+            whatsApp:        getValOr('configWhatsApp',       configuracoes.whatsApp),
+            whatsAppAtivo:   getValOr('configWhatsAppAtivo',  configuracoes.whatsAppAtivo),
+            status:          getValOr('configStatus',         configuracoes.status),
+            servicoLocal:    getValOr('configServicoLocal',   configuracoes.servicoLocal),
+            servicoRetirada: getValOr('configServicoRetirada',configuracoes.servicoRetirada),
+            servicoDelivery: getValOr('configServicoDelivery',configuracoes.servicoDelivery),
+            carrinhoAtivo:   getValOr('configCarrinho',       configuracoes.carrinhoAtivo),
+            chavePix:        getValOr('configChavePix',       configuracoes.chavePix),
+            qrCodePix:       getValOr('configQrCodePix',      configuracoes.qrCodePix),
+            qrCodeMenu:      getValOr('configQrCodeMenu',     configuracoes.qrCodeMenu),
+            dominios:        getValOr('configDominios',       configuracoes.dominios)
         };
-        await setDoc(doc(db, 'configuracoes', 'geral'), novasConfigs);
-        configuracoes = novasConfigs;
-        showToast('Configurações salvas com sucesso!', 'success');
+        await setDoc(doc(db,'configuracoes','geral'), n);
+        configuracoes = n;
+        showToast('Configurações salvas!','success');
         hideLoading();
-    } catch (error) {
-        showToast('Erro ao salvar configurações', 'error');
-        hideLoading();
-    }
+    } catch { showToast('Erro ao salvar','error'); hideLoading(); }
 };
 
 window.resetarConfiguracoes = function() {
-    if (!confirm('Tem certeza que deseja restaurar as configurações padrão?')) return;
-    configuracoes = { nomeCardapio: 'Xfood', logoUrl: '#', corPrimaria: '#3b82f6', corSecundaria: '#64748b', fonte: 'DM Sans', tituloBemVindo: '😋 Bemvindos', endereco: 'Av. das Hortências, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil', whatsApp: '5554999999999', status: 'aberto', servicoLocal: true, servicoRetirada: true, servicoDelivery: true, carrinhoAtivo: true, chavePix: '', qrCodePix: '' };
+    if (!confirm('Restaurar todos os padrões? (tudo será desativado)')) return;
+    configuracoes = {
+        nomeCardapio:'X-Food', logoUrl:'img/logo.jpg', logoLink:'',
+        corPrimaria:'#3b82f6', corSecundaria:'#64748b', fonte:'DM Sans',
+        tituloBemVindo:'Bem-vindos', endereco:'', whatsApp:'',
+        whatsAppAtivo:false, status:'fechado',
+        servicoLocal:false, servicoRetirada:false, servicoDelivery:false,
+        carrinhoAtivo:false, chavePix:'', qrCodePix:'', qrCodeMenu:'', dominios:''
+    };
     renderizarConfiguracoes();
-    showToast('Configurações restauradas! Clique em Salvar para aplicar.', 'info');
+    showToast('Padrões restaurados! Clique em Salvar para aplicar.','info');
 };
 
-// ===== PAGES =====
+// ─── PAGES ───────────────────────────────────────────────────────────────────
 function renderizarPages() {
-    const pagesContainer = document.getElementById('pagesContainer');
-    if (!pagesContainer) return;
-    const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
-    pagesContainer.innerHTML = `
-        <div class="pages-intro"><h3>📄 Links das Páginas</h3><p>Compartilhe estes links com seus clientes ou exiba em telões</p></div>
+    const pc = document.getElementById('pagesContainer');
+    if (!pc) return;
+    const base = window.location.origin + window.location.pathname.replace('admin.html','');
+    pc.innerHTML = `
+        <div class="pages-intro"><h3>📄 Links das Páginas</h3><p>Compartilhe estes links ou exiba em telões</p></div>
         <div class="pages-grid">
             <div class="page-card">
-                <div class="page-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div>
-                <h4>Cardápio Digital</h4>
-                <p>Página principal onde clientes visualizam produtos e fazem pedidos</p>
-                <div class="page-url"><input type="text" value="${baseUrl}index.html" readonly class="url-input" id="urlCardapio"><button class="btn-copy" onclick="copiarUrl('urlCardapio')">Copiar</button></div>
-                <div class="page-actions"><a href="${baseUrl}index.html" target="_blank" class="btn-page">Abrir Cardápio</a><button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}index.html')">Gerar QR Code</button></div>
+                <div class="page-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div>
+                <h4>Cardápio Digital</h4><p>Página principal com produtos e pedidos</p>
+                <div class="page-url"><input type="text" value="${base}index.html" readonly class="url-input" id="urlCardapio"><button class="btn-copy" onclick="copiarUrl('urlCardapio')">Copiar</button></div>
+                <div class="page-actions"><a href="${base}index.html" target="_blank" class="btn-page">Abrir</a><button class="btn-page secondary" onclick="gerarQRCode('${base}index.html')">QR Code</button></div>
             </div>
             <div class="page-card">
-                <div class="page-icon orange"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
-                <h4>Acompanhamento de Pedidos</h4>
-                <p>Telão público mostrando todos os pedidos em tempo real</p>
-                <div class="page-url"><input type="text" value="${baseUrl}Pedidos.html" readonly class="url-input" id="urlPedidos"><button class="btn-copy" onclick="copiarUrl('urlPedidos')">Copiar</button></div>
-                <div class="page-actions"><a href="${baseUrl}Pedidos.html" target="_blank" class="btn-page">Abrir Acompanhamento</a><button class="btn-page secondary" onclick="gerarQRCode('${baseUrl}Pedidos.html')">Gerar QR Code</button></div>
+                <div class="page-icon orange"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <h4>Acompanhamento de Pedidos</h4><p>Telão público em tempo real</p>
+                <div class="page-url"><input type="text" value="${base}Pedidos.html" readonly class="url-input" id="urlPedidos"><button class="btn-copy" onclick="copiarUrl('urlPedidos')">Copiar</button></div>
+                <div class="page-actions"><a href="${base}Pedidos.html" target="_blank" class="btn-page">Abrir</a><button class="btn-page secondary" onclick="gerarQRCode('${base}Pedidos.html')">QR Code</button></div>
             </div>
         </div>
-        <div class="modal" id="qrModal" style="display: none;"><div class="modal-overlay" onclick="fecharQRModal()"></div><div class="modal-content qr-modal-content"><button class="modal-close" onclick="fecharQRModal()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><h3>QR Code Gerado</h3><div id="qrCodeContainer"></div><p class="qr-instructions">Escaneie ou clique com botão direito para salvar</p></div></div>
-    `;
+        <div class="modal" id="qrModal" style="display:none;"><div class="modal-overlay" onclick="fecharQRModal()"></div><div class="modal-content qr-modal-content"><button class="modal-close" onclick="fecharQRModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><h3>QR Code Gerado</h3><div id="qrCodeContainer"></div><p class="qr-instructions">Clique com botão direito para salvar</p></div></div>`;
 }
-
-window.copiarUrl = function(inputId) {
-    const input = document.getElementById(inputId);
-    input.select();
-    document.execCommand('copy');
-    showToast('Link copiado!', 'success');
+window.copiarUrl = id => { const e = document.getElementById(id); if (!e) return; e.select(); document.execCommand('copy'); showToast('Link copiado!','success'); };
+window.gerarQRCode = url => {
+    const m = document.getElementById('qrModal'), c = document.getElementById('qrCodeContainer');
+    if (!m||!c) return;
+    c.innerHTML = `<img src="https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(url)}" style="max-width:100%;border-radius:8px;">`;
+    m.style.display = 'flex';
 };
+window.fecharQRModal = () => { const m=document.getElementById('qrModal'); if(m) m.style.display='none'; };
 
-window.gerarQRCode = function(url) {
-    const modal = document.getElementById('qrModal');
-    const container = document.getElementById('qrCodeContainer');
-    container.innerHTML = `<img src="https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(url)}" alt="QR Code" style="max-width: 100%; border-radius: 8px;">`;
-    modal.style.display = 'flex';
-};
-
-window.fecharQRModal = function() { document.getElementById('qrModal').style.display = 'none'; };
-
-// ===== DASHBOARD =====
-function calcularRankingProdutos() {
-    const contagemProdutos = {};
-    pedidos.forEach(pedido => {
-        pedido.itens.forEach(item => {
-            if (!contagemProdutos[item.nome]) {
-                const produtoOriginal = produtos.find(p => p.nome === item.nome);
-                contagemProdutos[item.nome] = { nome: item.nome, quantidade: 0, categoria: produtoOriginal?.categoria || 'Sem categoria' };
-            }
-            contagemProdutos[item.nome].quantidade += item.quantidade;
-        });
-    });
-    return Object.values(contagemProdutos).sort((a, b) => b.quantidade - a.quantidade).slice(0, 10);
-}
-
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
 function atualizarDashboard() {
-    const dashboardContainer = document.getElementById('dashboardContainer');
-    if (!dashboardContainer) return;
-    const totalProdutos = produtos.length;
-    const produtosAtivos = produtos.filter(p => p.ativo !== false).length;
-    const produtosInativos = totalProdutos - produtosAtivos;
-    const totalPedidos = pedidos.length;
-    const pedidosNovos = pedidos.filter(p => p.status === 'novo').length;
-    const pedidosPreparando = pedidos.filter(p => p.status === 'preparando').length;
-    const pedidosProntos = pedidos.filter(p => p.status === 'pronto').length;
-    const produtosPorCategoria = {};
-    produtos.forEach(p => {
-        const cat = p.categoria || 'Sem categoria';
-        produtosPorCategoria[cat] = (produtosPorCategoria[cat] || 0) + 1;
-    });
-    const rankingProdutos = calcularRankingProdutos();
-    const carrinhoAtivo = configuracoes.carrinhoAtivo !== false;
-    
-    dashboardContainer.innerHTML = `
+    const dc = document.getElementById('dashboardContainer');
+    if (!dc) return;
+    const total  = produtos.length;
+    const ativos = produtos.filter(p=>p.ativo!==false).length;
+    const totPed = pedidos.length;
+    const novos  = pedidos.filter(p=>p.status==='novo').length;
+    const prep   = pedidos.filter(p=>p.status==='preparando').length;
+    const prontos= pedidos.filter(p=>p.status==='pronto').length;
+    const porCat = {};
+    produtos.forEach(p => { const c=p.categoria||'Sem categoria'; porCat[c]=(porCat[c]||0)+1; });
+    const ranking = calcularRanking();
+    const carrinhoOk = configuracoes.carrinhoAtivo===true;
+
+    dc.innerHTML = `
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div><div class="stat-info"><span class="stat-label">Total de Produtos</span><span class="stat-value">${totalProdutos}</span></div></div>
-            <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></div><div class="stat-info"><span class="stat-label">Produtos Ativos</span><span class="stat-value">${produtosAtivos}</span></div></div>
-            <div class="stat-card"><div class="stat-icon gray"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></div><div class="stat-info"><span class="stat-label">Produtos Inativos</span><span class="stat-value">${produtosInativos}</span></div></div>
-            <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="stat-info"><span class="stat-label">Total de Pedidos</span><span class="stat-value">${totalPedidos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div><div class="stat-info"><span class="stat-label">Total Produtos</span><span class="stat-value">${total}</span></div></div>
+            <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div class="stat-info"><span class="stat-label">Ativos</span><span class="stat-value">${ativos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon gray"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="stat-info"><span class="stat-label">Inativos</span><span class="stat-value">${total-ativos}</span></div></div>
+            <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="stat-info"><span class="stat-label">Total Pedidos</span><span class="stat-value">${totPed}</span></div></div>
         </div>
         <div class="charts-grid">
-            <div class="chart-card"><h3 class="chart-title">Produtos por Categoria</h3><div class="chart-bars">${Object.entries(produtosPorCategoria).map(([cat, count]) => { const percentage = (count / totalProdutos) * 100; return `<div class="chart-bar-item"><div class="chart-bar-label"><span>${cat}</span><span>${count}</span></div><div class="chart-bar-track"><div class="chart-bar-fill" style="width: ${percentage}%"></div></div></div>`; }).join('')}</div></div>
-            <div class="chart-card"><h3 class="chart-title">Status dos Pedidos</h3><div class="chart-bars"><div class="chart-bar-item"><div class="chart-bar-label"><span>Novos</span><span>${pedidosNovos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill blue" style="width: ${totalPedidos > 0 ? (pedidosNovos / totalPedidos) * 100 : 0}%"></div></div></div><div class="chart-bar-item"><div class="chart-bar-label"><span>Preparando</span><span>${pedidosPreparando}</span></div><div class="chart-bar-track"><div class="chart-bar-fill orange" style="width: ${totalPedidos > 0 ? (pedidosPreparando / totalPedidos) * 100 : 0}%"></div></div></div><div class="chart-bar-item"><div class="chart-bar-label"><span>Prontos</span><span>${pedidosProntos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill green" style="width: ${totalPedidos > 0 ? (pedidosProntos / totalPedidos) * 100 : 0}%"></div></div></div></div></div>
+            <div class="chart-card">
+                <h3 class="chart-title">Produtos por Categoria</h3>
+                <div class="chart-bars">${Object.entries(porCat).map(([c,n])=>`<div class="chart-bar-item"><div class="chart-bar-label"><span>${c}</span><span>${n}</span></div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${total>0?(n/total)*100:0}%"></div></div></div>`).join('')}</div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Status dos Pedidos</h3>
+                <div class="chart-bars">
+                    <div class="chart-bar-item"><div class="chart-bar-label"><span>Novos</span><span>${novos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill blue" style="width:${totPed>0?(novos/totPed)*100:0}%"></div></div></div>
+                    <div class="chart-bar-item"><div class="chart-bar-label"><span>Preparando</span><span>${prep}</span></div><div class="chart-bar-track"><div class="chart-bar-fill orange" style="width:${totPed>0?(prep/totPed)*100:0}%"></div></div></div>
+                    <div class="chart-bar-item"><div class="chart-bar-label"><span>Prontos</span><span>${prontos}</span></div><div class="chart-bar-track"><div class="chart-bar-fill green" style="width:${totPed>0?(prontos/totPed)*100:0}%"></div></div></div>
+                </div>
+            </div>
         </div>
         <div class="ranking-section">
-            <h3 class="chart-title">🏆 Ranking de Produtos Mais Pedidos ${!carrinhoAtivo ? '<span class="ranking-status disabled">Ranking Indisponível</span>' : '<span class="ranking-status enabled">Ranking Ativado</span>'}</h3>
-            ${!carrinhoAtivo ? `<div class="ranking-disabled-message"><p>O carrinho de compras está desativado.</p></div>` : rankingProdutos.length === 0 ? `<div class="ranking-disabled-message"><p>Nenhum pedido registrado ainda.</p></div>` : `<div class="ranking-list">${rankingProdutos.map((produto, index) => { const maxQuantidade = rankingProdutos[0].quantidade; const percentage = (produto.quantidade / maxQuantidade) * 100; let medalColor = '#64748b'; if (index === 0) medalColor = '#fbbf24'; else if (index === 1) medalColor = '#9ca3af'; else if (index === 2) medalColor = '#cd7f32'; return `<div class="ranking-item"><div class="ranking-position" style="background-color: ${medalColor}">${index + 1}</div><div class="ranking-info"><div class="ranking-product-name">${produto.nome}</div><div class="ranking-product-category">${produto.categoria}</div></div><div class="ranking-bar"><div class="ranking-bar-fill" style="width: ${percentage}%"></div></div><div class="ranking-quantity">${produto.quantidade} ${produto.quantidade === 1 ? 'pedido' : 'pedidos'}</div></div>`; }).join('')}</div>`}
-        </div>
-    `;
+            <h3 class="chart-title">🏆 Ranking de Produtos <span class="ranking-status ${carrinhoOk?'enabled':'disabled'}">${carrinhoOk?'Ativo':'Carrinho desativado'}</span></h3>
+            ${!carrinhoOk||!ranking.length
+                ? `<div class="ranking-disabled-message"><p>${!carrinhoOk?'Carrinho desativado.':'Nenhum pedido registrado.'}</p></div>`
+                : `<div class="ranking-list">${ranking.map((p,i)=>{
+                    const cores=['#fbbf24','#9ca3af','#cd7f32'];
+                    return `<div class="ranking-item"><div class="ranking-position" style="background:${cores[i]||'#64748b'}">${i+1}</div><div class="ranking-info"><div class="ranking-product-name">${p.nome}</div><div class="ranking-product-category">${p.categoria}</div></div><div class="ranking-bar"><div class="ranking-bar-fill" style="width:${(p.quantidade/ranking[0].quantidade)*100}%"></div></div><div class="ranking-quantity">${p.quantidade} pedido(s)</div></div>`;
+                }).join('')}</div>`}
+        </div>`;
 }
 
-window.navegarParaConfiguracoes = function() {
-    const configNav = document.querySelector('[data-section="configuracoes"]');
-    if (configNav) configNav.click();
-    return false;
-};
+function calcularRanking() {
+    const map = {};
+    pedidos.forEach(pd => {
+        (pd.itens||[]).forEach(it => {
+            if (!map[it.nome]) { const o=produtos.find(p=>p.nome===it.nome); map[it.nome]={nome:it.nome,quantidade:0,categoria:o?.categoria||''}; }
+            map[it.nome].quantidade += it.quantidade;
+        });
+    });
+    return Object.values(map).sort((a,b)=>b.quantidade-a.quantidade).slice(0,10);
+}
 
-// ===== CATEGORIAS =====
+// ─── CATEGORIAS ──────────────────────────────────────────────────────────────
 async function carregarCategorias() {
     try {
-        const categoriasRef = collection(db, 'categorias');
-        onSnapshot(categoriasRef, (snapshot) => {
+        onSnapshot(collection(db,'categorias'), snap => {
             categorias = [];
-            snapshot.forEach((doc) => { categorias.push({ id: doc.id, ...doc.data() }); });
-            renderizarCategorias();
-            atualizarSelectCategorias();
-            renderizarFiltrosCategorias();
+            snap.forEach(d => categorias.push({id:d.id,...d.data()}));
+            renderizarCategorias(); atualizarSelectCategorias(); renderizarFiltrosCategorias();
         });
-    } catch (error) {
-        showToast('Erro ao carregar categorias', 'error');
-    }
+    } catch { showToast('Erro ao carregar categorias','error'); }
 }
 
 function renderizarCategorias() {
     if (!categoriesList) return;
-    if (categorias.length === 0) {
-        categoriesList.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;"><p>Nenhuma categoria cadastrada</p></div>`;
-        return;
-    }
+    if (!categorias.length) { categoriesList.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhuma categoria</div>'; return; }
     categoriesList.innerHTML = categorias.map(cat => {
-        const produtosDaCategoria = produtos.filter(p => p.categoria === cat.nome);
-        const isExpandida = categoriaExpandida === cat.id;
-        return `
-            <div class="category-item-wrapper">
-                <div class="category-item" onclick="window.toggleCategoria('${cat.id}')">
-                    <div class="category-info"><span class="category-name">${cat.nome}</span><span class="category-count">${produtosDaCategoria.length} produto(s)</span></div>
-                    <div class="category-actions" onclick="event.stopPropagation()">
-                        <button class="btn-icon-sm" onclick="window.editarCategoria('${cat.id}')">✏️</button>
-                        <button class="btn-icon-sm danger" onclick="window.excluirCategoria('${cat.id}')">🗑️</button>
-                    </div>
+        const prods = produtos.filter(p=>p.categoria===cat.nome);
+        const exp   = categoriaExpandida===cat.id;
+        return `<div class="category-item-wrapper">
+            <div class="category-item" onclick="window.toggleCategoria('${cat.id}')">
+                <div class="category-info"><span class="category-name">${cat.nome}</span><span class="category-count">${prods.length} produto(s)</span></div>
+                <div class="category-actions" onclick="event.stopPropagation()">
+                    <button class="btn-icon-sm" onclick="window.editarCategoria('${cat.id}')">✏️</button>
+                    <button class="btn-icon-sm danger" onclick="window.excluirCategoria('${cat.id}')">🗑️</button>
                 </div>
-                ${isExpandida ? `<div class="category-products">${produtosDaCategoria.length > 0 ? produtosDaCategoria.map(p => `<div class="category-product-item"><span>${p.nome}</span><span class="category-product-price">R$ ${formatarPreco(p.preco)}</span><span class="category-product-status ${p.ativo !== false ? 'active' : 'inactive'}">${p.ativo !== false ? 'Ativo' : 'Inativo'}</span></div>`).join('') : '<p style="color: #666; padding: 16px; text-align: center;">Nenhum produto nesta categoria</p>'}</div>` : ''}
             </div>
-        `;
+            ${exp?`<div class="category-products">${prods.length
+                ?prods.map(p=>`<div class="category-product-item"><span>${p.nome}</span><span class="category-product-price">R$ ${fmt(p.preco)}</span><span class="category-product-status ${p.ativo!==false?'active':'inactive'}">${p.ativo!==false?'Ativo':'Inativo'}</span></div>`).join('')
+                :'<p style="color:var(--text-muted);padding:16px;text-align:center;">Nenhum produto</p>'
+            }</div>`:''}</div>`;
     }).join('');
 }
 
-window.toggleCategoria = function(categoriaId) {
-    categoriaExpandida = categoriaExpandida === categoriaId ? null : categoriaId;
-    renderizarCategorias();
+window.toggleCategoria  = id => { categoriaExpandida = categoriaExpandida===id?null:id; renderizarCategorias(); };
+window.editarCategoria  = id => abrirModalCategoria(id);
+window.excluirCategoria = async id => {
+    if (!confirm('Excluir esta categoria?')) return;
+    try { showLoading(); await deleteDoc(doc(db,'categorias',id)); showToast('Excluída!','success'); hideLoading(); }
+    catch { showToast('Erro','error'); hideLoading(); }
 };
 
 function atualizarSelectCategorias() {
-    const select = document.getElementById('productCategory');
-    if (!select) return;
-    select.innerHTML = `<option value="">Selecione uma categoria</option>${categorias.map(cat => `<option value="${cat.nome}">${cat.nome}</option>`).join('')}`;
+    const s = document.getElementById('productCategory');
+    if (!s) return;
+    s.innerHTML = '<option value="">Selecione</option>' + categorias.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
 }
 
-function abrirModalCategoria(categoriaId = null) {
-    editandoCategoria = categoriaId;
-    if (categoriaId) {
-        const categoria = categorias.find(c => c.id === categoriaId);
-        document.getElementById('categoryModalTitle').textContent = 'Editar Categoria';
-        document.getElementById('categoryName').value = categoria.nome;
-    } else {
-        document.getElementById('categoryModalTitle').textContent = 'Nova Categoria';
-        categoryForm.reset();
-    }
+function abrirModalCategoria(id=null) {
+    editandoCategoria = id;
+    if (id) { document.getElementById('categoryModalTitle').textContent='Editar Categoria'; document.getElementById('categoryName').value=categorias.find(x=>x.id===id)?.nome||''; }
+    else    { document.getElementById('categoryModalTitle').textContent='Nova Categoria'; categoryForm.reset(); }
     categoryModal.classList.add('active');
 }
-
-function fecharModalCategoria() {
-    categoryModal.classList.remove('active');
-    categoryForm.reset();
-    editandoCategoria = null;
-}
+function fecharModalCategoria() { categoryModal.classList.remove('active'); categoryForm.reset(); editandoCategoria=null; }
 
 async function salvarCategoria(e) {
     e.preventDefault();
     const nome = document.getElementById('categoryName').value.trim();
     try {
         showLoading();
-        if (editandoCategoria) {
-            await updateDoc(doc(db, 'categorias', editandoCategoria), { nome });
-            showToast('Categoria atualizada!', 'success');
-        } else {
-            await addDoc(collection(db, 'categorias'), { nome });
-            showToast('Categoria criada!', 'success');
-        }
-        fecharModalCategoria();
-        hideLoading();
-    } catch (error) {
-        showToast('Erro ao salvar categoria', 'error');
-        hideLoading();
-    }
+        if (editandoCategoria) await updateDoc(doc(db,'categorias',editandoCategoria),{nome});
+        else await addDoc(collection(db,'categorias'),{nome});
+        showToast(editandoCategoria?'Atualizada!':'Criada!','success');
+        fecharModalCategoria(); hideLoading();
+    } catch { showToast('Erro','error'); hideLoading(); }
 }
 
-window.editarCategoria = function(categoriaId) { abrirModalCategoria(categoriaId); };
-window.excluirCategoria = async function(categoriaId) {
-    if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
-    try {
-        showLoading();
-        await deleteDoc(doc(db, 'categorias', categoriaId));
-        showToast('Categoria excluída!', 'success');
-        hideLoading();
-    } catch (error) {
-        showToast('Erro ao excluir categoria', 'error');
-        hideLoading();
-    }
-};
-
-// ===== PRODUTOS =====
+// ─── PRODUTOS ────────────────────────────────────────────────────────────────
 function renderizarFiltrosCategorias() {
-    const filtrosContainer = document.getElementById('categoryFilters');
-    if (!filtrosContainer) return;
-    filtrosContainer.innerHTML = `
-        <button class="category-filter-btn ${filtroCategoriaProduto === 'all' ? 'active' : ''}" onclick="window.filtrarPorCategoria('all')">Todos (${produtos.length})</button>
-        ${categorias.map(cat => { const count = produtos.filter(p => p.categoria === cat.nome).length; return `<button class="category-filter-btn ${filtroCategoriaProduto === cat.nome ? 'active' : ''}" onclick="window.filtrarPorCategoria('${cat.nome}')">${cat.nome} (${count})</button>`; }).join('')}
-    `;
+    const fc = document.getElementById('categoryFilters');
+    if (!fc) return;
+    fc.innerHTML = `<button class="category-filter-btn ${filtroCategoriaProduto==='all'?'active':''}" onclick="window.filtrarPorCategoria('all')">Todos (${produtos.length})</button>`
+        + categorias.map(c=>{const n=produtos.filter(p=>p.categoria===c.nome).length; return `<button class="category-filter-btn ${filtroCategoriaProduto===c.nome?'active':''}" onclick="window.filtrarPorCategoria('${c.nome}')">${c.nome} (${n})</button>`;}).join('');
 }
-
-window.filtrarPorCategoria = function(categoria) {
-    filtroCategoriaProduto = categoria;
-    renderizarFiltrosCategorias();
-    renderizarProdutos();
-};
+window.filtrarPorCategoria = cat => { filtroCategoriaProduto=cat; renderizarFiltrosCategorias(); renderizarProdutos(); };
 
 async function carregarProdutos() {
     try {
-        const produtosRef = collection(db, 'produtos');
-        onSnapshot(produtosRef, (snapshot) => {
+        onSnapshot(collection(db,'produtos'), snap => {
             produtos = [];
-            snapshot.forEach((doc) => { produtos.push({ id: doc.id, ...doc.data() }); });
-            renderizarFiltrosCategorias();
-            renderizarProdutos();
-            atualizarDashboard();
+            snap.forEach(d => produtos.push({id:d.id,...d.data()}));
+            renderizarFiltrosCategorias(); renderizarProdutos(); atualizarDashboard();
         });
-    } catch (error) {
-        showToast('Erro ao carregar produtos', 'error');
-    }
+    } catch { showToast('Erro ao carregar produtos','error'); }
 }
 
 function renderizarProdutos() {
     if (!productsGrid) return;
-    let produtosFiltrados = produtos;
-    if (filtroCategoriaProduto !== 'all') produtosFiltrados = produtos.filter(p => p.categoria === filtroCategoriaProduto);
-    
-    if (produtosFiltrados.length === 0) {
-        productsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #666;"><p>Nenhum produto encontrado${filtroCategoriaProduto !== 'all' ? ' nesta categoria' : ''}</p></div>`;
-        return;
-    }
-    
-    productsGrid.innerHTML = produtosFiltrados.map(produto => {
-        const isAtivo = produto.ativo !== false;
-        const qtdAdicionais = produto.adicionais ? produto.adicionais.length : 0;
-        const imagemHTML = produto.imagem ? 
-            `<img src="${produto.imagem}" alt="${produto.nome}" class="product-image-admin" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="placeholder-image" style="display: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Sem imagem</span></div>` : 
-            `<div class="placeholder-image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Sem imagem</span></div>`;
-        
+    const lista = filtroCategoriaProduto==='all' ? produtos : produtos.filter(p=>p.categoria===filtroCategoriaProduto);
+    if (!lista.length) { productsGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">Nenhum produto</div>'; return; }
+    productsGrid.innerHTML = lista.map(p => {
+        const ativo = p.ativo!==false;
+        const qtdAd = p.adicionais?.length||0;
+        const imgH  = p.imagem
+            ? `<img src="${p.imagem}" alt="${p.nome}" class="product-image-admin" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="placeholder-image" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem imagem</span></div>`
+            : `<div class="placeholder-image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem imagem</span></div>`;
         return `
-            <div class="product-card-admin ${!isAtivo ? 'product-inactive' : ''}">
-                <button class="btn-visibility ${isAtivo ? 'active' : ''}" onclick="window.toggleVisibilidadeProduto('${produto.id}', ${isAtivo})" title="${isAtivo ? 'Ocultar' : 'Mostrar'}">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${isAtivo ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'}</svg>
+            <div class="product-card-admin ${!ativo?'product-inactive':''}">
+                <button class="btn-visibility ${ativo?'active':''}" onclick="window.toggleVisibilidadeProduto('${p.id}',${ativo})" title="${ativo?'Ocultar':'Mostrar'}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ativo?'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>':'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg>
                 </button>
-                ${imagemHTML}
+                ${imgH}
                 <div class="product-info-admin">
-                    <h3 class="product-name-admin">${produto.nome}</h3>
-                    <p class="product-category-admin">${produto.categoria || 'Sem categoria'}</p>
-                    ${qtdAdicionais > 0 ? `<p style="font-size:0.78rem; color: #3b82f6; font-weight:600; margin: 4px 0 0;">🔧 ${qtdAdicionais} adicional(is)</p>` : ''}
-                    <div class="product-price-admin">R$ ${formatarPreco(produto.preco)}</div>
+                    <h3 class="product-name-admin">${p.nome}</h3>
+                    <p class="product-category-admin">${p.categoria||'Sem categoria'}</p>
+                    ${qtdAd>0?`<p style="font-size:.73rem;color:var(--accent);font-weight:600;margin:4px 0 0;">🔧 ${qtdAd} adicional(is)</p>`:''}
+                    <div class="product-price-admin">R$ ${fmt(p.preco)}</div>
                     <div class="product-actions">
-                        <button class="btn-icon" onclick="window.editarProduto('${produto.id}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        <button class="btn-icon" onclick="window.editarProduto('${p.id}')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Editar
                         </button>
-                        <button class="btn-icon danger" onclick="window.excluirProduto('${produto.id}')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button class="btn-icon danger" onclick="window.excluirProduto('${p.id}')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Excluir
                         </button>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 }
 
-window.toggleVisibilidadeProduto = async function(produtoId, ativoAtual) {
-    try {
-        await updateDoc(doc(db, 'produtos', produtoId), { ativo: !ativoAtual });
-        showToast(`Produto ${!ativoAtual ? 'ativado' : 'desativado'}!`, 'success');
-    } catch (error) {
-        showToast('Erro ao alterar visibilidade', 'error');
-    }
+window.toggleVisibilidadeProduto = async (id, ativo) => {
+    try { await updateDoc(doc(db,'produtos',id),{ativo:!ativo}); showToast(!ativo?'Ativado!':'Desativado!','success'); }
+    catch { showToast('Erro','error'); }
 };
 
-// ===== MODAL PRODUTO COM ADICIONAIS =====
-
-function abrirModalProduto(produtoId = null) {
-    editandoProduto = produtoId;
+// ─── MODAL PRODUTO ────────────────────────────────────────────────────────────
+function abrirModalProduto(id=null) {
+    editandoProduto = id;
     injetarCampoImagemUrl();
     injetarSecaoAdicionais();
-
-    if (!produtoId) {
-        if (modalTitle) modalTitle.textContent = 'Novo Produto';
-        productForm.reset();
-        limparPreviewImagem();
-        adicionaisTemp = [];
-        renderizarAdicionaisAdmin();
-        productModal.classList.add('active');
-        return;
+    if (!id) {
+        if (modalTitle) modalTitle.textContent='Novo Produto';
+        productForm.reset(); limparPreviewImagem();
+        adicionaisTemp=[]; renderizarAdicionaisAdmin();
+        productModal.classList.add('active'); return;
     }
-
-    const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) { showToast('Erro: produto não encontrado', 'error'); return; }
-
-    if (modalTitle) modalTitle.textContent = 'Editar Produto';
-    document.getElementById('productName').value = produto.nome ?? '';
-    document.getElementById('productPrice').value = produto.preco ?? '';
-    document.getElementById('productCategory').value = produto.categoria ?? '';
-    document.getElementById('productDescription').value = produto.descricao ?? '';
-    document.getElementById('productActive').checked = produto.ativo !== false;
-
-    const urlInput = document.getElementById('productImageUrl');
-    if (urlInput) {
-        const isUrl = produto.imagem && produto.imagem.startsWith('http');
-        urlInput.value = isUrl ? produto.imagem : '';
-    }
-
+    const p = produtos.find(x=>x.id===id);
+    if (!p) { showToast('Produto não encontrado','error'); return; }
+    if (modalTitle) modalTitle.textContent='Editar Produto';
+    document.getElementById('productName').value        = p.nome??'';
+    document.getElementById('productPrice').value       = p.preco??'';
+    document.getElementById('productCategory').value    = p.categoria??'';
+    document.getElementById('productDescription').value = p.descricao??'';
+    document.getElementById('productActive').checked    = p.ativo!==false;
+    const u = document.getElementById('productImageUrl');
+    if (u) u.value = (p.imagem?.startsWith('http')?p.imagem:'');
     if (imagePreview) {
-        if (produto.imagem) {
-            imagePreview.innerHTML = `<img src="${produto.imagem}" alt="Preview">`;
-            imagePreview.classList.add('active');
-        } else {
-            limparPreviewImagem();
-        }
+        if (p.imagem) { imagePreview.innerHTML=`<img src="${p.imagem}" alt="Preview">`; imagePreview.classList.add('active'); }
+        else limparPreviewImagem();
     }
-
-    // Carregar adicionais existentes
-    adicionaisTemp = produto.adicionais ? JSON.parse(JSON.stringify(produto.adicionais)) : [];
+    adicionaisTemp = p.adicionais ? JSON.parse(JSON.stringify(p.adicionais)) : [];
     renderizarAdicionaisAdmin();
-
     productModal.classList.add('active');
 }
 
 function injetarCampoImagemUrl() {
     if (document.getElementById('productImageUrl')) return;
-    const fileFormGroup = productImageInput?.closest('.form-group');
-    if (!fileFormGroup) return;
-    const labelArquivo = fileFormGroup.querySelector('label');
-    if (labelArquivo) labelArquivo.textContent = 'Imagem — Upload de Arquivo';
-    const urlGroup = document.createElement('div');
-    urlGroup.className = 'form-group';
-    urlGroup.id = 'formGroupImageUrl';
-    urlGroup.innerHTML = `
-        <label>Imagem — URL Externa</label>
-        <input type="url" id="productImageUrl" placeholder="https://exemplo.com/imagem.png" style="width:100%">
-        <small style="color:#888">Cole aqui um link direto para a imagem. O arquivo tem prioridade sobre a URL.</small>
-    `;
-    fileFormGroup.insertAdjacentElement('afterend', urlGroup);
+    const fg = productImageInput?.closest('.form-group');
+    if (!fg) return;
+    const lbl = fg.querySelector('label');
+    if (lbl) lbl.textContent='Imagem — Upload de Arquivo';
+    const ng = document.createElement('div');
+    ng.className='form-group'; ng.id='formGroupImageUrl';
+    ng.innerHTML=`<label>Imagem — URL Externa</label><input type="url" id="productImageUrl" placeholder="https://exemplo.com/imagem.png" style="width:100%"><small style="color:var(--text-muted)">Link direto para a imagem. Upload tem prioridade.</small>`;
+    fg.insertAdjacentElement('afterend', ng);
 }
-
-// ─────────────────────────────────────────────
-// SEÇÃO DE ADICIONAIS NO MODAL
-// ─────────────────────────────────────────────
 
 function injetarSecaoAdicionais() {
     if (document.getElementById('adminExtrasContainer')) return;
-
-    // Encontra o form-group do checkbox "ativo" para inserir depois
-    const activoGroup = document.getElementById('productActive')?.closest('.form-group');
-    if (!activoGroup) return;
-
-    const extrasGroup = document.createElement('div');
-    extrasGroup.className = 'form-group';
-    extrasGroup.id = 'adminExtrasContainer';
-    extrasGroup.innerHTML = `
-        <label>Adicionais do Produto</label>
+    const ag = document.getElementById('productActive')?.closest('.form-group');
+    if (!ag) return;
+    const eg = document.createElement('div');
+    eg.className='form-group'; eg.id='adminExtrasContainer';
+    eg.innerHTML=`<label>Adicionais</label>
         <div class="extras-admin-section">
             <div class="extras-admin-header">
                 <span id="extrasCountLabel">Nenhum adicional</span>
                 <button type="button" class="btn-add-extra" onclick="window.adicionarNovoAdicional()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    Adicionar
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar
                 </button>
             </div>
-            <div class="extras-admin-list" id="extrasAdminList">
-                <p class="extras-empty-msg">Nenhum adicional cadastrado para este produto.</p>
-            </div>
+            <div class="extras-admin-list" id="extrasAdminList"><p class="extras-empty-msg">Nenhum adicional.</p></div>
         </div>
-        <small style="color:#888">Adicionais aparecem no cardápio para o cliente calcular o preço final.</small>
-    `;
-
-    activoGroup.insertAdjacentElement('afterend', extrasGroup);
+        <small style="color:var(--text-muted)">Adicionais aparecem no cardápio.</small>`;
+    ag.insertAdjacentElement('afterend', eg);
 }
 
 function renderizarAdicionaisAdmin() {
-    const list = document.getElementById('extrasAdminList');
-    const countLabel = document.getElementById('extrasCountLabel');
+    const list=document.getElementById('extrasAdminList'), cnt=document.getElementById('extrasCountLabel');
     if (!list) return;
-
-    if (countLabel) {
-        countLabel.textContent = adicionaisTemp.length === 0 
-            ? 'Nenhum adicional' 
-            : `${adicionaisTemp.length} adicional(is)`;
-    }
-
-    if (adicionaisTemp.length === 0) {
-        list.innerHTML = `<p class="extras-empty-msg">Nenhum adicional cadastrado para este produto.</p>`;
-        return;
-    }
-
-    list.innerHTML = adicionaisTemp.map((ad, index) => `
-        <div class="extra-admin-item" data-index="${index}">
-            <input 
-                type="text" 
-                class="extra-nome-input" 
-                placeholder="Nome (ex: Cebola extra)" 
-                value="${ad.nome || ''}"
-                oninput="window.atualizarAdicionalTemp(${index}, 'nome', this.value)"
-            >
-            <div class="extra-preco-wrapper">
-                <span>R$</span>
-                <input 
-                    type="number" 
-                    class="extra-preco-input" 
-                    placeholder="0,00" 
-                    step="0.01" 
-                    min="0"
-                    value="${ad.preco || 0}"
-                    oninput="window.atualizarAdicionalTemp(${index}, 'preco', this.value)"
-                >
+    if (cnt) cnt.textContent = adicionaisTemp.length?`${adicionaisTemp.length} adicional(is)`:'Nenhum adicional';
+    if (!adicionaisTemp.length) { list.innerHTML='<p class="extras-empty-msg">Nenhum adicional.</p>'; return; }
+    list.innerHTML = adicionaisTemp.map((ad,i)=>`
+        <div class="extra-admin-item" data-index="${i}">
+            <input type="text" class="extra-nome-input" placeholder="Nome" value="${ad.nome||''}" oninput="window.atualizarAdicionalTemp(${i},'nome',this.value)">
+            <div class="extra-preco-wrapper"><span>R$</span>
+                <input type="number" class="extra-preco-input" placeholder="0,00" step="0.01" min="0" value="${ad.preco||0}" oninput="window.atualizarAdicionalTemp(${i},'preco',this.value)">
             </div>
-            <button type="button" class="btn-remove-extra" onclick="window.removerAdicionalTemp(${index})" title="Remover adicional">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
+            <button type="button" class="btn-remove-extra" onclick="window.removerAdicionalTemp(${i})">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
-        </div>
-    `).join('');
+        </div>`).join('');
 }
 
-window.adicionarNovoAdicional = function() {
-    adicionaisTemp.push({ nome: '', preco: 0 });
-    renderizarAdicionaisAdmin();
-    // Foca no último input de nome
-    setTimeout(() => {
-        const inputs = document.querySelectorAll('.extra-nome-input');
-        if (inputs.length > 0) inputs[inputs.length - 1].focus();
-    }, 50);
+window.adicionarNovoAdicional = () => {
+    adicionaisTemp.push({nome:'',preco:0}); renderizarAdicionaisAdmin();
+    setTimeout(()=>{ const inp=document.querySelectorAll('.extra-nome-input'); if(inp.length) inp[inp.length-1].focus(); },50);
 };
-
-window.atualizarAdicionalTemp = function(index, campo, valor) {
-    if (!adicionaisTemp[index]) return;
-    if (campo === 'preco') {
-        adicionaisTemp[index][campo] = parseFloat(valor) || 0;
-    } else {
-        adicionaisTemp[index][campo] = valor;
-    }
-    // Atualiza só o contador sem re-renderizar tudo (evita perder o foco)
-    const countLabel = document.getElementById('extrasCountLabel');
-    if (countLabel) {
-        countLabel.textContent = adicionaisTemp.length === 0 ? 'Nenhum adicional' : `${adicionaisTemp.length} adicional(is)`;
-    }
-};
-
-window.removerAdicionalTemp = function(index) {
-    adicionaisTemp.splice(index, 1);
-    renderizarAdicionaisAdmin();
-};
+window.atualizarAdicionalTemp = (i,c,v) => { if(adicionaisTemp[i]) adicionaisTemp[i][c]=c==='preco'?(parseFloat(v)||0):v; };
+window.removerAdicionalTemp   = i => { adicionaisTemp.splice(i,1); renderizarAdicionaisAdmin(); };
 
 function fecharModalProduto() {
-    productModal.classList.remove('active');
-    productForm.reset();
-    limparPreviewImagem();
-    const urlInput = document.getElementById('productImageUrl');
-    if (urlInput) urlInput.value = '';
-    adicionaisTemp = [];
-    editandoProduto = null;
+    productModal.classList.remove('active'); productForm.reset(); limparPreviewImagem();
+    const u=document.getElementById('productImageUrl'); if(u) u.value='';
+    adicionaisTemp=[]; editandoProduto=null;
 }
-
-function limparPreviewImagem() {
-    if (imagePreview) { imagePreview.innerHTML = ''; imagePreview.classList.remove('active'); }
-}
-
+function limparPreviewImagem() { if(imagePreview){ imagePreview.innerHTML=''; imagePreview.classList.remove('active'); } }
 function previewImagem(e) {
-    const file = e.target.files[0];
-    if (file && imagePreview) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            imagePreview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-            imagePreview.classList.add('active');
-        };
-        reader.readAsDataURL(file);
-    }
+    const f=e.target.files[0];
+    if (f&&imagePreview) { const r=new FileReader(); r.onload=ev=>{ imagePreview.innerHTML=`<img src="${ev.target.result}">`; imagePreview.classList.add('active'); }; r.readAsDataURL(f); }
 }
-
 function previewImagemUrl(url) {
     if (!imagePreview) return;
-    if (!url) {
-        if (!productImageInput?.files?.length) limparPreviewImagem();
-        return;
-    }
-    imagePreview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<span style=color:#e53e3e>URL inválida</span>'">`;
+    if (!url) { if(!productImageInput?.files?.length) limparPreviewImagem(); return; }
+    imagePreview.innerHTML=`<img src="${url}" onerror="this.parentElement.innerHTML='<span style=color:#ef4444;font-size:.8rem>URL inválida</span>'">`;
     imagePreview.classList.add('active');
 }
 
-// ─────────────────────────────────────────────
-// SALVAR PRODUTO — inclui adicionais
-// ─────────────────────────────────────────────
-
 async function salvarProduto(e) {
     e.preventDefault();
-    
-    const nome = document.getElementById('productName').value.trim();
-    const preco = parseFloat(document.getElementById('productPrice').value);
-    const categoria = document.getElementById('productCategory').value;
-    const descricao = document.getElementById('productDescription').value.trim();
-    const ativo = document.getElementById('productActive').checked;
-    const imagemFile = productImageInput.files[0];
-    const imagemUrlDigitada = (document.getElementById('productImageUrl')?.value || '').trim();
-
-    // Filtra adicionais com nome preenchido
-    const adicionaisValidos = adicionaisTemp.filter(ad => ad.nome && ad.nome.trim() !== '');
-    
+    const nome     = document.getElementById('productName').value.trim();
+    const preco    = parseFloat(document.getElementById('productPrice').value);
+    const categoria= document.getElementById('productCategory').value;
+    const descricao= document.getElementById('productDescription').value.trim();
+    const ativo    = document.getElementById('productActive').checked;
+    const imgFile  = productImageInput.files[0];
+    const imgUrl   = (document.getElementById('productImageUrl')?.value||'').trim();
+    const adVal    = adicionaisTemp.filter(a=>a.nome?.trim());
     try {
         showLoading();
-        
-        let imagemURL = null;
-        if (imagemFile) {
-            try {
-                const storageRef = ref(storage, `produtos/${Date.now()}_${imagemFile.name}`);
-                await uploadBytes(storageRef, imagemFile);
-                imagemURL = await getDownloadURL(storageRef);
-            } catch (storageError) {
-                console.warn('Erro ao fazer upload:', storageError);
-                imagemURL = null;
-            }
-        } else if (imagemUrlDigitada) {
-            imagemURL = imagemUrlDigitada;
-        } else if (editandoProduto) {
-            const produtoAntigo = produtos.find(p => p.id === editandoProduto);
-            imagemURL = produtoAntigo?.imagem || null;
-        }
-        
-        const dadosProduto = { 
-            nome, preco, categoria, descricao, ativo, 
-            imagem: imagemURL,
-            adicionais: adicionaisValidos
-        };
-        
-        if (editandoProduto) {
-            await updateDoc(doc(db, 'produtos', editandoProduto), dadosProduto);
-            showToast('Produto atualizado com sucesso!', 'success');
-        } else {
-            await addDoc(collection(db, 'produtos'), dadosProduto);
-            showToast('Produto criado com sucesso!', 'success');
-        }
-        
-        fecharModalProduto();
-        hideLoading();
-    } catch (error) {
-        console.error('Erro ao salvar produto:', error);
-        showToast('Erro ao salvar produto', 'error');
-        hideLoading();
-    }
+        let imagem = null;
+        if (imgFile) {
+            try { const sr=ref(storage,`produtos/${Date.now()}_${imgFile.name}`); await uploadBytes(sr,imgFile); imagem=await getDownloadURL(sr); }
+            catch { imagem=null; }
+        } else if (imgUrl) { imagem=imgUrl; }
+        else if (editandoProduto) { imagem=produtos.find(p=>p.id===editandoProduto)?.imagem||null; }
+        const dados={nome,preco,categoria,descricao,ativo,imagem,adicionais:adVal};
+        if (editandoProduto) { await updateDoc(doc(db,'produtos',editandoProduto),dados); showToast('Produto atualizado!','success'); }
+        else { await addDoc(collection(db,'produtos'),dados); showToast('Produto criado!','success'); }
+        fecharModalProduto(); hideLoading();
+    } catch { showToast('Erro ao salvar produto','error'); hideLoading(); }
 }
 
-window.editarProduto = function(produtoId) { abrirModalProduto(produtoId); };
-
-window.excluirProduto = async function(produtoId) {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    try {
-        showLoading();
-        await deleteDoc(doc(db, 'produtos', produtoId));
-        showToast('Produto excluído!', 'success');
-        hideLoading();
-    } catch (error) {
-        showToast('Erro ao excluir produto', 'error');
-        hideLoading();
-    }
+window.editarProduto  = id => abrirModalProduto(id);
+window.excluirProduto = async id => {
+    if (!confirm('Excluir este produto?')) return;
+    try { showLoading(); await deleteDoc(doc(db,'produtos',id)); showToast('Excluído!','success'); hideLoading(); }
+    catch { showToast('Erro','error'); hideLoading(); }
 };
 
-// ===== PEDIDOS =====
+// ─── PEDIDOS ─────────────────────────────────────────────────────────────────
 async function carregarPedidos() {
     try {
-        const pedidosRef = collection(db, 'pedidos');
-        const q = query(pedidosRef, orderBy('data', 'desc'));
-        onSnapshot(q, (snapshot) => {
-            pedidos = [];
-            snapshot.forEach((doc) => { pedidos.push({ id: doc.id, ...doc.data() }); });
-            filtrarPedidos();
-            atualizarDashboard();
+        onSnapshot(query(collection(db,'pedidos'),orderBy('data','desc')), snap => {
+            pedidos=[]; snap.forEach(d=>pedidos.push({id:d.id,...d.data()}));
+            filtrarPedidos(); atualizarDashboard();
         });
-    } catch (error) {
-        showToast('Erro ao carregar pedidos', 'error');
-    }
+    } catch { showToast('Erro ao carregar pedidos','error'); }
 }
 
 function filtrarPedidos() {
-    let pedidosFiltrados = pedidos;
-    if (filtroStatusPedido !== 'all') pedidosFiltrados = pedidos.filter(p => p.status === filtroStatusPedido);
-    renderizarPedidos(pedidosFiltrados);
+    renderizarPedidos(filtroStatusPedido==='all' ? pedidos : pedidos.filter(p=>p.status===filtroStatusPedido));
 }
 
-function renderizarPedidos(pedidosParaExibir) {
+function renderizarPedidos(lista) {
     if (!ordersList) return;
-    if (pedidosParaExibir.length === 0) {
-        ordersList.innerHTML = `<div style="text-align: center; padding: 60px; color: #666;"><p>Nenhum pedido encontrado</p></div>`;
-        return;
-    }
-    ordersList.innerHTML = pedidosParaExibir.map(pedido => {
-        const dataFormatada = pedido.data ? new Date(pedido.data.seconds * 1000).toLocaleString('pt-BR') : 'Data não disponível';
-        const statusLog = [
-            { status: 'novo', label: 'Novo', ativo: true },
-            { status: 'preparando', label: 'Preparando', ativo: pedido.status === 'preparando' || pedido.status === 'pronto' },
-            { status: 'pronto', label: 'Pronto', ativo: pedido.status === 'pronto' }
-        ];
-        return `
-            <div class="order-card">
-                <div class="order-header">
-                    <div><div class="order-number">Pedido #${pedido.id.substring(0, 8).toUpperCase()}</div><div class="order-time">${dataFormatada}</div></div>
-                    <span class="order-status ${pedido.status}">${pedido.status}</span>
-                </div>
-                <div class="order-process-log">${statusLog.map((s, index) => `<div class="process-step ${s.ativo ? 'active' : ''}"><div class="process-dot"></div><span class="process-label">${s.label}</span></div>${index < statusLog.length - 1 ? '<div class="process-line"></div>' : ''}`).join('')}</div>
-                <div class="order-items">${pedido.itens.map(item => `<div class="order-item"><div><span class="order-item-name">${item.nome}</span><span class="order-item-qty">x${item.quantidade}</span></div><span class="order-item-price">R$ ${formatarPreco(item.preco * item.quantidade)}</span></div>`).join('')}</div>
-                <div class="order-footer">
-                    <div class="order-total">Total: <span>R$ ${formatarPreco(pedido.total)}</span></div>
-                    <div class="order-actions">
-                        ${pedido.status === 'novo' ? `<button class="btn-status preparando" onclick="window.atualizarStatusPedido('${pedido.id}', 'preparando')">Iniciar Preparo</button>` : ''}
-                        ${pedido.status === 'preparando' ? `<button class="btn-status pronto" onclick="window.atualizarStatusPedido('${pedido.id}', 'pronto')">Marcar como Pronto</button>` : ''}
-                        <button class="btn-status danger" onclick="window.excluirPedido('${pedido.id}')">Excluir</button>
-                    </div>
+    if (!lista.length) { ordersList.innerHTML='<div style="text-align:center;padding:60px;color:var(--text-muted);">Nenhum pedido</div>'; return; }
+    ordersList.innerHTML = lista.map(pd => {
+        const data = pd.data ? new Date(pd.data.seconds*1000).toLocaleString('pt-BR') : '—';
+        const log  = [{s:'novo',l:'Novo',a:true},{s:'preparando',l:'Preparando',a:pd.status==='preparando'||pd.status==='pronto'},{s:'pronto',l:'Pronto',a:pd.status==='pronto'}];
+        return `<div class="order-card">
+            <div class="order-header">
+                <div><div class="order-number">Pedido #${pd.id.substring(0,8).toUpperCase()}</div><div class="order-time">${data}</div></div>
+                <span class="order-status ${pd.status}">${pd.status}</span>
+            </div>
+            <div class="order-process-log">${log.map((s,i)=>`<div class="process-step ${s.a?'active':''}"><div class="process-dot"></div><span class="process-label">${s.l}</span></div>${i<log.length-1?'<div class="process-line"></div>':''}`).join('')}</div>
+            <div class="order-items">${(pd.itens||[]).map(it=>`<div class="order-item"><div><span class="order-item-name">${it.nome}</span><span class="order-item-qty"> x${it.quantidade}</span></div><span class="order-item-price">R$ ${fmt(it.preco*it.quantidade)}</span></div>`).join('')}</div>
+            <div class="order-footer">
+                <div class="order-total">Total: <span>R$ ${fmt(pd.total)}</span></div>
+                <div class="order-actions">
+                    ${pd.status==='novo'       ?`<button class="btn-status preparando" onclick="window.atualizarStatusPedido('${pd.id}','preparando')">Iniciar Preparo</button>`:''}
+                    ${pd.status==='preparando' ?`<button class="btn-status pronto"     onclick="window.atualizarStatusPedido('${pd.id}','pronto')">Marcar Pronto</button>`:''}
+                    <button class="btn-status danger" onclick="window.excluirPedido('${pd.id}')">Excluir</button>
                 </div>
             </div>
-        `;
+        </div>`;
     }).join('');
 }
 
-window.atualizarStatusPedido = async function(pedidoId, novoStatus) {
-    try {
-        await updateDoc(doc(db, 'pedidos', pedidoId), { status: novoStatus, dataAtualizacao: serverTimestamp() });
-        showToast(`Pedido marcado como ${novoStatus}!`, 'success');
-    } catch (error) {
-        showToast('Erro ao atualizar status', 'error');
-    }
+window.atualizarStatusPedido = async (id, s) => {
+    try { await updateDoc(doc(db,'pedidos',id),{status:s,dataAtualizacao:serverTimestamp()}); showToast(`Pedido ${s}!`,'success'); }
+    catch { showToast('Erro','error'); }
 };
-
-window.excluirPedido = async function(pedidoId) {
-    if (!confirm('Tem certeza que deseja excluir este pedido?')) return;
-    try {
-        showLoading();
-        await deleteDoc(doc(db, 'pedidos', pedidoId));
-        showToast('Pedido excluído!', 'success');
-        hideLoading();
-    } catch (error) {
-        showToast('Erro ao excluir pedido', 'error');
-        hideLoading();
-    }
+window.excluirPedido = async id => {
+    if (!confirm('Excluir?')) return;
+    try { showLoading(); await deleteDoc(doc(db,'pedidos',id)); showToast('Excluído!','success'); hideLoading(); }
+    catch { showToast('Erro','error'); hideLoading(); }
 };
-
-window.limparTodosPedidos = async function() {
-    if (!confirm('⚠️ Isso irá excluir TODOS os pedidos permanentemente. Confirma?')) return;
-    if (!confirm('Confirme novamente: Deseja realmente excluir TODOS os pedidos?')) return;
+window.limparTodosPedidos = async () => {
+    if (!confirm('Excluir TODOS os pedidos?')) return;
+    if (!confirm('Confirme novamente.')) return;
     try {
         showLoading();
-        const pedidosRef = collection(db, 'pedidos');
-        const snapshot = await getDocs(pedidosRef);
-        const promises = [];
-        snapshot.forEach((docSnap) => { promises.push(deleteDoc(doc(db, 'pedidos', docSnap.id))); });
-        await Promise.all(promises);
-        showToast(`${promises.length} pedidos excluídos!`, 'success');
+        const snap=await getDocs(collection(db,'pedidos'));
+        await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'pedidos',d.id))));
+        showToast(`${snap.size} pedidos excluídos!`,'success');
         hideLoading();
-    } catch (error) {
-        showToast('Erro ao limpar pedidos', 'error');
-        hideLoading();
-    }
+    } catch { showToast('Erro','error'); hideLoading(); }
 };
 
-// ===== UTILITÁRIOS =====
-function formatarPreco(valor) { return parseFloat(valor).toFixed(2).replace('.', ','); }
-function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
-function showLoading() { loading.classList.add('active'); }
-function hideLoading() { loading.classList.remove('active'); }
-function showToast(message, type = 'success') {
-    toast.textContent = message;
-    toast.className = `toast ${type} active`;
-    setTimeout(() => toast.classList.remove('active'), 3000);
+// ─── UTILITÁRIOS ─────────────────────────────────────────────────────────────
+function fmt(val)      { return parseFloat(val).toFixed(2).replace('.',','); }
+function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+function showLoading() { loading?.classList.add('active'); }
+function hideLoading() { loading?.classList.remove('active'); }
+function showToast(msg, type='success') {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.className   = `toast ${type} active`;
+    setTimeout(()=>toast.classList.remove('active'), 3000);
 }
 
-console.log('Admin app inicializado!');
+console.log('X-Food Admin v2 inicializado!');
