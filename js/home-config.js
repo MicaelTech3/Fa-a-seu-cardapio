@@ -3,7 +3,7 @@ import { db } from './firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 const defaultConfig = {
-    nomeCardapio: 'Xfood',
+    nomeCardapio: 'X-FOOD',
     logoUrl: 'img/logo.png',
     corPrimaria: '#3b82f6',
     corSecundaria: '#64748b',
