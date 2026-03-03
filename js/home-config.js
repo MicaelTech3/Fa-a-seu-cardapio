@@ -4,7 +4,7 @@ import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-
 
 const defaultConfig = {
     nomeCardapio: 'X-FOOD',
-    logoUrl: 'img/logo.png',
+    logoUrl: 'https://i.postimg.cc/cLZ64xCm/logo.jpg',
     corPrimaria: '#3b82f6',
     corSecundaria: '#64748b',
     fonte: 'DM Sans',

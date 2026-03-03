@@ -44,7 +44,7 @@ let adicionaisTemp = [];
 
 let configuracoes = {
     nomeCardapio: 'Xfood',
-    logoUrl: '#',
+    logoUrl: 'https://i.postimg.cc/cLZ64xCm/logo.jpg',
     corPrimaria: '#3b82f6',
     corSecundaria: '#64748b',
     fonte: 'DM Sans',
