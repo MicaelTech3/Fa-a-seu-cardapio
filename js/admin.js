@@ -13,15 +13,15 @@ import {
     ref, uploadBytes, getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js';
 
-// ─── Estado ──────────────────────────────────────────────────────────────────
+// ─── Estado ───────────────────────────────────────────────────────────────────
 let produtos = [], categorias = [], pedidos = [];
 let editandoProduto = null, editandoCategoria = null;
 let filtroStatusPedido = 'all', filtroCategoriaProduto = 'all';
 let categoriaExpandida = null, adicionaisTemp = [];
 let abaConfigAtiva = 'aparencia';
 
-// ─── Configuracoes DEFAULT — tudo desativado por padrao ──────────────────────
-let configuracoes = {
+// ─── Padrões globais — tudo desativado ────────────────────────────────────────
+const DEFAULTS_GLOBAIS = {
     nomeCardapio:    'X-Food',
     logoUrl:         'img/logo.jpg',
     logoLink:        '',
@@ -43,7 +43,19 @@ let configuracoes = {
     dominios:        ''
 };
 
-// ─── DOM ─────────────────────────────────────────────────────────────────────
+// Padrões por aba (para reset individual)
+const DEFAULTS_ABA = {
+    aparencia:       { nomeCardapio:'X-Food', logoUrl:'img/logo.jpg', logoLink:'', corPrimaria:'#3b82f6', corSecundaria:'#64748b', fonte:'DM Sans' },
+    info:            { tituloBemVindo:'Bem-vindos', endereco:'', whatsApp:'', whatsAppAtivo:false, status:'fechado' },
+    servicos:        { servicoLocal:false, servicoRetirada:false, servicoDelivery:false },
+    funcionalidades: { carrinhoAtivo:false },
+    pagamento:       { chavePix:'', qrCodePix:'' },
+    qr:              { qrCodeMenu:'', dominios:'' }
+};
+
+let configuracoes = { ...DEFAULTS_GLOBAIS };
+
+// ─── DOM ──────────────────────────────────────────────────────────────────────
 const loginScreen    = document.getElementById('loginScreen');
 const adminDashboard = document.getElementById('adminDashboard');
 const loginForm      = document.getElementById('loginForm');
@@ -71,7 +83,7 @@ const cancelCategoryModal = document.getElementById('cancelCategoryModal');
 const ordersList    = document.getElementById('ordersList');
 const filterButtons = document.querySelectorAll('.filter-btn');
 
-// ─── Init ────────────────────────────────────────────────────────────────────
+// ─── Init ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => { initApp(); injetarEstilosExtras(); });
 
 function initApp() {
@@ -108,10 +120,10 @@ function setupEventListeners() {
             item.classList.add('active');
             contentSections.forEach(s => s.classList.remove('active'));
             document.getElementById('section'+capitalize(sec))?.classList.add('active');
-            if (sec==='dashboard')     atualizarDashboard();
+            if (sec==='dashboard')      atualizarDashboard();
             else if (sec==='configuracoes') renderizarConfiguracoes();
-            else if (sec==='pages')    renderizarPages();
-            else if (sec==='produtos') renderizarFiltrosCategorias();
+            else if (sec==='pages')     renderizarPages();
+            else if (sec==='produtos')  renderizarFiltrosCategorias();
         });
     });
     btnAddProduct.addEventListener('click', () => abrirModalProduto());
@@ -144,7 +156,7 @@ async function carregarDados() {
     atualizarDashboard();
 }
 
-// ─── ESTILOS EXTRAS ──────────────────────────────────────────────────────────
+// ─── ESTILOS EXTRAS ───────────────────────────────────────────────────────────
 function injetarEstilosExtras() {
     if (document.getElementById('adminExtrasStyles')) return;
     const s = document.createElement('style');
@@ -191,6 +203,9 @@ function injetarEstilosExtras() {
     .btn-remove-extra{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;flex-shrink:0;transition:all .18s;}
     .btn-remove-extra:hover{background:var(--danger-dim,rgba(239,68,68,.12));color:var(--danger,#ef4444);}
     .extras-empty-msg{text-align:center;color:var(--text-muted);font-size:.78rem;padding:12px 0 4px;}
+    .config-actions-aba{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap;}
+    .btn-reset-aba{background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:8px 14px;border-radius:var(--radius-sm,6px);font-size:.8rem;font-weight:500;font-family:inherit;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;}
+    .btn-reset-aba:hover{border-color:var(--warning,#f59e0b);color:var(--warning,#f59e0b);background:rgba(245,158,11,.06);}
     `;
     document.head.appendChild(s);
 }
@@ -218,13 +233,30 @@ function tabBtn(id, label, icon) {
 function panelOpen(id)  { return `<div class="config-tab-panel ${abaConfigAtiva===id?'active':''}" data-aba="${id}">`; }
 function panelClose()   { return `</div>`; }
 
-const saveBtnHTML = `
-    <div class="config-actions">
+// Botões de ação individuais por aba
+function abaActions(aba) {
+    return `
+    <div class="config-actions-aba">
+        <button class="btn-reset-aba" onclick="resetarAba('${aba}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.46"/></svg>
+            Restaurar padrão desta aba
+        </button>
         <button class="btn-primary" onclick="salvarConfiguracoes()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Salvar Configurações
+            Salvar
         </button>
     </div>`;
+}
+
+// Reset individual por aba
+window.resetarAba = function(aba) {
+    if (!DEFAULTS_ABA[aba]) return;
+    if (!confirm('Restaurar os padrões apenas desta aba?\n\nIsso não salva automaticamente — clique em "Salvar" para confirmar.')) return;
+    configuracoes = { ...configuracoes, ...DEFAULTS_ABA[aba] };
+    abaConfigAtiva = aba;
+    renderizarConfiguracoes();
+    showToast('Padrão restaurado! Clique em Salvar para aplicar.', 'info');
+};
 
 function renderizarConfiguracoes() {
     const cc = document.getElementById('configContainer');
@@ -271,8 +303,7 @@ function renderizarConfiguracoes() {
                 </div>
                 <div class="config-field full-width">
                     <label>🖼️ Logo — URL da Imagem</label>
-                    <input type="url" id="configLogoUrl" value="${cfg.logoUrl||'img/logo.jpg'}" class="config-input"
-                        placeholder="https://... ou img/logo.jpg">
+                    <input type="url" id="configLogoUrl" value="${cfg.logoUrl||'img/logo.jpg'}" class="config-input" placeholder="https://... ou img/logo.jpg">
                     <small>Use <strong>img/logo.jpg</strong> para a pasta local, ou cole uma URL externa.</small>
                     <div id="logoPreviewContainer" style="margin-top:8px;">
                         ${cfg.logoUrl ? `<div class="image-preview-uploaded"><img src="${cfg.logoUrl}" style="max-height:72px;border-radius:8px;"></div>` : ''}
@@ -280,13 +311,12 @@ function renderizarConfiguracoes() {
                 </div>
                 <div class="config-field full-width">
                     <label>🔗 Logo — Link ao Clicar <span style="color:var(--text-muted);font-weight:400">(opcional)</span></label>
-                    <input type="url" id="configLogoLink" value="${cfg.logoLink||''}" class="config-input"
-                        placeholder="https://seusite.com.br">
+                    <input type="url" id="configLogoLink" value="${cfg.logoLink||''}" class="config-input" placeholder="https://seusite.com.br">
                     <small>Quando preenchido, a logo vira um link clicável.</small>
                 </div>
             </div>
         </div>
-        ${saveBtnHTML}
+        ${abaActions('aparencia')}
     ${panelClose()}
 
     <!-- ── ABA INFORMACOES ── -->
@@ -300,8 +330,7 @@ function renderizarConfiguracoes() {
                 </div>
                 <div class="config-field full-width">
                     <label>Endereço Completo</label>
-                    <input type="text" id="configEndereco" value="${cfg.endereco||''}" class="config-input"
-                        placeholder="Rua Exemplo, 123 - Cidade - UF">
+                    <input type="text" id="configEndereco" value="${cfg.endereco||''}" class="config-input" placeholder="Rua Exemplo, 123 - Cidade - UF">
                 </div>
                 <div class="config-field">
                     <label>Status</label>
@@ -329,13 +358,12 @@ function renderizarConfiguracoes() {
                 </div>
                 <div class="config-field">
                     <label>Número WhatsApp</label>
-                    <input type="text" id="configWhatsApp" value="${cfg.whatsApp||''}" class="config-input"
-                        placeholder="5554999999999">
+                    <input type="text" id="configWhatsApp" value="${cfg.whatsApp||''}" class="config-input" placeholder="5554999999999">
                     <small>DDI + DDD + Número, sem espaços</small>
                 </div>
             </div>
         </div>
-        ${saveBtnHTML}
+        ${abaActions('info')}
     ${panelClose()}
 
     <!-- ── ABA SERVICOS ── -->
@@ -382,14 +410,14 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        ${saveBtnHTML}
+        ${abaActions('servicos')}
     ${panelClose()}
 
     <!-- ── ABA FUNCIONALIDADES ── -->
     ${panelOpen('funcionalidades')}
         <div class="config-section">
             <h3 class="config-title">⚙️ Funcionalidades do Cardápio</h3>
-            <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:18px;">Controle o que fica visível para os clientes. Tudo desativado por padrão.</p>
+            <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:18px;">Controle o que fica visível para os clientes. Desativado por padrão.</p>
             <div class="config-grid">
                 <div class="config-field full-width">
                     <div class="toggle-row">
@@ -405,7 +433,7 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        ${saveBtnHTML}
+        ${abaActions('funcionalidades')}
     ${panelClose()}
 
     <!-- ── ABA PAGAMENTO ── -->
@@ -415,18 +443,16 @@ function renderizarConfiguracoes() {
             <div class="config-grid">
                 <div class="config-field">
                     <label>Chave PIX</label>
-                    <input type="text" id="configChavePix" value="${cfg.chavePix||''}" class="config-input"
-                        placeholder="email, CPF, telefone...">
+                    <input type="text" id="configChavePix" value="${cfg.chavePix||''}" class="config-input" placeholder="email, CPF, telefone...">
                 </div>
                 <div class="config-field full-width">
                     <label>QR Code PIX — URL da imagem</label>
-                    <input type="url" id="configQrCodePix" value="${cfg.qrCodePix||''}" class="config-input"
-                        placeholder="https://... URL da imagem do QR Code">
+                    <input type="url" id="configQrCodePix" value="${cfg.qrCodePix||''}" class="config-input" placeholder="https://... URL da imagem do QR Code">
                     ${cfg.qrCodePix ? `<div class="qr-preview-box"><img src="${cfg.qrCodePix}" alt="QR PIX"></div>` : ''}
                 </div>
             </div>
         </div>
-        ${saveBtnHTML}
+        ${abaActions('pagamento')}
     ${panelClose()}
 
     <!-- ── ABA QR / LINKS ── -->
@@ -436,26 +462,21 @@ function renderizarConfiguracoes() {
             <div class="config-grid">
                 <div class="config-field full-width">
                     <label>URL do Menu Digital</label>
-                    <input type="url" id="configMenuUrl" value="https://exceedparkcardapio.vercel.app/menu.html"
-                        class="config-input" readonly style="opacity:.55;cursor:default;">
+                    <input type="url" id="configMenuUrl" value="https://exceedparkcardapio.vercel.app/menu.html" class="config-input" readonly style="opacity:.55;cursor:default;">
                     <small>Link do cardápio para compartilhar com clientes.</small>
                 </div>
                 <div class="config-field full-width">
                     <label>QR Code do Menu — URL da imagem</label>
-                    <input type="url" id="configQrCodeMenu" value="${cfg.qrCodeMenu||''}" class="config-input"
-                        placeholder="https://... URL da imagem do QR Code"
-                        oninput="window.previewQrMenu(this.value)">
-                    <small>Cole a URL de um QR Code gerado externamente. Apenas para uso interno (imprimir / telão).</small>
+                    <input type="url" id="configQrCodeMenu" value="${cfg.qrCodeMenu||''}" class="config-input" placeholder="https://... URL da imagem do QR Code" oninput="window.previewQrMenu(this.value)">
+                    <small>Cole a URL de um QR Code gerado externamente.</small>
                     <div id="qrMenuPreviewContainer" class="qr-preview-box">
                         ${cfg.qrCodeMenu
                             ? `<img src="${cfg.qrCodeMenu}" alt="QR Menu">`
                             : `<span style="font-size:.75rem;color:var(--text-muted);">Nenhuma imagem configurada</span>`}
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="https://exceedparkcardapio.vercel.app/menu.html" target="_blank"
-                            class="btn-secondary" style="font-size:.8rem;padding:7px 14px;text-decoration:none;">🔗 Abrir Menu</a>
-                        <button type="button" class="btn-secondary" style="font-size:.8rem;padding:7px 14px;"
-                            onclick="window.gerarQrMenuExterno()">⚙️ Gerar QR Code</button>
+                        <a href="https://exceedparkcardapio.vercel.app/menu.html" target="_blank" class="btn-secondary" style="font-size:.8rem;padding:7px 14px;text-decoration:none;">🔗 Abrir Menu</a>
+                        <button type="button" class="btn-secondary" style="font-size:.8rem;padding:7px 14px;" onclick="window.gerarQrMenuExterno()">⚙️ Gerar QR Code</button>
                     </div>
                 </div>
             </div>
@@ -465,8 +486,7 @@ function renderizarConfiguracoes() {
             <div class="config-grid">
                 <div class="config-field full-width">
                     <label>Links <span style="color:var(--text-muted);font-weight:400;">(um por linha)</span></label>
-                    <textarea id="configDominios" rows="4" class="config-input"
-                        placeholder="https://exceedparkcardapio.vercel.app" style="resize:vertical;">${cfg.dominios||''}</textarea>
+                    <textarea id="configDominios" rows="4" class="config-input" placeholder="https://exceedparkcardapio.vercel.app" style="resize:vertical;">${cfg.dominios||''}</textarea>
                     <small>Atalhos para acessar rapidamente os links do projeto.</small>
                 </div>
                 <div class="config-field full-width" id="dominiosListContainer">
@@ -474,13 +494,7 @@ function renderizarConfiguracoes() {
                 </div>
             </div>
         </div>
-        <div class="config-actions">
-            <button class="btn-primary" onclick="salvarConfiguracoes()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Salvar Configurações
-            </button>
-            <button class="btn-secondary" onclick="resetarConfiguracoes()">Restaurar Padrões</button>
-        </div>
+        ${abaActions('qr')}
     ${panelClose()}`;
 
     // Live previews
@@ -561,20 +575,13 @@ window.salvarConfiguracoes = async function() {
 };
 
 window.resetarConfiguracoes = function() {
-    if (!confirm('Restaurar todos os padrões? (tudo será desativado)')) return;
-    configuracoes = {
-        nomeCardapio:'X-Food', logoUrl:'img/logo.jpg', logoLink:'',
-        corPrimaria:'#3b82f6', corSecundaria:'#64748b', fonte:'DM Sans',
-        tituloBemVindo:'Bem-vindos', endereco:'', whatsApp:'',
-        whatsAppAtivo:false, status:'fechado',
-        servicoLocal:false, servicoRetirada:false, servicoDelivery:false,
-        carrinhoAtivo:false, chavePix:'', qrCodePix:'', qrCodeMenu:'', dominios:''
-    };
+    if (!confirm('Restaurar TODOS os padrões globais? (tudo será desativado)')) return;
+    configuracoes = { ...DEFAULTS_GLOBAIS };
     renderizarConfiguracoes();
     showToast('Padrões restaurados! Clique em Salvar para aplicar.','info');
 };
 
-// ─── PAGES ───────────────────────────────────────────────────────────────────
+// ─── PAGES ────────────────────────────────────────────────────────────────────
 function renderizarPages() {
     const pc = document.getElementById('pagesContainer');
     if (!pc) return;
@@ -606,7 +613,7 @@ window.gerarQRCode = url => {
 };
 window.fecharQRModal = () => { const m=document.getElementById('qrModal'); if(m) m.style.display='none'; };
 
-// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
 function atualizarDashboard() {
     const dc = document.getElementById('dashboardContainer');
     if (!dc) return;
@@ -664,7 +671,7 @@ function calcularRanking() {
     return Object.values(map).sort((a,b)=>b.quantidade-a.quantidade).slice(0,10);
 }
 
-// ─── CATEGORIAS ──────────────────────────────────────────────────────────────
+// ─── CATEGORIAS ───────────────────────────────────────────────────────────────
 async function carregarCategorias() {
     try {
         onSnapshot(collection(db,'categorias'), snap => {
@@ -730,7 +737,7 @@ async function salvarCategoria(e) {
     } catch { showToast('Erro','error'); hideLoading(); }
 }
 
-// ─── PRODUTOS ────────────────────────────────────────────────────────────────
+// ─── PRODUTOS ─────────────────────────────────────────────────────────────────
 function renderizarFiltrosCategorias() {
     const fc = document.getElementById('categoryFilters');
     if (!fc) return;
@@ -925,7 +932,7 @@ window.excluirProduto = async id => {
     catch { showToast('Erro','error'); hideLoading(); }
 };
 
-// ─── PEDIDOS ─────────────────────────────────────────────────────────────────
+// ─── PEDIDOS ──────────────────────────────────────────────────────────────────
 async function carregarPedidos() {
     try {
         onSnapshot(query(collection(db,'pedidos'),orderBy('data','desc')), snap => {
@@ -985,7 +992,7 @@ window.limparTodosPedidos = async () => {
     } catch { showToast('Erro','error'); hideLoading(); }
 };
 
-// ─── UTILITÁRIOS ─────────────────────────────────────────────────────────────
+// ─── UTILITÁRIOS ──────────────────────────────────────────────────────────────
 function fmt(val)      { return parseFloat(val).toFixed(2).replace('.',','); }
 function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
 function showLoading() { loading?.classList.add('active'); }

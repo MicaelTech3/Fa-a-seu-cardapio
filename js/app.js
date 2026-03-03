@@ -4,15 +4,10 @@
 import { db } from './firebase-config.js';
 import { 
     collection, 
-    getDocs, 
     addDoc, 
-    query, 
-    where, 
-    orderBy,
     onSnapshot,
     serverTimestamp,
-    doc,
-    getDoc
+    doc
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 // Estado da aplicacao
@@ -21,29 +16,32 @@ let categorias = [];
 let carrinho = [];
 let categoriaAtiva = 'todas';
 let pedidoAtualId = null;
+
+// ─── PADRÕES: tudo DESATIVADO ─────────────────────────────────────────────────
+// Evita o "flash" onde botões aparecem e depois somem.
+// O Firebase sobrescreve esses valores na primeira leitura.
 let configuracoes = {
-    nomeCardapio:   'X-Food',
-    // Logo usa pasta local por padrao — sem depender do Firebase Storage
-    logoUrl:        'img/logo.jpg',
-    logoLink:       '',
-    corPrimaria:    '#3b82f6',
-    corSecundaria:  '#64748b',
-    fonte:          'DM Sans',
-    tituloBemVindo: 'Bem-vindos',
-    endereco:       'Av. das Hortencias, 4510 - Estrada Gramado, Gramado - RS, 95670-000, Brasil',
-    whatsApp:       '5554999999999',
-    whatsAppAtivo:  true,
-    status:         'aberto',
-    servicoLocal:   true,
-    servicoRetirada:true,
-    servicoDelivery:true,
-    carrinhoAtivo:  true,
-    chavePix:       '',
-    qrCodePix:      ''
+    nomeCardapio:    'X-Food',
+    logoUrl:         'img/logo.jpg',
+    logoLink:        '',
+    corPrimaria:     '#3b82f6',
+    corSecundaria:   '#64748b',
+    fonte:           'DM Sans',
+    tituloBemVindo:  'Bem-vindos',
+    endereco:        '',
+    whatsApp:        '',
+    whatsAppAtivo:   false,
+    status:          'fechado',
+    servicoLocal:    false,
+    servicoRetirada: false,
+    servicoDelivery: false,
+    carrinhoAtivo:   false,
+    chavePix:        '',
+    qrCodePix:       ''
 };
 
 // Elementos do DOM
-const productsContainer = document.getElementById('productsContainer');
+const productsContainer   = document.getElementById('productsContainer');
 const categoriesContainer = document.querySelector('.categories-scroll');
 const cartDrawer   = document.getElementById('cartDrawer');
 const cartToggle   = document.getElementById('cartToggle');
@@ -60,6 +58,22 @@ const btnCloseModal= document.getElementById('btnCloseModal');
 const orderNumber  = document.getElementById('orderNumber');
 const loading      = document.getElementById('loading');
 
+// ─── Ocultar elementos IMEDIATAMENTE antes do Firebase responder ──────────────
+// Garante que nada aparece antes de sabermos o estado real salvo no banco.
+(function esconderElementosInicial() {
+    const ct = document.getElementById('cartToggle');
+    if (ct) ct.style.visibility = 'hidden';
+
+    const wf = document.querySelector('.whatsapp-float');
+    if (wf) wf.style.visibility = 'hidden';
+
+    const hwp = document.querySelector('.btn-hero-secondary[href*="wa.me"]');
+    if (hwp) hwp.style.visibility = 'hidden';
+
+    const hf = document.querySelector('.hero-features');
+    if (hf) hf.style.visibility = 'hidden';
+})();
+
 window.addEventListener('DOMContentLoaded', () => {
     initApp();
     criarModalProduto();
@@ -68,7 +82,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function initApp() {
     try {
         showLoading();
-        await carregarConfiguracoes();
+        await carregarConfiguracoes(); // aguarda 1ª leitura real do Firebase
         await carregarCategorias();
         await carregarProdutos();
         setupEventListeners();
@@ -84,24 +98,36 @@ async function initApp() {
 // ========================================================
 
 async function carregarConfiguracoes() {
-    try {
-        const configRef = doc(db, 'configuracoes', 'geral');
-        onSnapshot(configRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const config = docSnap.data();
-                configuracoes = { ...configuracoes, ...config };
+    // Retorna Promise que resolve apenas após a 1ª leitura do Firestore,
+    // garantindo que aplicarConfiguracoes() rode com dados reais
+    // ANTES de qualquer elemento ser exibido ao usuário.
+    return new Promise((resolve) => {
+        try {
+            const configRef = doc(db, 'configuracoes', 'geral');
+            let primeiraLeitura = true;
+
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    configuracoes = { ...configuracoes, ...docSnap.data() };
+                }
+                // Se não existir, mantém padrões (tudo desativado)
                 aplicarConfiguracoes(configuracoes);
-            } else {
+
+                if (primeiraLeitura) {
+                    primeiraLeitura = false;
+                    resolve();
+                }
+            }, (error) => {
+                console.error('Erro ao carregar configuracoes:', error);
                 aplicarConfiguracoes(configuracoes);
-            }
-        }, (error) => {
-            console.error('Erro ao carregar configuracoes:', error);
+                if (primeiraLeitura) { primeiraLeitura = false; resolve(); }
+            });
+        } catch (error) {
+            console.error('Erro ao configurar listener:', error);
             aplicarConfiguracoes(configuracoes);
-        });
-    } catch (error) {
-        console.error('Erro ao configurar listener:', error);
-        aplicarConfiguracoes(configuracoes);
-    }
+            resolve();
+        }
+    });
 }
 
 function aplicarConfiguracoes(config) {
@@ -113,11 +139,9 @@ function aplicarConfiguracoes(config) {
         if (logoText) logoText.textContent = config.nomeCardapio;
     }
 
-    // ── LOGO: imagem + link clicavel ─────────────────────────────────────────
-    // Usa img/logo.jpg como fallback — nunca depende do Firebase Storage
+    // ── LOGO ─────────────────────────────────────────────────────────────────
     const logoSrc = (config.logoUrl && config.logoUrl !== '#') ? config.logoUrl : 'img/logo.jpg';
 
-    // Logo no header
     const logoImgHeader = document.querySelector('.header .logo-img');
     if (logoImgHeader) {
         logoImgHeader.src = logoSrc;
@@ -125,14 +149,12 @@ function aplicarConfiguracoes(config) {
         logoImgHeader.onerror = function() { this.src = 'img/logo.jpg'; };
     }
 
-    // Logo icon (hero / outros lugares)
     const logoIcon = document.querySelector('.logo-icon');
     if (logoIcon) {
         logoIcon.src = logoSrc;
         logoIcon.onerror = function() { this.src = 'img/logo.jpg'; };
     }
 
-    // Torna logo clicavel se logoLink preenchido
     if (config.logoLink) {
         [logoImgHeader, logoIcon].forEach(img => {
             if (!img) return;
@@ -176,27 +198,30 @@ function aplicarConfiguracoes(config) {
         if (heroAddress) heroAddress.textContent = config.endereco;
     }
 
-    // WhatsApp link
+    // WhatsApp link href
     if (config.whatsApp) {
         const whatsappBtn = document.querySelector('.btn-hero-secondary[href*="wa.me"]');
         if (whatsappBtn) whatsappBtn.href = 'https://wa.me/' + config.whatsApp;
     }
 
-    // ── WHATSAPP TOGGLE ──────────────────────────────────────────────────────
-    // Oculta todos os elementos de WhatsApp se desativado no admin
-    const whatsAppAtivo = config.whatsAppAtivo !== false;
+    // ── WHATSAPP: exibir SOMENTE se === true ──────────────────────────────────
+    const whatsAppAtivo = config.whatsAppAtivo === true;
 
-    // Botao flutuante WhatsApp
     const whatsappFloat = document.querySelector('.whatsapp-float');
-    if (whatsappFloat) whatsappFloat.style.display = whatsAppAtivo ? '' : 'none';
+    if (whatsappFloat) {
+        whatsappFloat.style.visibility = '';
+        whatsappFloat.style.display    = whatsAppAtivo ? '' : 'none';
+    }
 
-    // Botao hero WhatsApp
     const heroWhatsapp = document.querySelector('.btn-hero-secondary[href*="wa.me"]');
-    if (heroWhatsapp) heroWhatsapp.style.display = whatsAppAtivo ? '' : 'none';
+    if (heroWhatsapp) {
+        heroWhatsapp.style.visibility = '';
+        heroWhatsapp.style.display    = whatsAppAtivo ? '' : 'none';
+    }
 
-    // Qualquer elemento com data-whatsapp
     document.querySelectorAll('[data-whatsapp]').forEach(el => {
-        el.style.display = whatsAppAtivo ? '' : 'none';
+        el.style.visibility = '';
+        el.style.display    = whatsAppAtivo ? '' : 'none';
     });
 
     // Status
@@ -212,20 +237,22 @@ function aplicarConfiguracoes(config) {
         }
     }
 
-    // Servicos disponiveis
+    // ── SERVIÇOS: exibir SOMENTE os === true ──────────────────────────────────
     const heroFeatures = document.querySelector('.hero-features');
     if (heroFeatures) {
         const badges = [];
-        if (config.servicoLocal    !== false) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>No local</span>');
-        if (config.servicoRetirada !== false) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>Retirada</span>');
-        if (config.servicoDelivery !== false) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Delivery</span>');
+        if (config.servicoLocal    === true) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>No local</span>');
+        if (config.servicoRetirada === true) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>Retirada</span>');
+        if (config.servicoDelivery === true) badges.push('<span class="hero-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Delivery</span>');
         heroFeatures.innerHTML = badges.join('');
+        heroFeatures.style.visibility = '';
     }
 
-    // Carrinho
+    // ── CARRINHO: exibir SOMENTE se === true ──────────────────────────────────
     const cartToggleBtn = document.getElementById('cartToggle');
     if (cartToggleBtn) {
-        cartToggleBtn.style.display = config.carrinhoAtivo === false ? 'none' : 'flex';
+        cartToggleBtn.style.visibility = '';
+        cartToggleBtn.style.display    = config.carrinhoAtivo === true ? 'flex' : 'none';
     }
 
     if (produtos.length > 0) filtrarProdutos();
@@ -340,9 +367,9 @@ function abrirModalProduto(produtoId) {
     document.getElementById('detailDescription').textContent = produto.descricao || '';
     document.getElementById('detailBasePrice').textContent   = 'R$ ' + formatarPreco(produto.preco);
 
-    const adicionais     = produto.adicionais || [];
-    const extrasSection  = document.getElementById('detailExtrasSection');
-    const extrasList     = document.getElementById('detailExtrasList');
+    const adicionais    = produto.adicionais || [];
+    const extrasSection = document.getElementById('detailExtrasSection');
+    const extrasList    = document.getElementById('detailExtrasList');
 
     if (adicionais.length > 0) {
         extrasSection.style.display = 'block';
@@ -379,9 +406,9 @@ window.toggleExtra = function(el) {
 };
 
 function atualizarPrecoModal(basePrice, extrasTotal = 0) {
-    const extrasRow       = document.getElementById('detailExtrasPrice');
-    const extrasPriceValue= document.getElementById('detailExtrasPriceValue');
-    const totalEl         = document.getElementById('detailTotalPrice');
+    const extrasRow        = document.getElementById('detailExtrasPrice');
+    const extrasPriceValue = document.getElementById('detailExtrasPriceValue');
+    const totalEl          = document.getElementById('detailTotalPrice');
     if (extrasTotal > 0) {
         extrasRow.style.display = 'flex';
         extrasPriceValue.textContent = '+ R$ ' + formatarPreco(extrasTotal);
@@ -407,7 +434,7 @@ async function carregarCategorias() {
         const categoriasRef = collection(db, 'categorias');
         onSnapshot(categoriasRef, (snapshot) => {
             categorias = [];
-            snapshot.forEach((doc) => { categorias.push({ id: doc.id, ...doc.data() }); });
+            snapshot.forEach((d) => { categorias.push({ id: d.id, ...d.data() }); });
             renderizarCategorias();
         });
     } catch (error) { console.error('Erro ao carregar categorias:', error); }
@@ -438,8 +465,8 @@ async function carregarProdutos() {
         const produtosRef = collection(db, 'produtos');
         onSnapshot(produtosRef, (snapshot) => {
             produtos = [];
-            snapshot.forEach((doc) => {
-                const produto = { id: doc.id, ...doc.data() };
+            snapshot.forEach((d) => {
+                const produto = { id: d.id, ...d.data() };
                 if (produto.ativo !== false) produtos.push(produto);
             });
             filtrarProdutos();
@@ -481,8 +508,7 @@ function renderizarProdutos(produtosParaExibir) {
                     const imgSrc = produto.imagem || 'img/logo.jpg';
                     return `
                         <div class="product-card" data-id="${produto.id}" onclick="abrirModalProduto('${produto.id}')">
-                            <img src="${imgSrc}" alt="${produto.nome}" class="product-image"
-                                onerror="this.src='img/logo.jpg'">
+                            <img src="${imgSrc}" alt="${produto.nome}" class="product-image" onerror="this.src='img/logo.jpg'">
                             <div class="product-info">
                                 <h3 class="product-name">${produto.nome}</h3>
                                 ${produto.descricao ? '<p class="product-description">' + produto.descricao + '</p>' : ''}
@@ -651,12 +677,12 @@ function mostrarNotificacaoPedidoPronto(numeroPedido) {
         notificacao.id = 'pedidoProntoNotificacao';
         notificacao.className = 'pedido-pronto-notification';
         notificacao.innerHTML = `
-            <div class="notification-icon">checkmark</div>
+            <div class="notification-icon">✅</div>
             <div class="notification-content">
                 <strong>Seu pedido esta pronto!</strong>
                 <p>Pedido #<span class="numero-pedido"></span> pronto para retirada!</p>
             </div>
-            <button class="notification-close" aria-label="Fechar" onclick="document.getElementById('pedidoProntoNotificacao').classList.remove('active')">x</button>
+            <button class="notification-close" aria-label="Fechar" onclick="document.getElementById('pedidoProntoNotificacao').classList.remove('active')">✕</button>
         `;
         document.body.appendChild(notificacao);
     }
@@ -670,12 +696,12 @@ function mostrarNotificacaoPedidoPronto(numeroPedido) {
 // ========================================================
 
 function setupEventListeners() {
-    if (cartToggle)   cartToggle.addEventListener('click',   abrirCarrinho);
-    if (cartClose)    cartClose.addEventListener('click',    fecharCarrinho);
-    if (cartOverlay)  cartOverlay.addEventListener('click',  fecharCarrinho);
-    if (btnCheckout)  btnCheckout.addEventListener('click',  finalizarPedido);
-    if (btnCloseModal)btnCloseModal.addEventListener('click',() => confirmModal.classList.remove('active'));
-    if (confirmModal) confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) confirmModal.classList.remove('active'); });
+    if (cartToggle)    cartToggle.addEventListener('click',   abrirCarrinho);
+    if (cartClose)     cartClose.addEventListener('click',    fecharCarrinho);
+    if (cartOverlay)   cartOverlay.addEventListener('click',  fecharCarrinho);
+    if (btnCheckout)   btnCheckout.addEventListener('click',  finalizarPedido);
+    if (btnCloseModal) btnCloseModal.addEventListener('click', () => confirmModal.classList.remove('active'));
+    if (confirmModal)  confirmModal.addEventListener('click',  (e) => { if (e.target === confirmModal) confirmModal.classList.remove('active'); });
 }
 
 function abrirCarrinho()  { if (cartDrawer) { cartDrawer.classList.add('active');    document.body.style.overflow = 'hidden'; } }
