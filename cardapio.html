@@ -3,1153 +3,1275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS FOOD — Cardápio Gamer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>CLLR — Cardápio & Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
-    --primary: 217 100% 60%;
-    --secondary: 217 85% 48%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 325 91% 60%;
-    --border: 0 0% 14%;
-    --radius: .5rem;
-  }
+:root {
+  --bg: #000000;
+  --bg2: #080810;
+  --bg3: #0d0d1a;
+  --card: #0a0a14;
+  --card2: #0f0f1e;
+  --border: rgba(51,129,255,.15);
+  --border2: rgba(51,129,255,.3);
+  --primary: #3381ff;
+  --primary2: #5f42f0;
+  --accent: #f042b8;
+  --accent2: #ff2d6e;
+  --green: #00ff88;
+  --yellow: #ffcc00;
+  --red: #ff3a3a;
+  --muted: rgba(255,255,255,.45);
+  --muted2: rgba(255,255,255,.25);
+  --text: #ffffff;
+  --radius: 8px;
+  --r2: 12px;
 
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    border-color: hsl(var(--border));
-  }
+  /* CLLR Brand */
+  --cllr-blue: #3381ff;
+  --cllr-violet: #5f42f0;
+  --cllr-pink: #f042b8;
+  --cllr-glow: 0 0 20px rgba(51,129,255,.5), 0 0 60px rgba(51,129,255,.2);
+  --cllr-glow-pink: 0 0 20px rgba(240,66,184,.5), 0 0 60px rgba(240,66,184,.2);
+}
 
-  @media (hover: hover) and (pointer: fine) {
-    * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 2 L4 20 L8.5 15.5 L12.5 22 L15 20.5 L11 13.5 L17 13.5 Z' fill='%234D9FFF' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") 4 2, auto !important; }
-    a, button, [role=button] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='none' stroke='%234D9FFF' stroke-width='2'/%3E%3Ccircle cx='14' cy='14' r='3' fill='%234D9FFF'/%3E%3Cline x1='14' y1='0' x2='14' y2='8' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='14' y1='20' x2='14' y2='28' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='0' y1='14' x2='8' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='20' y1='14' x2='28' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, pointer !important; }
-  }
+*,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
 
-  body {
-    background-color: hsl(var(--background));
-    font-family: 'Space Grotesk', sans-serif;
-    color: hsl(var(--foreground));
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-    min-height: 100vh;
-  }
+@media(hover:hover) and (pointer:fine){
+  *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 2 L4 20 L8.5 15.5 L12.5 22 L15 20.5 L11 13.5 L17 13.5 Z' fill='%234D9FFF' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") 4 2,auto!important}
+  a,button,[role=button],input,select,textarea{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='none' stroke='%234D9FFF' stroke-width='2'/%3E%3Ccircle cx='14' cy='14' r='3' fill='%234D9FFF'/%3E%3Cline x1='14' y1='0' x2='14' y2='8' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='14' y1='20' x2='14' y2='28' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='0' y1='14' x2='8' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='20' y1='14' x2='28' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3C/svg%3E") 14 14,pointer!important}
+}
 
-  h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; }
+html,body { min-height:100%; background:var(--bg); color:var(--text); font-family:'Space Grotesk',sans-serif; overflow-x:hidden; }
+h1,h2,h3,h4,h5,h6 { font-family:'Orbitron',sans-serif; }
+::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:#050508} ::-webkit-scrollbar-thumb{background:rgba(51,129,255,.3);border-radius:3px} ::-webkit-scrollbar-thumb:hover{background:rgba(51,129,255,.6)}
+input,select,textarea { outline:none; border:none; background:transparent; color:var(--text); font-family:'Space Grotesk',sans-serif; }
+button { border:none; background:transparent; color:var(--text); font-family:'Orbitron',sans-serif; cursor:pointer; }
 
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #0a0a0a; }
-  ::-webkit-scrollbar-thumb { background: #3381ff4d; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3381ff99; }
+/* ── ANIMATIONS ── */
+@keyframes pulse-neon{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow-pulse{0%,100%{box-shadow:var(--cllr-glow)}50%{box-shadow:0 0 40px rgba(51,129,255,.8),0 0 100px rgba(51,129,255,.4)}}
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes ping{75%,100%{transform:scale(2);opacity:0}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes border-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
-  /* Grid BG */
-  .grid-bg {
-    background-image:
-      linear-gradient(hsl(217 100% 60% / .03) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(217 100% 60% / .03) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
+/* ── GLOBAL BG ── */
+.grid-bg { background-image: linear-gradient(rgba(51,129,255,.025) 1px,transparent 1px), linear-gradient(90deg,rgba(51,129,255,.025) 1px,transparent 1px); background-size:60px 60px; }
+.scanline-overlay { position:fixed; inset:0; pointer-events:none; z-index:999; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px); }
 
-  /* Neon glow */
-  .neon-glow {
-    text-shadow: 0 0 7px hsl(217 100% 60% / .8), 0 0 20px hsl(217 100% 60% / .4), 0 0 40px hsl(217 100% 60% / .2);
-  }
-  .neon-border {
-    box-shadow: 0 0 5px #3381ff80, 0 0 15px #3381ff33, inset 0 0 5px #3381ff1a;
-  }
-  .neon-accent-glow {
-    text-shadow: 0 0 7px hsl(325 91% 60% / .8), 0 0 20px hsl(325 91% 60% / .4);
-  }
+/* ════════════════════════════════════════
+   PAGES
+════════════════════════════════════════ */
+.page { display:none; min-height:100vh; }
+.page.active { display:block; }
 
-  @keyframes pulse-neon { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-  @keyframes scanline-move { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
-  @keyframes glitch { 0%,100% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(2px, -1px); } 60% { transform: translate(-1px, 1px); } 80% { transform: translate(1px, -2px); } }
-  @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+/* ════════════════════════════════════════
+   ── LANDING / MENU PAGE ──
+════════════════════════════════════════ */
 
-  /* SCANLINE OVERLAY */
-  .scanline-overlay {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 100;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(0 0% 0% / .03) 2px, hsl(0 0% 0% / .03) 4px);
-  }
+/* TOPBAR */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.875rem 2rem;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-logo { font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:900; letter-spacing:.3em; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet),var(--cllr-pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.topbar-nav { display:flex; gap:.5rem; }
+.topbar-nav-btn { padding:.4rem 1rem; border:1px solid var(--border); border-radius:99px; font-family:'Rajdhani',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); transition:.2s; }
+.topbar-nav-btn:hover,.topbar-nav-btn.active { border-color:var(--primary); color:var(--primary); background:rgba(51,129,255,.08); }
+.topbar-right { display:flex; align-items:center; gap:1rem; }
+.topbar-status { display:flex; align-items:center; gap:.4rem; font-family:'Rajdhani',sans-serif; font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--green); }
+.topbar-status-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse-neon 1.5s ease-in-out infinite; }
+.cart-pill { display:flex; align-items:center; gap:.5rem; padding:.4rem .875rem; background:rgba(51,129,255,.1); border:1px solid var(--border2); border-radius:99px; font-family:'Rajdhani',sans-serif; font-size:.8rem; font-weight:700; color:var(--primary); transition:.2s; }
+.cart-pill:hover { background:rgba(51,129,255,.18); box-shadow:var(--cllr-glow); }
+.cart-pill-count { background:var(--primary); color:#fff; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.65rem; font-family:'Orbitron',sans-serif; }
 
-  /* HERO */
-  .hero {
-    position: relative;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 2rem;
-  }
+/* HERO */
+.hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:6rem 2rem 4rem; }
+.hero-orb { position:absolute; border-radius:50%; filter:blur(100px); pointer-events:none; }
+.orb1 { width:700px; height:700px; background:rgba(51,129,255,.06); top:-200px; left:-200px; }
+.orb2 { width:500px; height:500px; background:rgba(240,66,184,.05); bottom:-150px; right:-150px; }
+.orb3 { width:300px; height:300px; background:rgba(95,66,240,.04); top:50%; left:50%; transform:translate(-50%,-50%); }
 
-  .hero-bg-orb {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(80px);
-    pointer-events: none;
-  }
-  .orb-blue { width: 600px; height: 600px; background: hsl(217 100% 60% / .08); top: -200px; left: -200px; }
-  .orb-pink { width: 400px; height: 400px; background: hsl(325 91% 60% / .06); bottom: -100px; right: -100px; }
+.hero-eyebrow { font-family:'Rajdhani',sans-serif; font-size:.75rem; letter-spacing:.5em; text-transform:uppercase; color:var(--primary); margin-bottom:1.5rem; animation:fadeUp .8s ease both; }
+.hero-title { font-size:clamp(4rem,12vw,10rem); font-weight:900; letter-spacing:.15em; text-transform:uppercase; line-height:.9; text-align:center; animation:fadeUp .8s .1s ease both; position:relative; z-index:1; }
+.hero-title-main { display:block; background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.7) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hero-title-accent { display:block; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet),var(--cllr-pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 30px rgba(51,129,255,.5)); }
+.hero-sub { font-family:'Rajdhani',sans-serif; font-size:clamp(.9rem,2vw,1.2rem); font-weight:300; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); margin-top:1.5rem; animation:fadeUp .8s .2s ease both; }
+.hero-line { width:120px; height:1px; background:linear-gradient(90deg,transparent,var(--primary),var(--accent),transparent); margin:2.5rem auto; animation:fadeUp .8s .3s ease both; }
+.hero-badges { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; animation:fadeUp .8s .35s ease both; margin-bottom:3rem; }
+.hero-badge { display:flex; align-items:center; gap:.5rem; padding:.4rem 1rem; border:1px solid var(--border2); background:rgba(51,129,255,.06); border-radius:99px; font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.hero-cta { display:flex; gap:1rem; animation:fadeUp .8s .4s ease both; }
+.btn-primary { padding:.875rem 2.5rem; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); border-radius:var(--radius); font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; transition:.2s; }
+.btn-primary:hover { filter:brightness(1.15); box-shadow:var(--cllr-glow); transform:translateY(-2px); }
+.btn-outline { padding:.875rem 2.5rem; border:1px solid var(--border2); border-radius:var(--radius); font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--primary); transition:.2s; }
+.btn-outline:hover { background:rgba(51,129,255,.08); border-color:var(--primary); }
 
-  .hero-logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: clamp(3rem, 10vw, 8rem);
-    font-weight: 900;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    background: linear-gradient(135deg, #3381ff, #5f42f0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: fadeInUp .8s ease both;
-    position: relative;
-    z-index: 1;
-  }
+/* TICKER */
+.ticker-wrap { background:rgba(51,129,255,.06); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:.6rem 0; overflow:hidden; white-space:nowrap; }
+.ticker-inner { display:inline-flex; animation:ticker 30s linear infinite; }
+.ticker-item { font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); padding:0 3rem; }
+.ticker-item span { color:var(--primary); }
+@keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
-  .hero-logo-glitch {
-    position: relative;
-    display: inline-block;
-  }
-  .hero-logo-glitch:hover { animation: glitch .3s infinite; }
+/* SECTION */
+.menu-section { padding:5rem 0; }
+.container { max-width:1300px; margin:0 auto; padding:0 2rem; }
+.section-eyebrow { font-family:'Rajdhani',sans-serif; font-size:.7rem; letter-spacing:.4em; text-transform:uppercase; color:var(--primary); display:block; margin-bottom:.75rem; }
+.section-title { font-size:clamp(1.4rem,3.5vw,2.2rem); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.section-divider { width:60px; height:2px; background:linear-gradient(90deg,var(--primary),var(--accent)); margin:1rem 0 3rem; }
 
-  .hero-subtitle {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: clamp(1rem, 3vw, 1.5rem);
-    font-weight: 300;
-    letter-spacing: .4em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-    margin-top: .5rem;
-    animation: fadeInUp .8s .2s ease both;
-    z-index: 1;
-  }
+/* CATEGORY TABS */
+.cat-tabs { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:3rem; padding:.75rem; background:var(--card); border:1px solid var(--border); border-radius:var(--r2); }
+.cat-tab { padding:.5rem 1.25rem; border-radius:6px; font-family:'Rajdhani',sans-serif; font-size:.8rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); transition:.2s; }
+.cat-tab:hover { color:var(--text); background:rgba(255,255,255,.05); }
+.cat-tab.active { background:rgba(51,129,255,.15); color:var(--primary); box-shadow:inset 0 0 0 1px rgba(51,129,255,.4); }
 
-  .hero-divider {
-    width: 200px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
-    margin: 2rem auto;
-    animation: fadeInUp .8s .3s ease both;
-    z-index: 1;
-  }
+/* MENU GRID */
+.mgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; }
+.mgrid.wide { grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); }
 
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .5rem 1.5rem;
-    border: 1px solid hsl(var(--primary) / .3);
-    background: hsl(var(--primary) / .05);
-    border-radius: 9999px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .875rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: hsl(var(--primary));
-    animation: fadeInUp .8s .4s ease both;
-    z-index: 1;
-    margin-bottom: 3rem;
-  }
+/* PRODUCT CARD */
+.pcard {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:var(--r2); overflow:hidden; position:relative;
+  transition:.3s; animation:fadeUp .5s ease both;
+}
+.pcard:hover { border-color:rgba(51,129,255,.5); transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,.5),0 0 30px rgba(51,129,255,.1); }
+.pcard-img { aspect-ratio:16/8; background:var(--card); display:flex; align-items:center; justify-content:center; font-size:3.5rem; position:relative; overflow:hidden; }
+.pcard-img-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 40%,var(--card2)); }
+.pcard-badges { position:absolute; top:.75rem; left:.75rem; display:flex; flex-direction:column; gap:.3rem; z-index:2; }
+.badge { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .65rem; border-radius:99px; font-family:'Rajdhani',sans-serif; font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.badge-blue { background:rgba(51,129,255,.9); color:#fff; }
+.badge-pink { background:rgba(240,66,184,.9); color:#fff; }
+.badge-red { background:rgba(255,58,58,.9); color:#fff; }
+.badge-green { background:rgba(0,255,136,.9); color:#000; }
+.badge-yellow { background:rgba(255,204,0,.9); color:#000; }
+.pcard-body { padding:1.25rem; }
+.pcard-cat { font-family:'Rajdhani',sans-serif; font-size:.65rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted2); margin-bottom:.3rem; }
+.pcard-name { font-size:.875rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-bottom:.5rem; line-height:1.3; }
+.pcard-desc { font-size:.775rem; color:var(--muted); line-height:1.65; margin-bottom:1rem; }
+.pcard-tags { display:flex; gap:.3rem; flex-wrap:wrap; margin-bottom:1rem; }
+.pcard-tag { padding:.15rem .5rem; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px; font-family:'Rajdhani',sans-serif; font-size:.6rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted2); }
+.pcard-footer { display:flex; align-items:center; justify-content:space-between; }
+.pcard-price { font-family:'Orbitron',sans-serif; font-size:1.1rem; font-weight:700; color:var(--primary); text-shadow:0 0 12px rgba(51,129,255,.6); }
+.pcard-price small { font-size:.6rem; color:var(--muted2); font-family:'Rajdhani',sans-serif; display:block; text-transform:uppercase; letter-spacing:.05em; margin-bottom:-.1rem; }
+.pcard-add { width:38px; height:38px; border-radius:50%; background:rgba(51,129,255,.12); border:1px solid rgba(51,129,255,.4); color:var(--primary); font-size:1.25rem; display:flex; align-items:center; justify-content:center; transition:.2s; }
+.pcard-add:hover { background:var(--primary); color:#fff; box-shadow:var(--cllr-glow); }
 
-  .hero-badge-dot {
-    width: 6px; height: 6px;
-    border-radius: 9999px;
-    background: hsl(var(--primary));
-    animation: pulse-neon 2s ease-in-out infinite;
-  }
+/* FEATURED HERO CARD */
+.feat-card {
+  grid-column:1/-1; display:grid; grid-template-columns:1fr 1.2fr;
+  background:var(--card2); border:1px solid rgba(51,129,255,.35);
+  border-radius:var(--r2); overflow:hidden; position:relative;
+  box-shadow:0 0 50px rgba(51,129,255,.15); animation:fadeUp .5s ease both;
+  transition:.3s;
+}
+.feat-card:hover { box-shadow:0 0 80px rgba(51,129,255,.25); transform:translateY(-3px); }
+.feat-card-img { background:linear-gradient(135deg,rgba(51,129,255,.06),rgba(95,66,240,.06)); display:flex; align-items:center; justify-content:center; font-size:7rem; position:relative; min-height:280px; }
+.feat-corner { position:absolute; width:40px; height:40px; }
+.feat-corner.tl { top:0;left:0; border-top:2px solid var(--primary); border-left:2px solid var(--primary); }
+.feat-corner.br { bottom:0;right:0; border-bottom:2px solid var(--primary); border-right:2px solid var(--primary); }
+.feat-body { padding:2.5rem; display:flex; flex-direction:column; justify-content:center; gap:1rem; }
+.feat-badge-row { display:flex; align-items:center; gap:.5rem; }
+.feat-rank { font-family:'Orbitron',sans-serif; font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; color:var(--primary); padding:.2rem .6rem; border:1px solid var(--border2); border-radius:4px; }
+.feat-name { font-size:clamp(1.2rem,3vw,1.75rem); font-weight:800; letter-spacing:.06em; text-transform:uppercase; line-height:1.1; }
+.feat-desc { font-size:.875rem; color:var(--muted); line-height:1.7; }
+.feat-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+.feat-stat { padding:.75rem; background:rgba(51,129,255,.06); border:1px solid var(--border); border-radius:6px; text-align:center; }
+.feat-stat-val { font-family:'Orbitron',sans-serif; font-size:.9rem; font-weight:700; color:var(--primary); display:block; }
+.feat-stat-lbl { font-family:'Rajdhani',sans-serif; font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2); }
+.feat-price-row { display:flex; align-items:center; gap:2rem; }
+.feat-price { font-family:'Orbitron',sans-serif; font-size:2rem; font-weight:900; color:var(--primary); text-shadow:0 0 20px rgba(51,129,255,.7); }
+.feat-old { font-family:'Rajdhani',sans-serif; font-size:.875rem; color:var(--muted2); text-decoration:line-through; }
 
-  .scroll-hint {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .5rem;
-    color: hsl(var(--muted-foreground));
-    font-size: .75rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    font-family: 'Rajdhani', sans-serif;
-    animation: pulse-neon 2s ease-in-out infinite;
-  }
-  .scroll-hint-line {
-    width: 1px; height: 40px;
-    background: linear-gradient(to bottom, hsl(var(--primary)), transparent);
-  }
+/* COMBO CARDS */
+.combo-row { display:flex; flex-direction:column; gap:1rem; }
+.combo-card {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:var(--r2); display:grid; grid-template-columns:auto 1fr auto;
+  gap:0; overflow:hidden; transition:.3s; animation:fadeUp .5s ease both;
+}
+.combo-card:hover { border-color:rgba(240,66,184,.4); transform:translateY(-2px); box-shadow:0 15px 35px rgba(0,0,0,.4),0 0 25px rgba(240,66,184,.08); }
+.combo-lv { width:64px; display:flex; align-items:center; justify-content:center; writing-mode:vertical-rl; font-family:'Orbitron',sans-serif; font-size:.55rem; font-weight:700; letter-spacing:.4em; text-transform:uppercase; border-right:1px solid var(--border); padding:1.5rem .75rem; }
+.lv-1 { color:rgba(255,255,255,.5); background:rgba(255,255,255,.03); }
+.lv-2 { color:var(--primary); background:rgba(51,129,255,.06); }
+.lv-3 { color:var(--accent); background:rgba(240,66,184,.06); }
+.lv-4 { color:var(--yellow); background:rgba(255,204,0,.06); }
+.combo-body { padding:1.5rem 2rem; }
+.combo-name { font-size:.875rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-bottom:.35rem; }
+.combo-desc { font-size:.775rem; color:var(--muted); line-height:1.6; margin-bottom:.75rem; }
+.combo-includes { display:flex; gap:.4rem; flex-wrap:wrap; }
+.ci { padding:.2rem .5rem; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:4px; font-family:'Rajdhani',sans-serif; font-size:.65rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted2); }
+.combo-pricing { padding:1.5rem 2rem; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:.25rem; border-left:1px solid var(--border); min-width:140px; }
+.combo-save { font-family:'Rajdhani',sans-serif; font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.combo-price { font-family:'Orbitron',sans-serif; font-size:1.2rem; font-weight:700; }
+.combo-btn { padding:.5rem 1rem; border-radius:6px; font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; transition:.2s; margin-top:.5rem; }
+.combo-btn:hover { filter:brightness(1.2); }
 
-  /* NAV TABS */
-  .nav-tabs {
-    display: flex;
-    justify-content: center;
-    gap: .5rem;
-    flex-wrap: wrap;
-    padding: 2rem 1rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: hsl(var(--background) / .8);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid hsl(var(--border));
-  }
+/* INFO BAR */
+.info-bar { display:grid; grid-template-columns:repeat(5,1fr); background:var(--card); border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; margin-bottom:4rem; }
+.info-item { padding:1.5rem 1rem; text-align:center; border-right:1px solid var(--border); position:relative; transition:.3s; }
+.info-item:last-child { border-right:none; }
+.info-item:hover { background:rgba(51,129,255,.04); }
+.info-item::after { content:''; position:absolute; bottom:0;left:0;right:0; height:2px; background:linear-gradient(90deg,transparent,var(--primary),transparent); opacity:0; transition:.3s; }
+.info-item:hover::after { opacity:1; }
+.info-val { font-family:'Orbitron',sans-serif; font-size:1.3rem; font-weight:700; color:var(--primary); display:block; text-shadow:0 0 10px rgba(51,129,255,.5); }
+.info-lbl { font-family:'Rajdhani',sans-serif; font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); margin-top:.2rem; display:block; }
 
-  .nav-tab {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .875rem;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: .5rem 1.5rem;
-    border: 1px solid hsl(var(--border));
-    background: transparent;
-    color: hsl(var(--muted-foreground));
-    border-radius: var(--radius);
-    transition: all .2s;
-    cursor: pointer;
-    margin-bottom: 1rem;
-  }
-  .nav-tab:hover {
-    border-color: hsl(var(--primary) / .4);
-    color: hsl(var(--primary));
-    background: hsl(var(--primary) / .05);
-  }
-  .nav-tab.active {
-    border-color: hsl(var(--primary));
-    color: hsl(var(--primary));
-    background: hsl(var(--primary) / .1);
-    box-shadow: 0 0 5px #3381ff80, 0 0 15px #3381ff33;
-  }
+/* CART MODAL */
+.cart-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; backdrop-filter:blur(8px); }
+.cart-overlay.open { display:flex; justify-content:flex-end; }
+.cart-panel { width:420px; max-width:100vw; background:var(--bg3); border-left:1px solid var(--border2); display:flex; flex-direction:column; animation:slideLeft .3s ease; }
+.cart-head { padding:1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.cart-head-title { font-size:.9rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.cart-close { width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:1.1rem; transition:.2s; }
+.cart-close:hover { background:rgba(255,58,58,.15); color:var(--red); }
+.cart-items { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.75rem; }
+.cart-item { display:flex; gap:.875rem; padding:1rem; background:var(--card2); border:1px solid var(--border); border-radius:var(--radius); }
+.cart-item-icon { font-size:2rem; width:52px; height:52px; background:var(--card); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cart-item-info { flex:1; }
+.cart-item-name { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.cart-item-price { font-family:'Orbitron',sans-serif; font-size:.85rem; color:var(--primary); margin-top:.2rem; }
+.cart-item-qty { display:flex; align-items:center; gap:.5rem; margin-top:.5rem; }
+.qty-btn { width:24px; height:24px; border-radius:4px; background:rgba(51,129,255,.12); border:1px solid var(--border2); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:.9rem; transition:.2s; }
+.qty-btn:hover { background:var(--primary); color:#fff; }
+.qty-num { font-family:'Orbitron',sans-serif; font-size:.75rem; font-weight:700; min-width:20px; text-align:center; }
+.cart-item-del { color:var(--muted2); font-size:1.1rem; transition:.2s; padding:.2rem; }
+.cart-item-del:hover { color:var(--red); }
+.cart-footer { padding:1.5rem; border-top:1px solid var(--border); }
+.cart-totals { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1.25rem; }
+.cart-row { display:flex; justify-content:space-between; font-size:.8rem; color:var(--muted); font-family:'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; }
+.cart-row.total { color:var(--text); font-size:.95rem; font-weight:700; padding-top:.5rem; border-top:1px solid var(--border); }
+.cart-row.total span:last-child { font-family:'Orbitron',sans-serif; color:var(--primary); text-shadow:0 0 12px rgba(51,129,255,.5); }
+.cart-checkout { width:100%; padding:1rem; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); border-radius:var(--radius); font-size:.85rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#fff; transition:.2s; }
+.cart-checkout:hover { filter:brightness(1.1); box-shadow:var(--cllr-glow); }
+.cart-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; color:var(--muted2); font-family:'Rajdhani',sans-serif; font-size:.875rem; text-transform:uppercase; letter-spacing:.1em; }
+.cart-empty-icon { font-size:3rem; opacity:.3; }
 
-  /* CONTAINER */
-  .container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
+/* ════════════════════════════════════════
+   ── ADMIN PAGE ──
+════════════════════════════════════════ */
+.admin-wrap { display:flex; min-height:100vh; }
 
-  /* SECTION */
-  .section {
-    padding: 5rem 0;
-    display: none;
-  }
-  .section.active { display: block; }
+/* SIDEBAR */
+.admin-sidebar { width:260px; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:50; transition:.3s; }
+.sidebar-logo { padding:1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.75rem; }
+.sidebar-logo-text { font-family:'Orbitron',sans-serif; font-size:1.1rem; font-weight:900; letter-spacing:.2em; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.sidebar-badge { font-family:'Rajdhani',sans-serif; font-size:.6rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.15rem .5rem; background:rgba(51,129,255,.15); border:1px solid var(--border2); border-radius:4px; color:var(--primary); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:.75rem; }
+.sidebar-section-label { font-family:'Rajdhani',sans-serif; font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted2); padding:.75rem .75rem .3rem; }
+.sidebar-item { display:flex; align-items:center; gap:.75rem; padding:.65rem .875rem; border-radius:6px; font-family:'Rajdhani',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); transition:.2s; margin-bottom:.15rem; }
+.sidebar-item:hover { background:rgba(255,255,255,.05); color:var(--text); }
+.sidebar-item.active { background:rgba(51,129,255,.12); color:var(--primary); }
+.sidebar-item .icon { width:18px; text-align:center; font-size:1rem; }
+.sidebar-item .badge-mini { margin-left:auto; font-family:'Orbitron',sans-serif; font-size:.55rem; font-weight:700; padding:.1rem .4rem; background:var(--primary); color:#fff; border-radius:99px; }
+.sidebar-item .badge-mini.red { background:var(--red); }
+.sidebar-bottom { padding:1rem; border-top:1px solid var(--border); }
+.admin-profile { display:flex; align-items:center; gap:.75rem; padding:.75rem; background:var(--card2); border-radius:var(--radius); }
+.admin-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; font-family:'Orbitron',sans-serif; flex-shrink:0; }
+.admin-name { font-family:'Rajdhani',sans-serif; font-size:.8rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+.admin-role { font-family:'Rajdhani',sans-serif; font-size:.65rem; letter-spacing:.05em; text-transform:uppercase; color:var(--primary); }
 
-  .section-header {
-    text-align: center;
-    margin-bottom: 4rem;
-    animation: fadeInUp .6s ease both;
-  }
+/* ADMIN CONTENT */
+.admin-content { margin-left:260px; flex:1; min-height:100vh; }
 
-  .section-tag {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .75rem;
-    letter-spacing: .4em;
-    text-transform: uppercase;
-    color: hsl(var(--primary));
-    display: block;
-    margin-bottom: .75rem;
-  }
+/* ADMIN TOPBAR */
+.admin-topbar { padding:1rem 2rem; background:rgba(0,0,0,.5); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; backdrop-filter:blur(12px); position:sticky; top:0; z-index:40; }
+.admin-topbar-title { font-size:.9rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.admin-topbar-right { display:flex; align-items:center; gap:.75rem; }
+.admin-topbar-btn { padding:.4rem .875rem; border:1px solid var(--border); border-radius:6px; font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); transition:.2s; }
+.admin-topbar-btn:hover { border-color:var(--primary); color:var(--primary); background:rgba(51,129,255,.08); }
+.admin-topbar-btn.btn-action { background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); color:#fff; border-color:transparent; }
+.admin-topbar-btn.btn-action:hover { filter:brightness(1.1); box-shadow:var(--cllr-glow); }
+.live-indicator { display:flex; align-items:center; gap:.4rem; font-family:'Rajdhani',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.3rem .75rem; border:1px solid rgba(0,255,136,.3); background:rgba(0,255,136,.07); border-radius:99px; color:var(--green); }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse-neon 1.2s ease-in-out infinite; }
 
-  .section-title {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: hsl(var(--foreground));
-  }
+/* ADMIN PANEL */
+.admin-panel { display:none; padding:2rem; }
+.admin-panel.active { display:block; }
 
-  .section-line {
-    width: 80px; height: 2px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
-    margin: 1.5rem auto 0;
-  }
+/* KPI CARDS */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.25rem; margin-bottom:2rem; }
+.kpi { background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); padding:1.5rem; position:relative; overflow:hidden; transition:.3s; animation:fadeUp .5s ease both; }
+.kpi:hover { border-color:rgba(51,129,255,.35); transform:translateY(-3px); }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.kpi.blue::before { background:linear-gradient(90deg,var(--cllr-blue),var(--cllr-violet)); }
+.kpi.pink::before { background:linear-gradient(90deg,var(--cllr-pink),var(--accent2)); }
+.kpi.green::before { background:var(--green); }
+.kpi.yellow::before { background:var(--yellow); }
+.kpi-icon { font-size:1.5rem; margin-bottom:.75rem; }
+.kpi-val { font-family:'Orbitron',sans-serif; font-size:1.6rem; font-weight:700; display:block; margin-bottom:.25rem; }
+.kpi.blue .kpi-val { color:var(--primary); text-shadow:0 0 10px rgba(51,129,255,.4); }
+.kpi.pink .kpi-val { color:var(--accent); text-shadow:0 0 10px rgba(240,66,184,.4); }
+.kpi.green .kpi-val { color:var(--green); text-shadow:0 0 10px rgba(0,255,136,.4); }
+.kpi.yellow .kpi-val { color:var(--yellow); text-shadow:0 0 10px rgba(255,204,0,.4); }
+.kpi-lbl { font-family:'Rajdhani',sans-serif; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2); }
+.kpi-delta { position:absolute; top:1rem; right:1rem; font-family:'Rajdhani',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.05em; padding:.15rem .5rem; border-radius:99px; }
+.kpi-delta.up { background:rgba(0,255,136,.12); color:var(--green); }
+.kpi-delta.down { background:rgba(255,58,58,.12); color:var(--red); }
 
-  /* MENU GRID */
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
+/* GRID 2COL */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+.grid3 { display:grid; grid-template-columns:1.5fr 1fr; gap:1.5rem; margin-bottom:2rem; }
 
-  /* CARD */
-  .menu-card {
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border) / .6);
-    border-radius: var(--radius);
-    overflow: hidden;
-    position: relative;
-    transition: all .3s;
-    animation: fadeInUp .6s ease both;
-    cursor: pointer;
-  }
-  .menu-card:hover {
-    border-color: hsl(var(--primary) / .6);
-    box-shadow: 0 0 25px 4px hsl(220 80% 60% / .2);
-    transform: translateY(-4px);
-  }
+/* ADMIN CARD */
+.acard { background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; animation:fadeUp .5s ease both; }
+.acard-head { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.acard-title { font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.acard-action { font-family:'Rajdhani',sans-serif; font-size:.7rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--primary); transition:.2s; }
+.acard-action:hover { color:#fff; }
+.acard-body { padding:1.5rem; }
 
-  .menu-card-img {
-    aspect-ratio: 16/9;
-    background: hsl(var(--muted));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 4rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .menu-card-img::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 60%, hsl(var(--card)));
-  }
+/* ORDERS TABLE */
+.orders-table { width:100%; border-collapse:collapse; font-size:.78rem; }
+.orders-table th { font-family:'Rajdhani',sans-serif; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); text-align:left; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.orders-table td { padding:.75rem 1rem; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+.orders-table tr:hover td { background:rgba(255,255,255,.02); }
+.order-id { font-family:'Orbitron',sans-serif; font-size:.7rem; color:var(--primary); }
+.order-status { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .65rem; border-radius:99px; font-family:'Rajdhani',sans-serif; font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.status-pending { background:rgba(255,204,0,.12); color:var(--yellow); border:1px solid rgba(255,204,0,.3); }
+.status-prep { background:rgba(51,129,255,.12); color:var(--primary); border:1px solid rgba(51,129,255,.3); }
+.status-ready { background:rgba(0,255,136,.12); color:var(--green); border:1px solid rgba(0,255,136,.3); }
+.status-delivered { background:rgba(255,255,255,.06); color:var(--muted); border:1px solid rgba(255,255,255,.1); }
+.status-canceled { background:rgba(255,58,58,.1); color:var(--red); border:1px solid rgba(255,58,58,.2); }
 
-  .menu-card-badge {
-    position: absolute;
-    top: .75rem;
-    right: .75rem;
-    padding: .25rem .75rem;
-    border-radius: 9999px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    z-index: 2;
-  }
-  .badge-new { background: hsl(var(--primary) / .9); color: white; }
-  .badge-hot { background: hsl(8 100% 56% / .9); color: white; }
-  .badge-special { background: hsl(var(--accent) / .9); color: white; }
+/* PRODUCT LIST ADMIN */
+.prod-list { display:flex; flex-direction:column; gap:.5rem; }
+.prod-row { display:flex; align-items:center; gap:1rem; padding:.875rem 1rem; background:rgba(255,255,255,.02); border:1px solid var(--border); border-radius:8px; transition:.2s; }
+.prod-row:hover { border-color:rgba(51,129,255,.3); background:rgba(51,129,255,.04); }
+.prod-row-icon { font-size:1.5rem; width:44px; height:44px; background:var(--card); border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.prod-row-info { flex:1; }
+.prod-row-name { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.prod-row-cat { font-family:'Rajdhani',sans-serif; font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2); }
+.prod-row-price { font-family:'Orbitron',sans-serif; font-size:.85rem; font-weight:700; color:var(--primary); min-width:80px; text-align:right; }
+.prod-row-actions { display:flex; gap:.35rem; }
+.act-btn { width:30px; height:30px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:.85rem; transition:.2s; }
+.act-btn.edit { background:rgba(51,129,255,.12); color:var(--primary); }
+.act-btn.edit:hover { background:var(--primary); color:#fff; }
+.act-btn.del { background:rgba(255,58,58,.1); color:var(--red); }
+.act-btn.del:hover { background:var(--red); color:#fff; }
+.act-btn.toggle { background:rgba(0,255,136,.1); color:var(--green); }
+.act-btn.toggle:hover { background:var(--green); color:#000; }
 
-  .menu-card-body { padding: 1.25rem; }
+/* CHART BARS */
+.chart-bars { display:flex; align-items:flex-end; gap:.4rem; height:120px; margin-top:1rem; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:.35rem; }
+.bar { width:100%; border-radius:4px 4px 0 0; background:linear-gradient(180deg,var(--cllr-blue),var(--cllr-violet)); opacity:.7; transition:.3s; min-height:4px; }
+.bar:hover { opacity:1; box-shadow:0 0 10px rgba(51,129,255,.4); }
+.bar-lbl { font-family:'Rajdhani',sans-serif; font-size:.55rem; letter-spacing:.05em; text-transform:uppercase; color:var(--muted2); white-space:nowrap; }
 
-  .menu-card-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: .9rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: hsl(var(--foreground));
-    margin-bottom: .5rem;
-  }
+/* DONUT CHART */
+.donut-wrap { display:flex; align-items:center; gap:2rem; }
+.donut { width:120px; height:120px; border-radius:50%; background:conic-gradient(var(--cllr-blue) 0deg 162deg, var(--cllr-violet) 162deg 252deg, var(--cllr-pink) 252deg 306deg, rgba(255,255,255,.1) 306deg 360deg); position:relative; flex-shrink:0; }
+.donut::after { content:''; position:absolute; inset:20px; border-radius:50%; background:var(--card2); }
+.donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
+.donut-center-val { font-family:'Orbitron',sans-serif; font-size:.85rem; font-weight:700; color:var(--text); }
+.donut-center-lbl { font-family:'Rajdhani',sans-serif; font-size:.55rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2); }
+.donut-legend { display:flex; flex-direction:column; gap:.6rem; flex:1; }
+.dl-item { display:flex; align-items:center; gap:.5rem; }
+.dl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dl-name { font-family:'Rajdhani',sans-serif; font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); flex:1; }
+.dl-pct { font-family:'Orbitron',sans-serif; font-size:.7rem; font-weight:700; }
 
-  .menu-card-desc {
-    font-size: .8rem;
-    color: hsl(var(--muted-foreground));
-    line-height: 1.6;
-    margin-bottom: 1rem;
-  }
+/* ADD PRODUCT FORM */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.form-full { grid-column:1/-1; }
+.field { display:flex; flex-direction:column; gap:.4rem; }
+.field-label { font-family:'Rajdhani',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.field-input { padding:.7rem 1rem; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:6px; font-size:.8rem; color:var(--text); transition:.2s; width:100%; }
+.field-input:focus { border-color:var(--primary); background:rgba(51,129,255,.05); box-shadow:0 0 0 3px rgba(51,129,255,.1); }
+.field-input::placeholder { color:var(--muted2); }
+.field-select { padding:.7rem 1rem; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:6px; font-size:.8rem; color:var(--text); transition:.2s; width:100%; -webkit-appearance:none; }
+.field-select:focus { border-color:var(--primary); }
+.field-select option { background:var(--bg3); }
+.form-actions { display:flex; gap:.75rem; margin-top:1.5rem; justify-content:flex-end; }
+.btn-save { padding:.7rem 2rem; background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet)); border-radius:6px; font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; transition:.2s; }
+.btn-save:hover { filter:brightness(1.1); box-shadow:var(--cllr-glow); }
+.btn-cancel { padding:.7rem 1.5rem; border:1px solid var(--border); border-radius:6px; font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); transition:.2s; }
+.btn-cancel:hover { border-color:var(--border2); color:var(--text); }
 
-  .menu-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+/* TOGGLE SWITCH */
+.toggle-wrap { display:flex; align-items:center; gap:.75rem; }
+.toggle { position:relative; width:44px; height:24px; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; inset:0; background:rgba(255,255,255,.1); border-radius:99px; cursor:pointer; transition:.2s; border:1px solid var(--border); }
+.toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:2px; top:2px; background:var(--muted2); border-radius:50%; transition:.2s; }
+.toggle input:checked ~ .toggle-slider { background:rgba(51,129,255,.3); border-color:var(--primary); }
+.toggle input:checked ~ .toggle-slider:before { transform:translateX(20px); background:var(--primary); }
+.toggle-label { font-family:'Rajdhani',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
 
-  .menu-card-price {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: hsl(var(--primary));
-    text-shadow: 0 0 7px hsl(217 100% 60% / .5);
-  }
+/* NOTIFICATION DOT */
+.notif { position:relative; }
+.notif::after { content:''; position:absolute; top:-2px; right:-2px; width:8px; height:8px; background:var(--red); border-radius:50%; border:2px solid var(--card); animation:pulse-neon 1.5s ease-in-out infinite; }
 
-  .menu-card-add {
-    width: 36px; height: 36px;
-    border-radius: 9999px;
-    border: 1px solid hsl(var(--primary) / .4);
-    background: hsl(var(--primary) / .1);
-    color: hsl(var(--primary));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem;
-    transition: all .2s;
-    cursor: pointer;
-  }
-  .menu-card-add:hover {
-    background: hsl(var(--primary));
-    color: white;
-    box-shadow: 0 0 15px hsl(var(--primary) / .5);
-  }
-
-  /* FEATURED CARD */
-  .featured-card {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 280px;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--primary) / .4);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: 0 0 30px 6px hsl(220 80% 60% / .3);
-    animation: fadeInUp .6s ease both;
-    cursor: pointer;
-    transition: all .3s;
-  }
-  .featured-card:hover {
-    box-shadow: 0 0 40px 8px hsl(220 80% 60% / .4);
-    transform: translateY(-2px);
-  }
-
-  .featured-img {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 6rem;
-    background: linear-gradient(135deg, hsl(var(--primary) / .05), hsl(var(--accent) / .05));
-    position: relative;
-  }
-  .featured-img-corner {
-    position: absolute;
-    top: 0; left: 0;
-    width: 60px; height: 60px;
-    border-top: 2px solid hsl(var(--primary));
-    border-left: 2px solid hsl(var(--primary));
-  }
-  .featured-img-corner-br {
-    top: auto; left: auto; bottom: 0; right: 0;
-    border-top: none; border-left: none;
-    border-bottom: 2px solid hsl(var(--primary));
-    border-right: 2px solid hsl(var(--primary));
-  }
-
-  .featured-body {
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 1rem;
-  }
-
-  .featured-tag {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .7rem;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    color: hsl(var(--primary));
-  }
-
-  .featured-name {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-  }
-
-  .featured-desc {
-    font-size: .875rem;
-    color: hsl(var(--muted-foreground));
-    line-height: 1.6;
-  }
-
-  .featured-price {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: hsl(var(--primary));
-    text-shadow: 0 0 7px hsl(217 100% 60% / .8), 0 0 20px hsl(217 100% 60% / .4);
-  }
-
-  .featured-btn {
-    display: inline-flex; align-items: center; gap: .75rem;
-    padding: .75rem 1.5rem;
-    background: linear-gradient(135deg, #3381ff, #5f42f0);
-    border: none;
-    border-radius: var(--radius);
-    color: white;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .875rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    transition: all .2s;
-    cursor: pointer;
-    width: fit-content;
-  }
-  .featured-btn:hover { filter: brightness(1.1); box-shadow: 0 0 20px hsl(var(--primary) / .4); }
-
-  /* STATS BAR */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    overflow: hidden;
-    margin-bottom: 4rem;
-    background: hsl(var(--card));
-  }
-
-  .stat-item {
-    padding: 1.5rem;
-    text-align: center;
-    border-right: 1px solid hsl(var(--border));
-    position: relative;
-  }
-  .stat-item:last-child { border-right: none; }
-  .stat-item::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
-    opacity: 0;
-    transition: opacity .3s;
-  }
-  .stat-item:hover::after { opacity: 1; }
-
-  .stat-number {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: hsl(var(--primary));
-    display: block;
-  }
-
-  .stat-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .75rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-    margin-top: .25rem;
-    display: block;
-  }
-
-  /* COMBO CARD */
-  .combo-card {
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border) / .6);
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: flex;
-    gap: 0;
-    position: relative;
-    animation: fadeInUp .6s ease both;
-    transition: all .3s;
-    cursor: pointer;
-  }
-  .combo-card:hover {
-    border-color: hsl(var(--accent) / .6);
-    box-shadow: 0 0 25px hsl(var(--accent) / .2);
-    transform: translateY(-2px);
-  }
-
-  .combo-level {
-    width: 50px;
-    background: linear-gradient(180deg, hsl(var(--accent) / .3), hsl(var(--accent) / .1));
-    display: flex; align-items: center; justify-content: center;
-    writing-mode: vertical-rl;
-    font-family: 'Orbitron', sans-serif;
-    font-size: .6rem;
-    font-weight: 700;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    color: hsl(var(--accent));
-    border-right: 1px solid hsl(var(--accent) / .2);
-    flex-shrink: 0;
-  }
-
-  .combo-body { padding: 1.5rem; flex: 1; }
-
-  .combo-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: .85rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    margin-bottom: .5rem;
-  }
-
-  .combo-items {
-    font-size: .8rem;
-    color: hsl(var(--muted-foreground));
-    margin-bottom: 1rem;
-    line-height: 1.6;
-  }
-
-  .combo-footer {
-    display: flex; align-items: center; justify-content: space-between;
-  }
-
-  .combo-savings {
-    font-size: .75rem;
-    color: hsl(var(--accent));
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-  }
-
-  .combo-price {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: hsl(var(--accent));
-    text-shadow: 0 0 7px hsl(var(--accent) / .5);
-  }
-
-  /* FOOTER */
-  .footer {
-    border-top: 1px solid hsl(var(--border));
-    padding: 3rem 0;
-    text-align: center;
-  }
-  .footer-logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: .3em;
-    background: linear-gradient(135deg, #3381ff, #5f42f0);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: .5rem;
-  }
-  .footer-text {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .75rem;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-  }
-
-  /* CART BUTTON */
-  .cart-btn {
-    position: fixed;
-    bottom: 2rem; right: 2rem;
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #3381ff, #5f42f0);
-    border: none;
-    border-radius: 9999px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    cursor: pointer;
-    z-index: 60;
-    box-shadow: 0 0 20px hsl(var(--primary) / .4);
-    transition: all .2s;
-  }
-  .cart-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px hsl(var(--primary) / .6); }
-
-  .cart-count {
-    position: absolute;
-    top: -4px; right: -4px;
-    background: hsl(var(--accent));
-    color: white;
-    width: 22px; height: 22px;
-    border-radius: 9999px;
-    font-size: .7rem;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 10px hsl(var(--accent) / .5);
-    animation: ping 1s cubic-bezier(0,0,.2,1) infinite;
-  }
-
-  /* LIVE badge */
-  .live-badge {
-    display: inline-flex; align-items: center; gap: .4rem;
-    padding: .2rem .75rem;
-    border: 1px solid hsl(8 100% 56% / .5);
-    background: hsl(8 100% 56% / .1);
-    border-radius: 9999px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: hsl(8 100% 56%);
-    margin-bottom: 1rem;
-  }
-  .live-dot {
-    width: 6px; height: 6px;
-    background: hsl(8 100% 56%);
-    border-radius: 9999px;
-    animation: pulse-neon 1s ease-in-out infinite;
-  }
-
-  /* Progress bar (XP) */
-  .xp-bar-wrap {
-    display: flex; align-items: center; gap: .75rem; margin-top: .5rem;
-  }
-  .xp-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: .65rem;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
-    white-space: nowrap;
-  }
-  .xp-track {
-    flex: 1; height: 4px;
-    background: hsl(var(--muted));
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-  .xp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #3381ff, #5f42f0);
-    border-radius: 9999px;
-    transition: width .6s ease;
-  }
-
-  @media (max-width: 640px) {
-    .featured-card { grid-template-columns: 1fr; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    .stats-bar .stat-item:nth-child(2) { border-right: none; }
-    .stats-bar .stat-item:nth-child(3) { border-right: 1px solid hsl(var(--border)); }
-    .stats-bar .stat-item:nth-child(3), .stats-bar .stat-item:nth-child(4) { border-top: 1px solid hsl(var(--border)); }
-  }
+/* RESPONSIVE ADMIN */
+@media(max-width:1100px){
+  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+  .grid2,.grid3 { grid-template-columns:1fr; }
+  .info-bar { grid-template-columns:repeat(3,1fr); }
+  .info-item:nth-child(3){ border-right:none; }
+  .info-item:nth-child(4),
+  .info-item:nth-child(5){ border-top:1px solid var(--border); }
+}
+@media(max-width:860px){
+  .admin-sidebar { transform:translateX(-100%); }
+  .admin-sidebar.open { transform:translateX(0); }
+  .admin-content { margin-left:0; }
+  .feat-card { grid-template-columns:1fr; }
+  .combo-card { grid-template-columns:auto 1fr; }
+  .combo-pricing { display:none; }
+}
+@media(max-width:640px){
+  .kpi-grid { grid-template-columns:1fr 1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  .topbar-nav { display:none; }
+}
 </style>
 </head>
 <body class="grid-bg">
-
-<!-- Scanline overlay -->
 <div class="scanline-overlay"></div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg-orb orb-blue"></div>
-  <div class="hero-bg-orb orb-pink"></div>
+<!-- ═══════════════════════════════
+     MENU PAGE
+═══════════════════════════════ -->
+<div id="page-menu" class="page active">
 
-  <div class="live-badge">
-    <span class="live-dot"></span> Delivery 24h
-  </div>
-
-  <h1 class="hero-logo">
-    <span class="hero-logo-glitch">NEXUS</span>
-  </h1>
-  <p class="hero-subtitle">Food &amp; Drink · Level Up Your Taste</p>
-  <div class="hero-divider"></div>
-
-  <div class="hero-badge">
-    <span class="hero-badge-dot"></span>
-    Sistema online · Pedidos abertos
-    <span class="hero-badge-dot"></span>
-  </div>
-
-  <button class="featured-btn" onclick="document.querySelector('.nav-tabs').scrollIntoView({behavior:'smooth'})">
-    ▶ Ver Cardápio
-  </button>
-
-  <div class="scroll-hint">
-    <div class="scroll-hint-line"></div>
-    <span>Scroll</span>
-  </div>
-</section>
-
-<!-- NAV TABS -->
-<nav class="nav-tabs">
-  <button class="nav-tab active" onclick="showSection('lanches')">⚔ Lanches</button>
-  <button class="nav-tab" onclick="showSection('bebidas')">💧 Bebidas</button>
-  <button class="nav-tab" onclick="showSection('combos')">🎮 Combos</button>
-  <button class="nav-tab" onclick="showSection('sobremesas')">🍬 Sobremesas</button>
-</nav>
-
-<!-- ═══ LANCHES ═══ -->
-<section id="lanches" class="section active">
-  <div class="container">
-
-    <div class="section-header">
-      <span class="section-tag">// categoria_01</span>
-      <h2 class="section-title neon-glow">Lanches</h2>
-      <div class="section-line"></div>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-logo">CLLR</div>
+    <nav class="topbar-nav">
+      <button class="topbar-nav-btn active" onclick="setCat('all')">Tudo</button>
+      <button class="topbar-nav-btn" onclick="setCat('lanches')">Lanches</button>
+      <button class="topbar-nav-btn" onclick="setCat('bebidas')">Bebidas</button>
+      <button class="topbar-nav-btn" onclick="setCat('combos')">Combos</button>
+      <button class="topbar-nav-btn" onclick="setCat('sobremesas')">Sobremesas</button>
+      <button class="topbar-nav-btn" onclick="setCat('snacks')">Snacks</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="topbar-status"><span class="topbar-status-dot"></span>Aberto · 11h–02h</div>
+      <button class="cart-pill" onclick="toggleCart()">
+        🛒 Carrinho
+        <span class="cart-pill-count" id="cartCount">0</span>
+      </button>
+      <button class="topbar-nav-btn" onclick="showPage('admin')" style="border-color:rgba(240,66,184,.4);color:#f042b8">⚙ Admin</button>
     </div>
+  </header>
 
-    <!-- Stats -->
-    <div class="stats-bar">
-      <div class="stat-item"><span class="stat-number">24</span><span class="stat-label">Opções</span></div>
-      <div class="stat-item"><span class="stat-number">4.9★</span><span class="stat-label">Avaliação</span></div>
-      <div class="stat-item"><span class="stat-number">15min</span><span class="stat-label">Preparo</span></div>
-      <div class="stat-item"><span class="stat-number">100%</span><span class="stat-label">Fresh</span></div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-orb orb1"></div>
+    <div class="hero-orb orb2"></div>
+    <div class="hero-orb orb3"></div>
+    <p class="hero-eyebrow">// since 2024 · level up your food ·</p>
+    <h1 class="hero-title">
+      <span class="hero-title-main">CELLAR</span>
+      <span class="hero-title-accent">CLLR</span>
+    </h1>
+    <p class="hero-sub">Comida Gamer · Delivery & Retirada · 24 / 7</p>
+    <div class="hero-line"></div>
+    <div class="hero-badges">
+      <span class="hero-badge">⚡ Entrega em 30min</span>
+      <span class="hero-badge">🔥 +50 itens no cardápio</span>
+      <span class="hero-badge">🎮 Pedido Online</span>
+      <span class="hero-badge">★ 4.9/5.0 avaliação</span>
     </div>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="document.getElementById('menu-anchor').scrollIntoView({behavior:'smooth'})">▶ Ver Cardápio</button>
+      <button class="btn-outline" onclick="toggleCart()">🛒 Meu Pedido</button>
+    </div>
+  </section>
 
-    <div class="menu-grid">
-      <!-- FEATURED -->
-      <div class="featured-card">
-        <div class="featured-img">
-          🍔
-          <div class="featured-img-corner"></div>
-          <div class="featured-img-corner featured-img-corner-br"></div>
-        </div>
-        <div class="featured-body">
-          <span class="featured-tag">// destaque_da_semana</span>
-          <div class="live-badge" style="width:fit-content"><span class="live-dot"></span> Mais Pedido</div>
-          <h3 class="featured-name neon-glow">Ultra Smash Burger</h3>
-          <p class="featured-desc">Dois smash patties 180g, queijo cheddar derretido, bacon crocante, molho especial NEXUS, cebola caramelizada e brioche artesanal.</p>
-          <div class="xp-bar-wrap">
-            <span class="xp-label">Rating XP</span>
-            <div class="xp-track"><div class="xp-fill" style="width:95%"></div></div>
-            <span class="xp-label" style="color:hsl(var(--primary))">95/100</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1.5rem;margin-top:.5rem">
-            <span class="featured-price">R$ 38,90</span>
-            <button class="featured-btn">+ Adicionar ao Pedido</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cards normais -->
-      <div class="menu-card">
-        <div class="menu-card-img">🥩
-          <span class="menu-card-badge badge-hot">🔥 Hot</span>
-        </div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Stealth Smash</h3>
-          <p class="menu-card-desc">Patty 180g, queijo gouda, jalapeño, maionese sriracha, rúcula e pão pretzel.</p>
-          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
-            <span class="xp-label">Rating</span>
-            <div class="xp-track"><div class="xp-fill" style="width:88%"></div></div>
-          </div>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 32,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🐔
-          <span class="menu-card-badge badge-new">✦ Novo</span>
-        </div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Cyber Chicken</h3>
-          <p class="menu-card-desc">Frango empanado crocante, coleslaw, picles crocante, molho buffalo e brioche.</p>
-          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
-            <span class="xp-label">Rating</span>
-            <div class="xp-track"><div class="xp-fill" style="width:82%"></div></div>
-          </div>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 29,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🌿</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Pixel Plant</h3>
-          <p class="menu-card-desc">Hambúrguer plant-based 160g, queijo vegano, tomate, alface, maionese de ervas.</p>
-          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
-            <span class="xp-label">Rating</span>
-            <div class="xp-track"><div class="xp-fill" style="width:76%;background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div>
-          </div>
-          <div class="menu-card-footer">
-            <span class="menu-card-price" style="color:#22c55e;text-shadow:0 0 7px #22c55e80">R$ 27,90</span>
-            <button class="menu-card-add" style="border-color:#22c55e80;background:#22c55e1a;color:#22c55e">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🌮
-          <span class="menu-card-badge badge-special">★ Especial</span>
-        </div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Loot Box Wrap</h3>
-          <p class="menu-card-desc">Wrap crocante, frango grelhado, avocado, molho chipotle, queijo parmesão ralado.</p>
-          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
-            <span class="xp-label">Rating</span>
-            <div class="xp-track"><div class="xp-fill" style="width:80%"></div></div>
-          </div>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 25,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🍟</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">XP Fries</h3>
-          <p class="menu-card-desc">Batatas fritas crinkle-cut, tempero cajun especial, molho cheddar e bacon bits.</p>
-          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
-            <span class="xp-label">Rating</span>
-            <div class="xp-track"><div class="xp-fill" style="width:91%"></div></div>
-          </div>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 18,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-inner">
+      <span class="ticker-item">⚡ ULTRA SMASH BURGER — <span>R$ 38,90</span></span>
+      <span class="ticker-item">🎮 FRETE GRÁTIS ACIMA DE R$ 80</span>
+      <span class="ticker-item">🔥 CYBER CHICKEN — <span>NOVO</span></span>
+      <span class="ticker-item">💧 NEXUS ENERGY™ — <span>EXCLUSIVO</span></span>
+      <span class="ticker-item">★ COMBO SQUAD WIPE — <span>R$ 159,90</span></span>
+      <span class="ticker-item">🍬 FINAL BOSS CAKE — <span>DISPONÍVEL</span></span>
+      <span class="ticker-item">⚡ ULTRA SMASH BURGER — <span>R$ 38,90</span></span>
+      <span class="ticker-item">🎮 FRETE GRÁTIS ACIMA DE R$ 80</span>
+      <span class="ticker-item">🔥 CYBER CHICKEN — <span>NOVO</span></span>
+      <span class="ticker-item">💧 NEXUS ENERGY™ — <span>EXCLUSIVO</span></span>
+      <span class="ticker-item">★ COMBO SQUAD WIPE — <span>R$ 159,90</span></span>
+      <span class="ticker-item">🍬 FINAL BOSS CAKE — <span>DISPONÍVEL</span></span>
     </div>
   </div>
-</section>
 
-<!-- ═══ BEBIDAS ═══ -->
-<section id="bebidas" class="section">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">// categoria_02</span>
-      <h2 class="section-title neon-glow">Bebidas</h2>
-      <div class="section-line"></div>
+  <!-- MENU SECTION -->
+  <section class="menu-section" id="menu-anchor">
+    <div class="container">
+
+      <!-- INFO BAR -->
+      <div class="info-bar">
+        <div class="info-item"><span class="info-val">52</span><span class="info-lbl">Itens</span></div>
+        <div class="info-item"><span class="info-val">4.9★</span><span class="info-lbl">Avaliação</span></div>
+        <div class="info-item"><span class="info-val">28min</span><span class="info-lbl">Entrega</span></div>
+        <div class="info-item"><span class="info-val">R$15</span><span class="info-lbl">Frete</span></div>
+        <div class="info-item"><span class="info-val">24h</span><span class="info-lbl">Online</span></div>
+      </div>
+
+      <!-- CAT TABS -->
+      <div class="cat-tabs" id="catTabs">
+        <button class="cat-tab active" onclick="setCat('all',this)">🔥 Todos os Itens</button>
+        <button class="cat-tab" onclick="setCat('lanches',this)">⚔ Lanches</button>
+        <button class="cat-tab" onclick="setCat('bebidas',this)">💧 Bebidas</button>
+        <button class="cat-tab" onclick="setCat('combos',this)">🎮 Combos</button>
+        <button class="cat-tab" onclick="setCat('sobremesas',this)">🍬 Sobremesas</button>
+        <button class="cat-tab" onclick="setCat('snacks',this)">🍟 Snacks & Sides</button>
+      </div>
+
+      <!-- LANCHES -->
+      <div class="menu-cat-block" data-cat="lanches">
+        <div class="section-eyebrow">// 01 — Lanches</div>
+        <h2 class="section-title">Burgers & Wraps</h2>
+        <div class="section-divider"></div>
+        <div class="mgrid">
+          <!-- FEATURED -->
+          <div class="feat-card">
+            <div class="feat-card-img">
+              🍔
+              <div class="feat-corner tl"></div>
+              <div class="feat-corner br"></div>
+            </div>
+            <div class="feat-body">
+              <div class="feat-badge-row">
+                <span class="feat-rank">// rank S</span>
+                <span class="badge badge-red">🔥 Mais Pedido</span>
+                <span class="badge badge-yellow">★ Chef Pick</span>
+              </div>
+              <h3 class="feat-name">Ultra Smash Burger</h3>
+              <p class="feat-desc">Dois smash patties 180g cada, queijo cheddar triplo, bacon crocante artesanal, molho CLLR secreto, pickles crunchy e cebola caramelizada 4h. Servido em brioche amanteigado tostado.</p>
+              <div class="feat-stats">
+                <div class="feat-stat"><span class="feat-stat-val">360g</span><span class="feat-stat-lbl">Peso</span></div>
+                <div class="feat-stat"><span class="feat-stat-val">15min</span><span class="feat-stat-lbl">Preparo</span></div>
+                <div class="feat-stat"><span class="feat-stat-val">98/100</span><span class="feat-stat-lbl">Rating XP</span></div>
+              </div>
+              <div class="feat-price-row">
+                <div><span class="feat-old">R$ 46,90</span><span class="feat-price">R$ 38,90</span></div>
+                <button class="btn-primary" onclick="addToCart('Ultra Smash Burger','🍔',38.90)">+ Adicionar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pcard" style="animation-delay:.05s">
+            <div class="pcard-img">🌶️<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-red">🔥 Hot</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Lanche · Spicy</p>
+              <h3 class="pcard-name">Stealth Smash</h3>
+              <p class="pcard-desc">Patty 180g, queijo gouda defumado, jalapeño fresco, maionese sriracha, rúcula e pão pretzel artesanal.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Picante</span><span class="pcard-tag">Artesanal</span></div>
+              <div class="pcard-footer"><div class="pcard-price"><small>A partir de</small>R$ 32,90</div><button class="pcard-add" onclick="addToCart('Stealth Smash','🌶️',32.90)">+</button></div>
+            </div>
+          </div>
+
+          <div class="pcard" style="animation-delay:.1s">
+            <div class="pcard-img">🐔<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-blue">✦ Novo</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Lanche · Chicken</p>
+              <h3 class="pcard-name">Cyber Chicken</h3>
+              <p class="pcard-desc">Frango empanado duplo crocante, coleslaw asiática, pickles artesanais, molho buffalo honey e brioche.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Frango</span><span class="pcard-tag">Crocante</span><span class="pcard-tag">Novo</span></div>
+              <div class="pcard-footer"><div class="pcard-price">R$ 29,90</div><button class="pcard-add" onclick="addToCart('Cyber Chicken','🐔',29.90)">+</button></div>
+            </div>
+          </div>
+
+          <div class="pcard" style="animation-delay:.15s">
+            <div class="pcard-img">🌿<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Lanche · Plant</p>
+              <h3 class="pcard-name">Pixel Plant</h3>
+              <p class="pcard-desc">Hambúrguer plant-based 160g, queijo vegano, tomate heirloom, alface americana, maionese de ervas finas.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Vegano</span><span class="pcard-tag">Plant-based</span></div>
+              <div class="pcard-footer"><div class="pcard-price" style="color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.4)">R$ 27,90</div><button class="pcard-add" style="border-color:rgba(0,255,136,.4);color:var(--green)" onclick="addToCart('Pixel Plant','🌿',27.90)">+</button></div>
+            </div>
+          </div>
+
+          <div class="pcard" style="animation-delay:.2s">
+            <div class="pcard-img">🌮<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-pink">★ Especial</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Wrap · Grill</p>
+              <h3 class="pcard-name">Loot Box Wrap</h3>
+              <p class="pcard-desc">Wrap grelhado, frango marinado no limão, avocado cremoso, molho chipotle defumado, parmesão e tomate confitado.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Wrap</span><span class="pcard-tag">Grelhado</span></div>
+              <div class="pcard-footer"><div class="pcard-price">R$ 25,90</div><button class="pcard-add" onclick="addToCart('Loot Box Wrap','🌮',25.90)">+</button></div>
+            </div>
+          </div>
+
+          <div class="pcard" style="animation-delay:.25s">
+            <div class="pcard-img">🥩<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-yellow">★ Premium</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Lanche · Black Angus</p>
+              <h3 class="pcard-name">GG Black Angus</h3>
+              <p class="pcard-desc">Patty Black Angus 220g, queijo emmental suíço, cogumelos salteados, aioli trufado e focaccia artesanal.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Black Angus</span><span class="pcard-tag">Premium</span><span class="pcard-tag">Trufa</span></div>
+              <div class="pcard-footer"><div class="pcard-price" style="color:var(--yellow);text-shadow:0 0 10px rgba(255,204,0,.4)">R$ 48,90</div><button class="pcard-add" style="border-color:rgba(255,204,0,.4);color:var(--yellow)" onclick="addToCart('GG Black Angus','🥩',48.90)">+</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SNACKS -->
+      <div class="menu-cat-block" data-cat="snacks" style="margin-top:4rem">
+        <div class="section-eyebrow">// 02 — Snacks</div>
+        <h2 class="section-title">Sides & Snacks</h2>
+        <div class="section-divider"></div>
+        <div class="mgrid">
+          <div class="pcard">
+            <div class="pcard-img">🍟<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-red">🔥 Top</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Side · Fries</p>
+              <h3 class="pcard-name">XP Fries</h3>
+              <p class="pcard-desc">Batatas crinkle-cut crocantes, tempero cajun exclusivo, molho cheddar e bacon bits. Disponível em P, M, G.</p>
+              <div class="pcard-tags"><span class="pcard-tag">Crocante</span><span class="pcard-tag">Cajun</span></div>
+              <div class="pcard-footer"><div class="pcard-price"><small>A partir de</small>R$ 14,90</div><button class="pcard-add" onclick="addToCart('XP Fries','🍟',14.90)">+</button></div>
+            </div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🧀<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Side · Nachos</p>
+              <h3 class="pcard-name">Nachos Protocol</h3>
+              <p class="pcard-desc">Nachos crocantes, cheddar derretido, guacamole fresco, pico de gallo, jalapeño e creme azedo.</p>
+              <div class="pcard-footer"><div class="pcard-price">R$ 22,90</div><button class="pcard-add" onclick="addToCart('Nachos Protocol','🧀',22.90)">+</button></div>
+            </div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🍗<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-blue">✦ Novo</span></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Side · Chicken</p>
+              <h3 class="pcard-name">Chicken Bites XL</h3>
+              <p class="pcard-desc">12 pedaços de frango empanado, 2 molhos à escolha (buffalo, honey mustard, cheddar, barbecue).</p>
+              <div class="pcard-footer"><div class="pcard-price">R$ 28,90</div><button class="pcard-add" onclick="addToCart('Chicken Bites XL','🍗',28.90)">+</button></div>
+            </div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🥗<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body">
+              <p class="pcard-cat">Side · Salada</p>
+              <h3 class="pcard-name">Spawn Point Salad</h3>
+              <p class="pcard-desc">Mix de folhas nobres, cherry, pepino japonês, croutons, parmesão e molho caesar da casa.</p>
+              <div class="pcard-footer"><div class="pcard-price" style="color:var(--green);text-shadow:0 0 10px rgba(0,255,136,.4)">R$ 18,90</div><button class="pcard-add" style="border-color:rgba(0,255,136,.4);color:var(--green)" onclick="addToCart('Spawn Point Salad','🥗',18.90)">+</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BEBIDAS -->
+      <div class="menu-cat-block" data-cat="bebidas" style="margin-top:4rem">
+        <div class="section-eyebrow">// 03 — Bebidas</div>
+        <h2 class="section-title">Drinks & Energy</h2>
+        <div class="section-divider"></div>
+        <div class="mgrid wide">
+          <div class="feat-card" style="border-color:rgba(240,66,184,.35);box-shadow:0 0 50px rgba(240,66,184,.12)">
+            <div class="feat-card-img" style="background:linear-gradient(135deg,rgba(240,66,184,.08),rgba(95,66,240,.06));font-size:6rem">
+              ⚡
+              <div class="feat-corner tl" style="border-color:var(--accent)"></div>
+              <div class="feat-corner br" style="border-color:var(--accent)"></div>
+            </div>
+            <div class="feat-body">
+              <div class="feat-badge-row">
+                <span class="feat-rank" style="color:var(--accent);border-color:rgba(240,66,184,.3)">// exclusivo</span>
+                <span class="badge badge-pink">★ CLLR Exclusive</span>
+              </div>
+              <h3 class="feat-name">CLLR Energy™</h3>
+              <p class="feat-desc">Nossa bebida energética criada para gamers. Taurina 2000mg, vitamina B6+B12, cafeína natural de guaraná, eletrólitos e zero açúcar. Disponível em Tropical Glitch, Berry Neon e Classic Blue.</p>
+              <div class="feat-stats">
+                <div class="feat-stat"><span class="feat-stat-val">350ml</span><span class="feat-stat-lbl">Volume</span></div>
+                <div class="feat-stat"><span class="feat-stat-val">0 kcal</span><span class="feat-stat-lbl">Calorias</span></div>
+                <div class="feat-stat"><span class="feat-stat-val">3 sab.</span><span class="feat-stat-lbl">Sabores</span></div>
+              </div>
+              <span class="feat-price" style="color:var(--accent);text-shadow:0 0 20px rgba(240,66,184,.7)">R$ 14,90</span>
+              <button class="btn-primary" style="background:linear-gradient(135deg,var(--accent),#8b2fc9)" onclick="addToCart('CLLR Energy™','⚡',14.90)">+ Adicionar</button>
+            </div>
+          </div>
+
+          <div class="pcard">
+            <div class="pcard-img">🧃<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-green">🌿 Natural</span></div></div>
+            <div class="pcard-body"><p class="pcard-cat">Bebida · Detox</p><h3 class="pcard-name">Respawn Juice</h3><p class="pcard-desc">Suco detox cold-pressed: gengibre, limão siciliano, cúrcuma, maçã verde e água de coco. 500ml.</p><div class="pcard-footer"><div class="pcard-price" style="color:var(--green)">R$ 12,90</div><button class="pcard-add" style="border-color:rgba(0,255,136,.4);color:var(--green)" onclick="addToCart('Respawn Juice','🧃',12.90)">+</button></div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🥤<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body"><p class="pcard-cat">Bebida · Milk Shake</p><h3 class="pcard-name">Milk Shake 8-Bit</h3><p class="pcard-desc">Milk shake artesanal 450ml. Sabores: Oreo Matrix, Caramelo Hacker, Morango GG, Nutella Raid.</p><div class="pcard-footer"><div class="pcard-price">R$ 19,90</div><button class="pcard-add" onclick="addToCart('Milk Shake 8-Bit','🥤',19.90)">+</button></div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">☕<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body"><p class="pcard-cat">Bebida · Coffee</p><h3 class="pcard-name">Dark Mode Cold Brew</h3><p class="pcard-desc">Cold brew 48h 300ml, dose dupla espresso, gelo, leite vegetal de aveia ou amêndoa.</p><div class="pcard-footer"><div class="pcard-price">R$ 13,90</div><button class="pcard-add" onclick="addToCart('Dark Mode Cold Brew','☕',13.90)">+</button></div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🍺<div class="pcard-img-overlay"></div></div>
+            <div class="pcard-body"><p class="pcard-cat">Bebida · Craft</p><h3 class="pcard-name">Craft Pack Artesanal</h3><p class="pcard-desc">Cervejas artesanais selecionadas: IPA Hoppy, Stout Dark Mode, Lager Crystal. Long neck 355ml.</p><div class="pcard-footer"><div class="pcard-price">R$ 16,90</div><button class="pcard-add" onclick="addToCart('Craft Pack','🍺',16.90)">+</button></div></div>
+          </div>
+          <div class="pcard">
+            <div class="pcard-img">🧋<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-blue">✦ Novo</span></div></div>
+            <div class="pcard-body"><p class="pcard-cat">Bebida · Boba</p><h3 class="pcard-name">Pixel Boba Tea</h3><p class="pcard-desc">Bubble tea taiwanês com pérolas de tapioca. Sabores: Matcha, Taro, Brown Sugar e Maracujá. 500ml.</p><div class="pcard-footer"><div class="pcard-price">R$ 18,90</div><button class="pcard-add" onclick="addToCart('Pixel Boba Tea','🧋',18.90)">+</button></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMBOS -->
+      <div class="menu-cat-block" data-cat="combos" style="margin-top:4rem">
+        <div class="section-eyebrow">// 04 — Combos</div>
+        <h2 class="section-title">Combo Packs</h2>
+        <div class="section-divider"></div>
+        <div class="combo-row">
+          <div class="combo-card">
+            <div class="combo-lv lv-1">STARTER</div>
+            <div class="combo-body">
+              <h3 class="combo-name">Solo Queue Pack</h3>
+              <p class="combo-desc">Perfeito para um jogador. Burger à escolha (P/M) + fritas P + bebida 350ml.</p>
+              <div class="combo-includes"><span class="ci">1x Burger</span><span class="ci">1x Fritas P</span><span class="ci">1x Bebida</span></div>
+            </div>
+            <div class="combo-pricing">
+              <span class="combo-save" style="color:var(--green)">↓ R$ 8,00 OFF</span>
+              <span class="combo-price" style="color:rgba(255,255,255,.7)">R$ 34,90</span>
+              <button class="combo-btn" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.7)" onclick="addToCart('Solo Queue Pack','⚔',34.90)">+ Add</button>
+            </div>
+          </div>
+          <div class="combo-card" style="border-color:rgba(51,129,255,.3)">
+            <div class="combo-lv lv-2">GOLD</div>
+            <div class="combo-body">
+              <h3 class="combo-name">Duo Mode Bundle</h3>
+              <p class="combo-desc">Ideal para a dupla. 2 burgers + 2 fritas G + 2 CLLR Energy™ + 2 sobremesas.</p>
+              <div class="combo-includes"><span class="ci">2x Burger</span><span class="ci">2x Fritas G</span><span class="ci">2x Energy</span><span class="ci">2x Sobremesa</span></div>
+            </div>
+            <div class="combo-pricing">
+              <span class="combo-save" style="color:var(--primary)">↓ R$ 22,00 OFF</span>
+              <span class="combo-price" style="color:var(--primary)">R$ 89,90</span>
+              <button class="combo-btn" style="background:rgba(51,129,255,.15);color:var(--primary);border:1px solid rgba(51,129,255,.3)" onclick="addToCart('Duo Mode Bundle','🎮',89.90)">+ Add</button>
+            </div>
+          </div>
+          <div class="combo-card" style="border-color:rgba(240,66,184,.3)">
+            <div class="combo-lv lv-3">SQUAD</div>
+            <div class="combo-body">
+              <h3 class="combo-name">Squad Wipe Feast</h3>
+              <p class="combo-desc">Para o squad completo (4p). 4 burgers + 4 fritas G + 4 bebidas + nachos + 4 sobremesas.</p>
+              <div class="combo-includes"><span class="ci">4x Burger</span><span class="ci">4x Fritas G</span><span class="ci">4x Bebida</span><span class="ci">1x Nachos</span><span class="ci">4x Sobremesa</span></div>
+            </div>
+            <div class="combo-pricing">
+              <span class="combo-save" style="color:var(--accent)">↓ R$ 45,00 OFF</span>
+              <span class="combo-price" style="color:var(--accent)">R$ 159,90</span>
+              <button class="combo-btn" style="background:rgba(240,66,184,.15);color:var(--accent);border:1px solid rgba(240,66,184,.3)" onclick="addToCart('Squad Wipe Feast','⚔',159.90)">+ Add</button>
+            </div>
+          </div>
+          <div class="combo-card" style="border-color:rgba(255,204,0,.3)">
+            <div class="combo-lv lv-4">RAID</div>
+            <div class="combo-body">
+              <h3 class="combo-name">Clan Raid Party</h3>
+              <p class="combo-desc">O ultimate para clãs e eventos (8p). 8 burgers + 4 fritas XG + 8 bebidas + 2 nachos + 8 sobremesas + frete grátis.</p>
+              <div class="combo-includes"><span class="ci">8x Burger</span><span class="ci">4x Fritas XG</span><span class="ci">8x Bebida</span><span class="ci">2x Nachos</span><span class="ci">8x Sobremesa</span><span class="ci">🚚 Frete Free</span></div>
+            </div>
+            <div class="combo-pricing">
+              <span class="combo-save" style="color:var(--yellow)">↓ R$ 90,00 OFF</span>
+              <span class="combo-price" style="color:var(--yellow)">R$ 299,90</span>
+              <button class="combo-btn" style="background:rgba(255,204,0,.15);color:var(--yellow);border:1px solid rgba(255,204,0,.3)" onclick="addToCart('Clan Raid Party','🏆',299.90)">+ Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOBREMESAS -->
+      <div class="menu-cat-block" data-cat="sobremesas" style="margin-top:4rem;margin-bottom:4rem">
+        <div class="section-eyebrow">// 05 — Sobremesas</div>
+        <h2 class="section-title">Sweets & Desserts</h2>
+        <div class="section-divider"></div>
+        <div class="mgrid">
+          <div class="feat-card" style="border-color:rgba(240,66,184,.35);box-shadow:0 0 50px rgba(240,66,184,.12)">
+            <div class="feat-card-img" style="background:linear-gradient(135deg,rgba(240,66,184,.06),rgba(95,66,240,.06));font-size:6rem">
+              🍰
+              <div class="feat-corner tl" style="border-color:var(--accent)"></div>
+              <div class="feat-corner br" style="border-color:var(--accent)"></div>
+            </div>
+            <div class="feat-body">
+              <div class="feat-badge-row"><span class="badge badge-pink">👑 Boss Dessert</span></div>
+              <h3 class="feat-name">Final Boss Cake</h3>
+              <p class="feat-desc">Cheesecake de chocolate belga 70% cacau, calda quente de frutas vermelhas, farofinha de brownie crocante e bola de sorvete de baunilha bourbon. Uma batalha para os sentidos.</p>
+              <span class="feat-price" style="color:var(--accent);text-shadow:0 0 20px rgba(240,66,184,.7)">R$ 22,90</span>
+              <button class="btn-primary" style="background:linear-gradient(135deg,var(--accent),#8b2fc9)" onclick="addToCart('Final Boss Cake','🍰',22.90)">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="pcard"><div class="pcard-img">🍦<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-red">🔥 Top</span></div></div><div class="pcard-body"><p class="pcard-cat">Sobremesa · Ice Cream</p><h3 class="pcard-name">Pixel Ice Cream</h3><p class="pcard-desc">Sorvete artesanal 2 bolas: Cookies & Code, Caramel Rush, Dark Mode Chocolate ou Strawberry Glitch.</p><div class="pcard-footer"><div class="pcard-price">R$ 14,90</div><button class="pcard-add" onclick="addToCart('Pixel Ice Cream','🍦',14.90)">+</button></div></div></div>
+          <div class="pcard"><div class="pcard-img">🍩<div class="pcard-img-overlay"></div><div class="pcard-badges"><span class="badge badge-blue">✦ Novo</span></div></div><div class="pcard-body"><p class="pcard-cat">Sobremesa · Donuts</p><h3 class="pcard-name">Glitch Donut Box</h3><p class="pcard-desc">4 donuts artesanais temáticos: Neon Blue, Pink Glitch, Dark Mode e Gold Rush. Recheados.</p><div class="pcard-footer"><div class="pcard-price">R$ 24,90</div><button class="pcard-add" onclick="addToCart('Glitch Donut Box','🍩',24.90)">+</button></div></div></div>
+          <div class="pcard"><div class="pcard-img">🫐<div class="pcard-img-overlay"></div></div><div class="pcard-body"><p class="pcard-cat">Sobremesa · Açaí</p><h3 class="pcard-name">Berry Respawn Bowl</h3><p class="pcard-desc">Açaí 500ml premium com granola crocante, banana, morango, blueberry, leite condensado e mel.</p><div class="pcard-footer"><div class="pcard-price" style="color:#a855f7;text-shadow:0 0 10px rgba(168,85,247,.4)">R$ 18,90</div><button class="pcard-add" style="border-color:rgba(168,85,247,.4);color:#a855f7" onclick="addToCart('Berry Respawn Bowl','🫐',18.90)">+</button></div></div></div>
+        </div>
+      </div>
+
     </div>
+  </section>
 
-    <div class="menu-grid">
-      <div class="featured-card" style="border-color:hsl(325 91% 60% / .4);box-shadow:0 0 30px 6px hsl(325 91% 60% / .2)">
-        <div class="featured-img" style="background:linear-gradient(135deg,hsl(325 91% 60% / .08),hsl(217 100% 60% / .05))">
-          ⚡
-          <div class="featured-img-corner" style="border-color:hsl(325 91% 60%)"></div>
-          <div class="featured-img-corner featured-img-corner-br" style="border-color:hsl(325 91% 60%)"></div>
-        </div>
-        <div class="featured-body">
-          <span class="featured-tag" style="color:hsl(325 91% 60%)">// energy_drink</span>
-          <div class="live-badge" style="width:fit-content;border-color:hsl(325 91% 60% / .5);background:hsl(325 91% 60% / .1);color:hsl(325 91% 60%)">
-            <span class="live-dot" style="background:hsl(325 91% 60%)"></span> Exclusivo
-          </div>
-          <h3 class="featured-name neon-accent-glow">NEXUS Energy™</h3>
-          <p class="featured-desc">Nossa bebida energética exclusiva com taurina, vitamina B, cafeína natural e eletrólitos. Disponível nos sabores: Tropical Glitch, Berry Neon e Classic Blue.</p>
-          <span class="featured-price" style="color:hsl(325 91% 60%);text-shadow:0 0 7px hsl(325 91% 60% / .8)">R$ 14,90</span>
-          <button class="featured-btn" style="background:linear-gradient(135deg,hsl(325 91% 60%),#8b2fc9)">+ Adicionar</button>
-        </div>
-      </div>
+  <!-- FOOTER MENU -->
+  <footer style="background:var(--card);border-top:1px solid var(--border);padding:2rem;text-align:center">
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:900;letter-spacing:.3em;background:linear-gradient(135deg,var(--cllr-blue),var(--cllr-violet),var(--cllr-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem">CLLR</div>
+    <p style="font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2)">// cellar gaming food · delivery 24/7 · 2025</p>
+  </footer>
 
-      <div class="menu-card">
-        <div class="menu-card-img">🧃<span class="menu-card-badge badge-new">✦ Novo</span></div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Respawn Juice</h3>
-          <p class="menu-card-desc">Suco detox com gengibre, limão siciliano, cúrcuma e água de coco. 500ml.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price" style="color:#22c55e;text-shadow:0 0 7px #22c55e80">R$ 12,90</span>
-            <button class="menu-card-add" style="border-color:#22c55e80;background:#22c55e1a;color:#22c55e">+</button>
-          </div>
-        </div>
-      </div>
+</div><!-- /page-menu -->
 
-      <div class="menu-card">
-        <div class="menu-card-img">🥤</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Milk Shake 8-Bit</h3>
-          <p class="menu-card-desc">Milk shake artesanal 450ml. Sabores: Oreo Matrix, Caramelo Hacker, Morango GG.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 19,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
+<!-- CART OVERLAY -->
+<div class="cart-overlay" id="cartOverlay" onclick="if(event.target===this)toggleCart()">
+  <div class="cart-panel">
+    <div class="cart-head">
+      <h3 class="cart-head-title">🛒 Seu Pedido</h3>
+      <button class="cart-close" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty"><span class="cart-empty-icon">🛒</span>Carrinho vazio</div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-totals">
+        <div class="cart-row"><span>Subtotal</span><span id="cartSubtotal">R$ 0,00</span></div>
+        <div class="cart-row"><span>Taxa de entrega</span><span>R$ 8,00</span></div>
+        <div class="cart-row total"><span>Total</span><span id="cartTotal">R$ 0,00</span></div>
       </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">☕</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Dark Mode Coffee</h3>
-          <p class="menu-card-desc">Cold brew 300ml, 48h de extração. Dose dupla de espresso com gelo e leite vegetal.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 13,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🍺</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Craft Beer Pack</h3>
-          <p class="menu-card-desc">Cervejas artesanais selecionadas. IPA, Stout e Lager. Long neck 355ml cada.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 16,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
+      <button class="cart-checkout" onclick="alert('Pedido enviado! 🎮 Em breve você receberá a confirmação.')">✔ Finalizar Pedido</button>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ═══ COMBOS ═══ -->
-<section id="combos" class="section">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">// categoria_03</span>
-      <h2 class="section-title neon-glow">Combos</h2>
-      <div class="section-line"></div>
-    </div>
+<!-- ═══════════════════════════════
+     ADMIN PAGE
+═══════════════════════════════ -->
+<div id="page-admin" class="page">
+  <div class="admin-wrap">
 
-    <div style="display:grid;gap:1rem">
-      <div class="combo-card">
-        <div class="combo-level">STARTER</div>
-        <div class="combo-body">
-          <h3 class="combo-name">Solo Queue Pack</h3>
-          <p class="combo-items">1x Burger à escolha (pequeno) + Batata P + 1x Refrigerante 350ml</p>
-          <div class="combo-footer">
-            <span class="combo-savings">Economia: R$ 8,00</span>
-            <span class="combo-price">R$ 34,90</span>
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-logo">
+        <div>
+          <div class="sidebar-logo-text">CLLR</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">Admin Panel</div>
+        </div>
+        <span class="sidebar-badge">v2.0</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Principal</div>
+        <button class="sidebar-item active" onclick="showAdmin('dashboard',this)"><span class="icon">📊</span> Dashboard</button>
+        <button class="sidebar-item notif" onclick="showAdmin('orders',this)"><span class="icon">📋</span> Pedidos <span class="badge-mini red" id="orderBadge">5</span></button>
+        <button class="sidebar-item" onclick="showAdmin('products',this)"><span class="icon">🍔</span> Produtos</button>
+        <button class="sidebar-item" onclick="showAdmin('addprod',this)"><span class="icon">➕</span> Novo Produto</button>
+        <div class="sidebar-section-label">Relatórios</div>
+        <button class="sidebar-item" onclick="showAdmin('analytics',this)"><span class="icon">📈</span> Analytics</button>
+        <button class="sidebar-item" onclick="showAdmin('customers',this)"><span class="icon">👾</span> Clientes</button>
+        <div class="sidebar-section-label">Config</div>
+        <button class="sidebar-item" onclick="showAdmin('settings',this)"><span class="icon">⚙</span> Configurações</button>
+        <div style="margin-top:.5rem;border-top:1px solid var(--border);padding-top:.75rem">
+          <button class="sidebar-item" onclick="showPage('menu')"><span class="icon">👁</span> Ver Menu</button>
+        </div>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="admin-profile">
+          <div class="admin-avatar">A</div>
+          <div><div class="admin-name">Admin</div><div class="admin-role">Super Admin</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="admin-content grid-bg">
+
+      <!-- ADMIN TOPBAR -->
+      <div class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button onclick="document.getElementById('adminSidebar').classList.toggle('open')" style="display:none;width:36px;height:36px;border-radius:6px;background:rgba(255,255,255,.06);align-items:center;justify-content:center;font-size:1.1rem;" id="sidebarToggle">☰</button>
+          <span class="admin-topbar-title" id="adminTitle">Dashboard</span>
+        </div>
+        <div class="admin-topbar-right">
+          <div class="live-indicator"><span class="live-dot"></span> Sistema Ativo</div>
+          <button class="admin-topbar-btn">⬇ Exportar</button>
+          <button class="admin-topbar-btn btn-action" onclick="showAdmin('addprod')">+ Novo Produto</button>
+        </div>
+      </div>
+
+      <!-- ─── DASHBOARD ─── -->
+      <div class="admin-panel active" id="panel-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi blue"><span class="kpi-delta up">↑ 12%</span><div class="kpi-icon">💰</div><span class="kpi-val">R$ 4.280</span><span class="kpi-lbl">Receita Hoje</span></div>
+          <div class="kpi pink"><span class="kpi-delta up">↑ 8%</span><div class="kpi-icon">📋</div><span class="kpi-val">47</span><span class="kpi-lbl">Pedidos Hoje</span></div>
+          <div class="kpi green"><span class="kpi-delta up">↑ 3%</span><div class="kpi-icon">👾</div><span class="kpi-val">312</span><span class="kpi-lbl">Clientes Ativos</span></div>
+          <div class="kpi yellow"><span class="kpi-delta down">↓ 2min</span><div class="kpi-icon">⚡</div><span class="kpi-val">28min</span><span class="kpi-lbl">Tempo Médio</span></div>
+        </div>
+        <div class="grid3">
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">📈 Vendas — Últimos 7 Dias</span><button class="acard-action">Ver tudo</button></div>
+            <div class="acard-body">
+              <div style="display:flex;justify-content:space-between;margin-bottom:.5rem">
+                <span style="font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">R$ 0</span>
+                <span style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--primary)">R$ 24.360 total</span>
+              </div>
+              <div class="chart-bars">
+                <div class="bar-col"><div class="bar" style="height:55%"></div><span class="bar-lbl">Seg</span></div>
+                <div class="bar-col"><div class="bar" style="height:75%"></div><span class="bar-lbl">Ter</span></div>
+                <div class="bar-col"><div class="bar" style="height:45%"></div><span class="bar-lbl">Qua</span></div>
+                <div class="bar-col"><div class="bar" style="height:88%"></div><span class="bar-lbl">Qui</span></div>
+                <div class="bar-col"><div class="bar" style="height:100%;opacity:1;box-shadow:0 0 12px rgba(51,129,255,.5)"></div><span class="bar-lbl" style="color:var(--primary)">Sex</span></div>
+                <div class="bar-col"><div class="bar" style="height:92%"></div><span class="bar-lbl">Sab</span></div>
+                <div class="bar-col"><div class="bar" style="height:70%"></div><span class="bar-lbl">Dom</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">🍔 Por Categoria</span></div>
+            <div class="acard-body">
+              <div class="donut-wrap">
+                <div class="donut">
+                  <div class="donut-center"><span class="donut-center-val">47</span><span class="donut-center-lbl">Pedidos</span></div>
+                </div>
+                <div class="donut-legend">
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--cllr-blue)"></div><span class="dl-name">Lanches</span><span class="dl-pct" style="color:var(--cllr-blue)">45%</span></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--cllr-violet)"></div><span class="dl-name">Bebidas</span><span class="dl-pct" style="color:var(--cllr-violet)">25%</span></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--cllr-pink)"></div><span class="dl-name">Combos</span><span class="dl-pct" style="color:var(--cllr-pink)">15%</span></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:rgba(255,255,255,.2)"></div><span class="dl-name">Outros</span><span class="dl-pct" style="color:var(--muted)">15%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-head"><span class="acard-title">📋 Pedidos Recentes</span><button class="acard-action" onclick="showAdmin('orders')">Ver todos</button></div>
+          <div class="acard-body" style="padding:0">
+            <table class="orders-table">
+              <thead><tr><th>#ID</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Hora</th></tr></thead>
+              <tbody>
+                <tr><td><span class="order-id">#1047</span></td><td>Lucas M.</td><td>Ultra Smash + XP Fries</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 53,80</td><td><span class="order-status status-prep">⚡ Preparando</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:.75rem">14:32</td></tr>
+                <tr><td><span class="order-id">#1046</span></td><td>Ana R.</td><td>Duo Mode Bundle</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 89,90</td><td><span class="order-status status-ready">✅ Pronto</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:.75rem">14:18</td></tr>
+                <tr><td><span class="order-id">#1045</span></td><td>Pedro K.</td><td>Cyber Chicken + Shake</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 49,80</td><td><span class="order-status status-pending">⏳ Pendente</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:.75rem">14:05</td></tr>
+                <tr><td><span class="order-id">#1044</span></td><td>Julia S.</td><td>Berry Bowl + Cold Brew</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 32,80</td><td><span class="order-status status-delivered">✓ Entregue</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:.75rem">13:55</td></tr>
+                <tr><td><span class="order-id">#1043</span></td><td>Mike T.</td><td>Squad Wipe Feast</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 159,90</td><td><span class="order-status status-delivered">✓ Entregue</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif;font-size:.75rem">13:40</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <div class="combo-card">
-        <div class="combo-level" style="background:linear-gradient(180deg,hsl(217 100% 60% / .3),hsl(217 100% 60% / .1));border-color:hsl(217 100% 60% / .2);color:hsl(var(--primary))">GOLD</div>
-        <div class="combo-body">
-          <h3 class="combo-name">Duo Mode Bundle</h3>
-          <p class="combo-items">2x Ultra Smash Burger + 2x Batata G + 2x NEXUS Energy™ + 2x Sobremesa</p>
-          <div class="combo-footer">
-            <span class="combo-savings" style="color:hsl(var(--primary))">Economia: R$ 22,00</span>
-            <span class="combo-price" style="color:hsl(var(--primary));text-shadow:0 0 7px hsl(var(--primary) / .5)">R$ 89,90</span>
+      <!-- ─── ORDERS ─── -->
+      <div class="admin-panel" id="panel-orders">
+        <div class="kpi-grid">
+          <div class="kpi blue"><div class="kpi-icon">⏳</div><span class="kpi-val">5</span><span class="kpi-lbl">Pendentes</span></div>
+          <div class="kpi yellow"><div class="kpi-icon">⚡</div><span class="kpi-val">8</span><span class="kpi-lbl">Preparando</span></div>
+          <div class="kpi green"><div class="kpi-icon">✅</div><span class="kpi-val">12</span><span class="kpi-lbl">Prontos</span></div>
+          <div class="kpi pink"><div class="kpi-icon">🚚</div><span class="kpi-val">22</span><span class="kpi-lbl">Entregues Hoje</span></div>
+        </div>
+        <div class="acard">
+          <div class="acard-head"><span class="acard-title">📋 Todos os Pedidos</span>
+            <div style="display:flex;gap:.5rem">
+              <select class="field-select" style="padding:.35rem .75rem;font-size:.75rem;width:auto;font-family:'Rajdhani',sans-serif" onchange="filterOrders(this.value)">
+                <option value="all">Todos</option>
+                <option value="pending">Pendentes</option>
+                <option value="prep">Preparando</option>
+                <option value="ready">Prontos</option>
+                <option value="delivered">Entregues</option>
+              </select>
+            </div>
+          </div>
+          <div style="padding:0">
+            <table class="orders-table">
+              <thead><tr><th>#ID</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Hora</th><th>Ação</th></tr></thead>
+              <tbody id="ordersTableBody">
+                <tr data-status="pending"><td><span class="order-id">#1047</span></td><td>Lucas M.</td><td>Ultra Smash + XP Fries</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 53,80</td><td><span class="order-status status-pending">⏳ Pendente</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">14:32</td><td><button class="act-btn edit" onclick="this.closest('tr').querySelector('.order-status').className='order-status status-prep';this.closest('tr').querySelector('.order-status').textContent='⚡ Preparando'" style="font-size:.7rem;font-family:\'Rajdhani\',sans-serif;font-weight:700;width:auto;padding:0 .5rem">▶</button></td></tr>
+                <tr data-status="pending"><td><span class="order-id">#1046</span></td><td>Ana R.</td><td>Duo Mode Bundle</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 89,90</td><td><span class="order-status status-pending">⏳ Pendente</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">14:18</td><td><button class="act-btn edit" onclick="this.closest('tr').querySelector('.order-status').className='order-status status-prep';this.closest('tr').querySelector('.order-status').textContent='⚡ Preparando'" style="font-size:.7rem;font-family:\'Rajdhani\',sans-serif;font-weight:700;width:auto;padding:0 .5rem">▶</button></td></tr>
+                <tr data-status="prep"><td><span class="order-id">#1045</span></td><td>Pedro K.</td><td>Cyber Chicken + Shake</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 49,80</td><td><span class="order-status status-prep">⚡ Preparando</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">14:05</td><td><button class="act-btn toggle" onclick="this.closest('tr').querySelector('.order-status').className='order-status status-ready';this.closest('tr').querySelector('.order-status').textContent='✅ Pronto'" style="font-size:.7rem;font-family:\'Rajdhani\',sans-serif;font-weight:700;width:auto;padding:0 .5rem">✓</button></td></tr>
+                <tr data-status="ready"><td><span class="order-id">#1044</span></td><td>Julia S.</td><td>Berry Bowl + Cold Brew</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 32,80</td><td><span class="order-status status-ready">✅ Pronto</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">13:55</td><td><button class="act-btn toggle" onclick="this.closest('tr').querySelector('.order-status').className='order-status status-delivered';this.closest('tr').querySelector('.order-status').textContent='✓ Entregue'" style="font-size:.7rem;font-family:\'Rajdhani\',sans-serif;font-weight:700;width:auto;padding:0 .5rem">🚚</button></td></tr>
+                <tr data-status="delivered"><td><span class="order-id">#1043</span></td><td>Mike T.</td><td>Squad Wipe Feast</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 159,90</td><td><span class="order-status status-delivered">✓ Entregue</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">13:40</td><td>—</td></tr>
+                <tr data-status="delivered"><td><span class="order-id">#1042</span></td><td>Carol F.</td><td>Solo Queue Pack</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 34,90</td><td><span class="order-status status-delivered">✓ Entregue</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">13:22</td><td>—</td></tr>
+                <tr data-status="canceled"><td><span class="order-id">#1041</span></td><td>Thiago N.</td><td>GG Black Angus</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--muted2)">R$ 48,90</td><td><span class="order-status status-canceled">✕ Cancelado</span></td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">12:58</td><td>—</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <div class="combo-card" style="border-color:hsl(8 100% 56% / .4)">
-        <div class="combo-level" style="background:linear-gradient(180deg,hsl(8 100% 56% / .3),hsl(8 100% 56% / .1));border-color:hsl(8 100% 56% / .2);color:hsl(8 100% 56%)">SQUAD</div>
-        <div class="combo-body">
-          <h3 class="combo-name">Squad Wipe Feast</h3>
-          <p class="combo-items">4x Burger à escolha + 4x Batata G + 4x Bebida + 1x Nachos + 4x Sobremesa</p>
-          <div class="combo-footer">
-            <span class="combo-savings" style="color:hsl(8 100% 56%)">Economia: R$ 45,00</span>
-            <span class="combo-price" style="color:hsl(8 100% 56%);text-shadow:0 0 7px hsl(8 100% 56% / .5)">R$ 159,90</span>
+      <!-- ─── PRODUCTS ─── -->
+      <div class="admin-panel" id="panel-products">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--primary)">// 52 itens cadastrados</div>
+            <h2 style="font-size:1.1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Gerenciar Produtos</h2>
+          </div>
+          <button class="btn-primary" onclick="showAdmin('addprod')" style="padding:.6rem 1.5rem;font-size:.75rem">+ Novo Produto</button>
+        </div>
+        <div class="acard">
+          <div class="acard-head">
+            <span class="acard-title">🍔 Todos os Produtos</span>
+            <div style="display:flex;gap:.5rem">
+              <input class="field-input" placeholder="Buscar produto..." style="padding:.35rem .75rem;width:200px;font-size:.8rem">
+              <select class="field-select" style="padding:.35rem .75rem;width:auto;font-size:.8rem;font-family:'Rajdhani',sans-serif">
+                <option>Todos</option><option>Lanches</option><option>Bebidas</option><option>Combos</option><option>Sobremesas</option><option>Snacks</option>
+              </select>
+            </div>
+          </div>
+          <div class="acard-body">
+            <div class="prod-list">
+              <div class="prod-row"><div class="prod-row-icon">🍔</div><div class="prod-row-info"><div class="prod-row-name">Ultra Smash Burger</div><div class="prod-row-cat">Lanches · Ativo</div></div><div class="prod-row-price">R$ 38,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🌶️</div><div class="prod-row-info"><div class="prod-row-name">Stealth Smash</div><div class="prod-row-cat">Lanches · Ativo</div></div><div class="prod-row-price">R$ 32,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🐔</div><div class="prod-row-info"><div class="prod-row-name">Cyber Chicken</div><div class="prod-row-cat">Lanches · Ativo</div></div><div class="prod-row-price">R$ 29,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🌿</div><div class="prod-row-info"><div class="prod-row-name">Pixel Plant</div><div class="prod-row-cat">Lanches · Ativo</div></div><div class="prod-row-price">R$ 27,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🥩</div><div class="prod-row-info"><div class="prod-row-name">GG Black Angus</div><div class="prod-row-cat">Lanches · Ativo</div></div><div class="prod-row-price">R$ 48,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🍟</div><div class="prod-row-info"><div class="prod-row-name">XP Fries</div><div class="prod-row-cat">Snacks · Ativo</div></div><div class="prod-row-price">R$ 14,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🧀</div><div class="prod-row-info"><div class="prod-row-name">Nachos Protocol</div><div class="prod-row-cat">Snacks · Ativo</div></div><div class="prod-row-price">R$ 22,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">⚡</div><div class="prod-row-info"><div class="prod-row-name">CLLR Energy™</div><div class="prod-row-cat">Bebidas · Exclusivo</div></div><div class="prod-row-price">R$ 14,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🥤</div><div class="prod-row-info"><div class="prod-row-name">Milk Shake 8-Bit</div><div class="prod-row-cat">Bebidas · Ativo</div></div><div class="prod-row-price">R$ 19,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+              <div class="prod-row"><div class="prod-row-icon">🍰</div><div class="prod-row-info"><div class="prod-row-name">Final Boss Cake</div><div class="prod-row-cat">Sobremesas · Ativo</div></div><div class="prod-row-price">R$ 22,90</div><div class="prod-row-actions"><button class="act-btn edit">✏</button><button class="act-btn toggle">◉</button><button class="act-btn del">✕</button></div></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="combo-card" style="border-color:hsl(45 100% 60% / .4)">
-        <div class="combo-level" style="background:linear-gradient(180deg,hsl(45 100% 60% / .3),hsl(45 100% 60% / .1));border-color:hsl(45 100% 60% / .2);color:hsl(45 100% 60%)">RAID</div>
-        <div class="combo-body">
-          <h3 class="combo-name">Clan Raid Party</h3>
-          <p class="combo-items">8x Burger à escolha + 4x Batata XG + 8x Bebida + 2x Porção Nachos + 8x Sobremesa + Entrega Grátis</p>
-          <div class="combo-footer">
-            <span class="combo-savings" style="color:hsl(45 100% 60%)">Economia: R$ 90,00</span>
-            <span class="combo-price" style="color:hsl(45 100% 60%);text-shadow:0 0 7px hsl(45 100% 60% / .5)">R$ 299,90</span>
+      <!-- ─── ADD PRODUCT ─── -->
+      <div class="admin-panel" id="panel-addprod">
+        <div class="acard" style="max-width:800px">
+          <div class="acard-head"><span class="acard-title">➕ Adicionar Novo Produto</span></div>
+          <div class="acard-body">
+            <div class="form-grid">
+              <div class="field form-full"><label class="field-label">Nome do Produto *</label><input class="field-input" placeholder="Ex: Ultra Smash Burger" type="text"></div>
+              <div class="field"><label class="field-label">Categoria *</label><select class="field-select"><option value="">Selecionar...</option><option>Lanches</option><option>Bebidas</option><option>Combos</option><option>Sobremesas</option><option>Snacks & Sides</option></select></div>
+              <div class="field"><label class="field-label">Preço (R$) *</label><input class="field-input" placeholder="0,00" type="number" step="0.01"></div>
+              <div class="field"><label class="field-label">Preço Original (Promo)</label><input class="field-input" placeholder="0,00 (opcional)" type="number" step="0.01"></div>
+              <div class="field"><label class="field-label">Emoji / Ícone</label><input class="field-input" placeholder="🍔" type="text"></div>
+              <div class="field form-full"><label class="field-label">Descrição *</label><textarea class="field-input" rows="3" placeholder="Descreva o produto em detalhes..." style="resize:vertical"></textarea></div>
+              <div class="field"><label class="field-label">Tags (separadas por vírgula)</label><input class="field-input" placeholder="Artesanal, Picante, Premium" type="text"></div>
+              <div class="field"><label class="field-label">Badge</label><select class="field-select"><option value="">Nenhum</option><option>Novo</option><option>🔥 Hot</option><option>★ Especial</option><option>★ Premium</option><option>🌿 Natural</option></select></div>
+              <div class="field form-full">
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                  <span class="toggle-label">Produto ativo (visível no cardápio)</span>
+                </div>
+              </div>
+              <div class="field form-full">
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+                  <span class="toggle-label">Marcar como Destaque (Featured Card)</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn-cancel" onclick="showAdmin('products')">Cancelar</button>
+              <button class="btn-save" onclick="alert('Produto cadastrado com sucesso! 🎮')">✓ Salvar Produto</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- ─── ANALYTICS ─── -->
+      <div class="admin-panel" id="panel-analytics">
+        <div class="kpi-grid">
+          <div class="kpi blue"><div class="kpi-icon">📊</div><span class="kpi-val">R$ 48.2k</span><span class="kpi-lbl">Receita Mensal</span></div>
+          <div class="kpi pink"><div class="kpi-icon">📦</div><span class="kpi-val">892</span><span class="kpi-lbl">Pedidos/Mês</span></div>
+          <div class="kpi green"><div class="kpi-icon">💚</div><span class="kpi-val">R$ 54</span><span class="kpi-lbl">Ticket Médio</span></div>
+          <div class="kpi yellow"><div class="kpi-icon">⭐</div><span class="kpi-val">4.9</span><span class="kpi-lbl">Avaliação Média</span></div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">🏆 Top Produtos</span></div>
+            <div class="acard-body">
+              <div style="display:flex;flex-direction:column;gap:.75rem">
+                <div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">🍔</span><div style="flex:1"><div style="font-size:.8rem;font-weight:700;text-transform:uppercase;font-family:'Orbitron',sans-serif;font-size:.7rem;margin-bottom:.25rem">Ultra Smash Burger</div><div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden"><div style="height:100%;width:92%;background:linear-gradient(90deg,var(--cllr-blue),var(--cllr-violet));border-radius:3px"></div></div></div><span style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--primary);min-width:45px;text-align:right">R$ 8.9k</span></div>
+                <div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">⚡</span><div style="flex:1"><div style="font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;margin-bottom:.25rem">CLLR Energy™</div><div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden"><div style="height:100%;width:78%;background:linear-gradient(90deg,var(--cllr-pink),#8b2fc9);border-radius:3px"></div></div></div><span style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--accent);min-width:45px;text-align:right">R$ 7.2k</span></div>
+                <div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">🎮</span><div style="flex:1"><div style="font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;margin-bottom:.25rem">Squad Wipe Feast</div><div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden"><div style="height:100%;width:65%;background:linear-gradient(90deg,var(--yellow),#ff8c00);border-radius:3px"></div></div></div><span style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--yellow);min-width:45px;text-align:right">R$ 6.1k</span></div>
+                <div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">🐔</span><div style="flex:1"><div style="font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;margin-bottom:.25rem">Cyber Chicken</div><div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden"><div style="height:100%;width:52%;background:linear-gradient(90deg,var(--green),#00aa66);border-radius:3px"></div></div></div><span style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--green);min-width:45px;text-align:right">R$ 4.8k</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">⏰ Picos de Pedido</span></div>
+            <div class="acard-body">
+              <div class="chart-bars" style="height:150px">
+                <div class="bar-col"><div class="bar" style="height:10%"></div><span class="bar-lbl">11h</span></div>
+                <div class="bar-col"><div class="bar" style="height:30%"></div><span class="bar-lbl">12h</span></div>
+                <div class="bar-col"><div class="bar" style="height:55%"></div><span class="bar-lbl">13h</span></div>
+                <div class="bar-col"><div class="bar" style="height:40%"></div><span class="bar-lbl">14h</span></div>
+                <div class="bar-col"><div class="bar" style="height:25%"></div><span class="bar-lbl">15h</span></div>
+                <div class="bar-col"><div class="bar" style="height:45%"></div><span class="bar-lbl">18h</span></div>
+                <div class="bar-col"><div class="bar" style="height:100%;opacity:1;box-shadow:0 0 12px rgba(51,129,255,.5)"></div><span class="bar-lbl" style="color:var(--primary)">20h</span></div>
+                <div class="bar-col"><div class="bar" style="height:90%"></div><span class="bar-lbl">21h</span></div>
+                <div class="bar-col"><div class="bar" style="height:75%"></div><span class="bar-lbl">22h</span></div>
+                <div class="bar-col"><div class="bar" style="height:50%"></div><span class="bar-lbl">23h</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── CUSTOMERS ─── -->
+      <div class="admin-panel" id="panel-customers">
+        <div class="kpi-grid">
+          <div class="kpi blue"><div class="kpi-icon">👾</div><span class="kpi-val">1.284</span><span class="kpi-lbl">Total Clientes</span></div>
+          <div class="kpi green"><div class="kpi-icon">🔄</div><span class="kpi-val">68%</span><span class="kpi-lbl">Retorno</span></div>
+          <div class="kpi pink"><div class="kpi-icon">🆕</div><span class="kpi-val">47</span><span class="kpi-lbl">Novos Este Mês</span></div>
+          <div class="kpi yellow"><div class="kpi-icon">⭐</div><span class="kpi-val">R$ 127</span><span class="kpi-lbl">LTV Médio</span></div>
+        </div>
+        <div class="acard">
+          <div class="acard-head"><span class="acard-title">👾 Top Clientes</span></div>
+          <div style="padding:0">
+            <table class="orders-table">
+              <thead><tr><th>Cliente</th><th>Email</th><th>Pedidos</th><th>Total Gasto</th><th>Último Pedido</th><th>Tier</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700">Mike T.</td><td style="color:var(--muted2);font-size:.78rem">mike@email.com</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">24</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--yellow)">R$ 1.847</td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">Hoje</td><td><span class="badge badge-yellow">★ GOLD</span></td></tr>
+                <tr><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700">Ana R.</td><td style="color:var(--muted2);font-size:.78rem">ana@email.com</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">18</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--yellow)">R$ 1.204</td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">Hoje</td><td><span class="badge badge-yellow">★ GOLD</span></td></tr>
+                <tr><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700">Lucas M.</td><td style="color:var(--muted2);font-size:.78rem">lucas@email.com</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">11</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 682</td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">Hoje</td><td><span class="badge badge-blue">◆ SILVER</span></td></tr>
+                <tr><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700">Julia S.</td><td style="color:var(--muted2);font-size:.78rem">julia@email.com</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">8</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">R$ 438</td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">Hoje</td><td><span class="badge badge-blue">◆ SILVER</span></td></tr>
+                <tr><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700">Pedro K.</td><td style="color:var(--muted2);font-size:.78rem">pedro@email.com</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--primary)">5</td><td style="font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--muted)">R$ 197</td><td style="color:var(--muted2);font-family:'Rajdhani',sans-serif">Hoje</td><td><span class="badge" style="background:rgba(255,255,255,.08);color:var(--muted)">● BRONZE</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SETTINGS ─── -->
+      <div class="admin-panel" id="panel-settings">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px">
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">🏪 Info do Estabelecimento</span></div>
+            <div class="acard-body">
+              <div style="display:flex;flex-direction:column;gap:1rem">
+                <div class="field"><label class="field-label">Nome</label><input class="field-input" value="CLLR — Cellar Gaming Food" type="text"></div>
+                <div class="field"><label class="field-label">Telefone</label><input class="field-input" value="(11) 99999-0000" type="text"></div>
+                <div class="field"><label class="field-label">Endereço</label><input class="field-input" value="Rua Gamer, 404 — SP" type="text"></div>
+                <div class="field"><label class="field-label">Taxa de Entrega (R$)</label><input class="field-input" value="8.00" type="number" step="0.01"></div>
+                <button class="btn-save" style="width:100%">✓ Salvar Dados</button>
+              </div>
+            </div>
+          </div>
+          <div class="acard">
+            <div class="acard-head"><span class="acard-title">⚙ Configurações Operacionais</span></div>
+            <div class="acard-body">
+              <div style="display:flex;flex-direction:column;gap:1.25rem">
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Cardápio Online Ativo</span></div>
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Aceitar Pedidos</span></div>
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Delivery Habilitado</span></div>
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label><span class="toggle-label">Modo Manutenção</span></div>
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Notificações Sonoras</span></div>
+                <div class="toggle-wrap"><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label><span class="toggle-label">Ticker de Promoções</span></div>
+                <button class="btn-save" style="width:100%;margin-top:.5rem">✓ Aplicar Config</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
-</section>
-
-<!-- ═══ SOBREMESAS ═══ -->
-<section id="sobremesas" class="section">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">// categoria_04</span>
-      <h2 class="section-title neon-glow">Sobremesas</h2>
-      <div class="section-line"></div>
-    </div>
-
-    <div class="menu-grid">
-      <div class="featured-card" style="border-color:hsl(325 91% 60% / .4);box-shadow:0 0 30px 6px hsl(325 91% 60% / .2)">
-        <div class="featured-img" style="font-size:5rem">🍰
-          <div class="featured-img-corner" style="border-color:hsl(325 91% 60%)"></div>
-          <div class="featured-img-corner featured-img-corner-br" style="border-color:hsl(325 91% 60%)"></div>
-        </div>
-        <div class="featured-body">
-          <span class="featured-tag" style="color:hsl(325 91% 60%)">// boss_dessert</span>
-          <h3 class="featured-name" style="-webkit-text-fill-color:unset;background:none;color:hsl(var(--foreground))">Final Boss Cake</h3>
-          <p class="featured-desc">Cheesecake de chocolate belga com calda de frutas vermelhas, farofinha de brownie e sorvete de baunilha. Uma batalha para o seu paladar.</p>
-          <span class="featured-price" style="color:hsl(325 91% 60%);text-shadow:0 0 7px hsl(325 91% 60% / .8)">R$ 22,90</span>
-          <button class="featured-btn" style="background:linear-gradient(135deg,hsl(325 91% 60%),#8b2fc9)">+ Adicionar</button>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🍦<span class="menu-card-badge badge-hot">🔥 Top</span></div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Pixel Ice Cream</h3>
-          <p class="menu-card-desc">Sorvete artesanal 2 bolas. Sabores da semana: Cookies & Code e Caramel Rush.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 14,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🍩<span class="menu-card-badge badge-new">✦ Novo</span></div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Glitch Donut Box</h3>
-          <p class="menu-card-desc">4 donuts artesanais com coberturas temáticas: Neon Blue, Pink Glitch, Dark Mode e Gold Rush.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price">R$ 24,90</span>
-            <button class="menu-card-add">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="menu-card">
-        <div class="menu-card-img">🫐</div>
-        <div class="menu-card-body">
-          <h3 class="menu-card-name">Berry Respawn Bowl</h3>
-          <p class="menu-card-desc">Açaí 500ml com granola, banana, morango, blueberry e leite condensado.</p>
-          <div class="menu-card-footer">
-            <span class="menu-card-price" style="color:#a855f7;text-shadow:0 0 7px #a855f780">R$ 18,90</span>
-            <button class="menu-card-add" style="border-color:#a855f780;background:#a855f71a;color:#a855f7">+</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-logo">NEXUS FOOD</div>
-    <p class="footer-text">// delivering legendary experiences · 2025</p>
-    <div style="margin-top:1.5rem;display:flex;justify-content:center;gap:2rem">
-      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">⚡ Entrega 24/7</span>
-      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">🎮 Cardápio Gamer</span>
-      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">🔥 Feito na hora</span>
-    </div>
-  </div>
-</footer>
-
-<!-- CART BUTTON -->
-<button class="cart-btn" id="cartBtn" onclick="alert('Carrinho em breve! 🎮')">
-  🛒
-  <span class="cart-count" id="cartCount">0</span>
-</button>
+</div><!-- /page-admin -->
 
 <script>
-  function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    event.target.classList.add('active');
+// ── PAGE ROUTER ──
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── ADMIN PANELS ──
+const panelTitles = { dashboard:'Dashboard', orders:'Pedidos', products:'Produtos', addprod:'Novo Produto', analytics:'Analytics', customers:'Clientes', settings:'Configurações' };
+function showAdmin(id, btn) {
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('adminTitle').textContent = panelTitles[id] || id;
+  if(btn) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    btn.classList.add('active');
   }
+}
 
-  // Add to cart
-  let count = 0;
-  document.querySelectorAll('.menu-card-add, .featured-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      count++;
-      const el = document.getElementById('cartCount');
-      el.textContent = count;
-      el.style.animation = 'none';
-      setTimeout(() => el.style.animation = '', 10);
-    });
+// ── CATEGORY FILTER ──
+function setCat(cat, btn) {
+  if(btn) { document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+  document.querySelectorAll('.topbar-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.menu-cat-block').forEach(block => {
+    if(cat === 'all' || block.dataset.cat === cat) block.style.display = '';
+    else block.style.display = 'none';
   });
+}
 
-  // Staggered animations on section change
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach((entry, i) => {
-      if (entry.isIntersecting) {
-        entry.target.style.animationDelay = `${i * 0.1}s`;
-      }
-    });
+// ── CART ──
+let cartItems = [];
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+}
+function addToCart(name, icon, price) {
+  const existing = cartItems.find(i => i.name === name);
+  if(existing) { existing.qty++; }
+  else { cartItems.push({name, icon, price, qty:1}); }
+  renderCart();
+  // Flash cart btn
+  const pill = document.querySelector('.cart-pill');
+  pill.style.boxShadow = 'var(--cllr-glow)';
+  setTimeout(() => pill.style.boxShadow = '', 600);
+}
+function removeFromCart(name) {
+  cartItems = cartItems.filter(i => i.name !== name);
+  renderCart();
+}
+function changeQty(name, delta) {
+  const item = cartItems.find(i => i.name === name);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty <= 0) cartItems = cartItems.filter(i => i.name !== name);
+  renderCart();
+}
+function renderCart() {
+  const total = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = cartItems.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+  const itemsEl = document.getElementById('cartItems');
+  const footerEl = document.getElementById('cartFooter');
+  if(!cartItems.length) {
+    itemsEl.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">🛒</span>Carrinho vazio</div>';
+    footerEl.style.display = 'none';
+    return;
+  }
+  footerEl.style.display = 'block';
+  itemsEl.innerHTML = cartItems.map(i => `
+    <div class="cart-item">
+      <div class="cart-item-icon">${i.icon}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${i.name}</div>
+        <div class="cart-item-price">R$ ${(i.price * i.qty).toFixed(2).replace('.',',')}</div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="changeQty('${i.name}',-1)">−</button>
+          <span class="qty-num">${i.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${i.name}',1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-del" onclick="removeFromCart('${i.name}')">✕</button>
+    </div>
+  `).join('');
+  document.getElementById('cartSubtotal').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+  document.getElementById('cartTotal').textContent = 'R$ ' + (total + 8).toFixed(2).replace('.',',');
+}
+
+// ── ORDER FILTER ──
+function filterOrders(val) {
+  document.querySelectorAll('#ordersTableBody tr').forEach(tr => {
+    if(val === 'all' || tr.dataset.status === val) tr.style.display = '';
+    else tr.style.display = 'none';
   });
-  document.querySelectorAll('.menu-card, .combo-card, .featured-card').forEach(el => observer.observe(el));
+}
+
+// ── RESPONSIVE ──
+if(window.innerWidth < 860) {
+  document.getElementById('sidebarToggle').style.display = 'flex';
+}
+
+// ── STAGGER ANIMATIONS ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if(e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+  });
+}, {threshold:.1});
+document.querySelectorAll('.pcard,.combo-card,.feat-card,.kpi,.acard').forEach((el,i) => {
+  el.style.animationDelay = (i % 6) * .07 + 's';
+  observer.observe(el);
+});
 </script>
-
 </body>
 </html>
