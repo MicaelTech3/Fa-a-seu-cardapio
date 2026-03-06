@@ -35,7 +35,8 @@ let configuracoes = {
     servicoDelivery: false,
     carrinhoAtivo:   false,
     chavePix:        '',
-    qrCodePix:       ''
+    qrCodePix:       '',
+    maisPedidosIds:  []
 };
 
 // Elementos do DOM
@@ -96,17 +97,14 @@ async function initApp() {
 // ========================================================
 
 function inicializarHamburger() {
-    // Cria o botão hamburger no header
     const headerContainer = document.querySelector('.header .container');
     if (!headerContainer) return;
 
-    // Cria wrapper para ações do header se não existir
     let headerActions = headerContainer.querySelector('.header-actions');
     if (!headerActions) {
         headerActions = document.createElement('div');
         headerActions.className = 'header-actions';
 
-        // Move o cart-toggle para dentro do header-actions
         const existingCartToggle = headerContainer.querySelector('#cartToggle');
         if (existingCartToggle) {
             headerActions.appendChild(existingCartToggle);
@@ -114,7 +112,6 @@ function inicializarHamburger() {
         headerContainer.appendChild(headerActions);
     }
 
-    // Cria botão hamburger
     const hamburgerBtn = document.createElement('button');
     hamburgerBtn.id = 'hamburgerToggle';
     hamburgerBtn.className = 'hamburger-toggle';
@@ -125,7 +122,6 @@ function inicializarHamburger() {
         <span class="hamburger-line"></span>
     `;
 
-    // Insere o hamburger ANTES do cart-toggle no header-actions
     const cartToggleBtn = headerActions.querySelector('#cartToggle');
     if (cartToggleBtn) {
         headerActions.insertBefore(hamburgerBtn, cartToggleBtn);
@@ -133,7 +129,6 @@ function inicializarHamburger() {
         headerActions.appendChild(hamburgerBtn);
     }
 
-    // Cria o drawer do hamburger
     const drawer = document.createElement('div');
     drawer.id = 'hamburgerDrawer';
     drawer.className = 'hamburger-drawer';
@@ -164,7 +159,6 @@ function inicializarHamburger() {
         </div>
     `;
 
-    // Overlay do hamburger
     const overlay = document.createElement('div');
     overlay.id = 'hamburgerOverlay';
     overlay.className = 'hamburger-drawer-overlay';
@@ -172,11 +166,9 @@ function inicializarHamburger() {
     document.body.appendChild(drawer);
     document.body.appendChild(overlay);
 
-    // Event listeners do hamburger
     hamburgerBtn.addEventListener('click', toggleHamburger);
     overlay.addEventListener('click', fecharHamburger);
 
-    // Busca em tempo real
     const searchInput = document.getElementById('hamburgerSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -184,7 +176,6 @@ function inicializarHamburger() {
             buscarProdutos(termo);
         });
 
-        // Fecha com ESC
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') fecharHamburger();
         });
@@ -207,7 +198,6 @@ function toggleHamburger() {
         btn.classList.add('open');
         document.body.style.overflow = '';
 
-        // Foca no campo de busca ao abrir
         setTimeout(() => {
             const input = document.getElementById('hamburgerSearchInput');
             if (input) input.focus();
@@ -233,17 +223,32 @@ function atualizarHamburgerCategorias() {
     const count = document.getElementById('hamburgerProductCount');
     if (!lista) return;
 
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
     const total = produtos.filter(p => p.ativo !== false).length;
+    const qtdDestaque = maisPedidosIds.length;
+
     if (count) count.textContent = `${total} prato${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'is' : ''}`;
 
-    // Conta produtos por categoria
     const porCategoria = {};
     produtos.filter(p => p.ativo !== false).forEach(p => {
         const cat = p.categoria || 'Outros';
         porCategoria[cat] = (porCategoria[cat] || 0) + 1;
     });
 
-    let html = `
+    // Botão Mais Pedidos como primeiro (só aparece se houver destaques)
+    let html = '';
+    if (qtdDestaque > 0) {
+        html += `
+            <button class="hamburger-cat-btn mais-pedidos-cat ${categoriaAtiva === '__mais_pedidos__' ? 'active' : ''}" 
+                    onclick="selecionarCategoriaHamburger('__mais_pedidos__')">
+                <span class="cat-dot" style="background:var(--accent-gold,#f59e0b);"></span>
+                ⭐ Mais Pedidos
+                <span class="hamburger-cat-count">${qtdDestaque}</span>
+            </button>
+        `;
+    }
+
+    html += `
         <button class="hamburger-cat-btn ${categoriaAtiva === 'todas' ? 'active' : ''}" 
                 onclick="selecionarCategoriaHamburger('todas')">
             <span class="cat-dot"></span>
@@ -268,11 +273,9 @@ function atualizarHamburgerCategorias() {
 }
 
 window.selecionarCategoriaHamburger = function(categoria) {
-    // Limpa busca se existir
     const searchInput = document.getElementById('hamburgerSearchInput');
     if (searchInput) searchInput.value = '';
 
-    // Atualiza categoria ativa nos dois lugares (drawer + barra de categorias)
     categoriaAtiva = categoria;
 
     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
@@ -285,7 +288,6 @@ window.selecionarCategoriaHamburger = function(categoria) {
     filtrarProdutos();
     fecharHamburger();
 
-    // Scroll suave até os produtos
     setTimeout(() => {
         const menu = document.getElementById('menu');
         if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -310,7 +312,6 @@ function buscarProdutos(termo) {
 
     renderizarProdutos(resultados);
 
-    // Atualiza contador no drawer
     const count = document.getElementById('hamburgerProductCount');
     if (count) count.textContent = `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''} para "${termo}"`;
 }
@@ -328,6 +329,7 @@ async function carregarConfiguracoes() {
             onSnapshot(configRef, (docSnap) => {
                 if (docSnap.exists()) {
                     configuracoes = { ...configuracoes, ...docSnap.data() };
+                    if (!Array.isArray(configuracoes.maisPedidosIds)) configuracoes.maisPedidosIds = [];
                 }
                 aplicarConfiguracoes(configuracoes);
 
@@ -462,7 +464,11 @@ function aplicarConfiguracoes(config) {
         cartToggleBtn.style.display    = config.carrinhoAtivo === true ? 'flex' : 'none';
     }
 
-    if (produtos.length > 0) filtrarProdutos();
+    // Re-renderiza categorias e produtos com os dados de maisPedidosIds atualizados
+    if (produtos.length > 0) {
+        renderizarCategorias();
+        filtrarProdutos();
+    }
 }
 
 // ========================================================
@@ -650,9 +656,21 @@ async function carregarCategorias() {
 
 function renderizarCategorias() {
     if (!categoriesContainer) return;
+
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
+    const qtdDestaque    = maisPedidosIds.length;
+
+    // Botão Mais Pedidos como PRIMEIRO (só aparece se houver destaques configurados)
+    const btnMaisPedidos = qtdDestaque > 0
+        ? `<button class="category-btn mais-pedidos-cat ${categoriaAtiva === '__mais_pedidos__' ? 'active' : ''}" data-category="__mais_pedidos__">⭐ Mais Pedidos</button>`
+        : '';
+
     categoriesContainer.innerHTML =
-        '<button class="category-btn active" data-category="todas">Todas</button>' +
-        categorias.map(cat => '<button class="category-btn" data-category="' + cat.nome + '">' + cat.nome + '</button>').join('');
+        btnMaisPedidos +
+        `<button class="category-btn ${categoriaAtiva === 'todas' ? 'active' : ''}" data-category="todas">Todas</button>` +
+        categorias.map(cat =>
+            `<button class="category-btn ${categoriaAtiva === cat.nome ? 'active' : ''}" data-category="${cat.nome}">${cat.nome}</button>`
+        ).join('');
 
     document.querySelectorAll('.category-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -660,7 +678,6 @@ function renderizarCategorias() {
             btn.classList.add('active');
             categoriaAtiva = btn.dataset.category;
             filtrarProdutos();
-            // Também atualiza o hamburger quando clica na barra de categorias
             atualizarHamburgerCategorias();
         });
     });
@@ -679,6 +696,7 @@ async function carregarProdutos() {
                 const produto = { id: d.id, ...d.data() };
                 if (produto.ativo !== false) produtos.push(produto);
             });
+            renderizarCategorias();
             filtrarProdutos();
             atualizarHamburgerCategorias();
         });
@@ -686,66 +704,131 @@ async function carregarProdutos() {
 }
 
 function filtrarProdutos() {
-    const filtrados = categoriaAtiva === 'todas'
-        ? produtos
-        : produtos.filter(p => p.categoria === categoriaAtiva);
-    renderizarProdutos(filtrados);
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
+
+    let filtrados;
+    if (categoriaAtiva === '__mais_pedidos__') {
+        // Aba Mais Pedidos: só os produtos marcados como destaque
+        filtrados = produtos.filter(p => maisPedidosIds.includes(p.id));
+        renderizarProdutos(filtrados, false);
+    } else if (categoriaAtiva === 'todas') {
+        // Aba Todas: destaques primeiro, depois o resto
+        filtrados = [...produtos];
+        renderizarProdutos(filtrados, true);
+    } else {
+        filtrados = produtos.filter(p => p.categoria === categoriaAtiva);
+        renderizarProdutos(filtrados, false);
+    }
 }
 
-function renderizarProdutos(produtosParaExibir) {
-    if (!productsContainer) return;
-
-    if (produtosParaExibir.length === 0) {
-        productsContainer.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
-                <p style="font-size:1.1rem;">Nenhum produto encontrado nesta categoria</p>
-            </div>`;
-        return;
-    }
-
-    const porCategoria = {};
-    produtosParaExibir.forEach(p => {
-        const cat = p.categoria || 'Outros';
-        if (!porCategoria[cat]) porCategoria[cat] = [];
-        porCategoria[cat].push(p);
-    });
-
-    productsContainer.innerHTML = Object.keys(porCategoria).map(categoria => `
-        <div class="category-section">
-            <h2 class="category-title">${categoria}</h2>
-            <div class="products-grid">
-                ${porCategoria[categoria].map(produto => {
-                    const temAdicionais = produto.adicionais && produto.adicionais.length > 0;
-                    const imgSrc = produto.imagem || 'img/logo.jpg';
-                    return `
-                        <div class="product-card" data-id="${produto.id}" onclick="abrirModalProduto('${produto.id}')">
-                            <img src="${imgSrc}" alt="${produto.nome}" class="product-image" onerror="this.src='img/logo.jpg'">
-                            <div class="product-info">
-                                <h3 class="product-name">${produto.nome}</h3>
-                                ${produto.descricao ? '<p class="product-description">' + produto.descricao + '</p>' : ''}
-                                <div class="product-footer">
-                                    <span class="product-price">R$ ${formatarPreco(produto.preco)}</span>
-                                    <button class="btn-add" onclick="event.stopPropagation(); abrirModalProduto('${produto.id}')">
-                                        ${temAdicionais
-                                            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Montar'
-                                            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Ver'}
-                                    </button>
-                                </div>
-                                ${temAdicionais ? '<div class="product-extras-badge">+ ' + produto.adicionais.length + ' adicional(is)</div>' : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
+// Gera o HTML de um card de produto (reutilizável)
+function renderizarCardProduto(produto) {
+    const temAdicionais = produto.adicionais && produto.adicionais.length > 0;
+    const imgSrc = produto.imagem || 'img/logo.jpg';
+    return `
+        <div class="product-card" data-id="${produto.id}" onclick="abrirModalProduto('${produto.id}')">
+            <img src="${imgSrc}" alt="${produto.nome}" class="product-image" onerror="this.src='img/logo.jpg'">
+            <div class="product-info">
+                <h3 class="product-name">${produto.nome}</h3>
+                ${produto.descricao ? '<p class="product-description">' + produto.descricao + '</p>' : ''}
+                <div class="product-footer">
+                    <span class="product-price">R$ ${formatarPreco(produto.preco)}</span>
+                    <button class="btn-add" onclick="event.stopPropagation(); abrirModalProduto('${produto.id}')">
+                        ${temAdicionais
+                            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Montar'
+                            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Ver'}
+                    </button>
+                </div>
+                ${temAdicionais ? '<div class="product-extras-badge">+ ' + produto.adicionais.length + ' adicional(is)</div>' : ''}
             </div>
         </div>
-    `).join('');
+    `;
+}
 
+function injetarEstiloBadge() {
     if (!document.getElementById('extrasBadgeStyle')) {
         const s = document.createElement('style');
         s.id = 'extrasBadgeStyle';
         s.textContent = '.product-extras-badge{margin-top:8px;display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;color:var(--primary-color,#3b82f6);background:rgba(59,130,246,.08);padding:4px 10px;border-radius:20px;}';
         document.head.appendChild(s);
     }
+}
+
+/**
+ * @param {Array}   produtosParaExibir  - lista de produtos a renderizar
+ * @param {boolean} mostrarDestaquesFirst - se true, separa destaques numa seção no topo
+ */
+function renderizarProdutos(produtosParaExibir, mostrarDestaquesFirst = false) {
+    if (!productsContainer) return;
+
+    if (produtosParaExibir.length === 0) {
+        const isMaisPedidos = categoriaAtiva === '__mais_pedidos__';
+        productsContainer.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#666;">
+                <p style="font-size:1.1rem;">${isMaisPedidos
+                    ? '⭐ Nenhum produto em destaque. Marque produtos como "Mais Pedidos" no painel admin.'
+                    : 'Nenhum produto encontrado nesta categoria'}</p>
+            </div>`;
+        return;
+    }
+
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
+    let html = '';
+
+    if (mostrarDestaquesFirst && maisPedidosIds.length > 0) {
+        // Separa destaques do restante
+        const destaques = produtosParaExibir.filter(p =>  maisPedidosIds.includes(p.id));
+        const resto     = produtosParaExibir.filter(p => !maisPedidosIds.includes(p.id));
+
+        // Seção ⭐ Mais Pedidos
+        if (destaques.length > 0) {
+            html += `
+                <div class="category-section mais-pedidos-section">
+                    <h2 class="category-title" style="color:var(--accent-gold,#f59e0b);">⭐ Mais Pedidos</h2>
+                    <div class="products-grid">
+                        ${destaques.map(p => renderizarCardProduto(p)).join('')}
+                    </div>
+                </div>`;
+        }
+
+        // Restante agrupado por categoria
+        const porCategoria = {};
+        resto.forEach(p => {
+            const cat = p.categoria || 'Outros';
+            if (!porCategoria[cat]) porCategoria[cat] = [];
+            porCategoria[cat].push(p);
+        });
+
+        html += Object.keys(porCategoria).map(categoria => `
+            <div class="category-section">
+                <h2 class="category-title">${categoria}</h2>
+                <div class="products-grid">
+                    ${porCategoria[categoria].map(p => renderizarCardProduto(p)).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    } else {
+        // Comportamento padrão: agrupa por categoria
+        const porCategoria = {};
+        produtosParaExibir.forEach(p => {
+            const cat = p.categoria || 'Outros';
+            if (!porCategoria[cat]) porCategoria[cat] = [];
+            porCategoria[cat].push(p);
+        });
+
+        html = Object.keys(porCategoria).map(categoria => `
+            <div class="category-section">
+                <h2 class="category-title">${categoria}</h2>
+                <div class="products-grid">
+                    ${porCategoria[categoria].map(p => renderizarCardProduto(p)).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    productsContainer.innerHTML = html;
+    injetarEstiloBadge();
 }
 
 // ========================================================

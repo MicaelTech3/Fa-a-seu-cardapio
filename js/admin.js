@@ -19,8 +19,9 @@ let editandoProduto = null, editandoCategoria = null;
 let filtroStatusPedido = 'all', filtroCategoriaProduto = 'all';
 let categoriaExpandida = null, adicionaisTemp = [];
 let abaConfigAtiva = 'aparencia';
+let termoBusca = '';
 
-// ─── Padrões globais — tudo desativado ────────────────────────────────────────
+// ─── Padrões globais ──────────────────────────────────────────────────────────
 const DEFAULTS_GLOBAIS = {
     nomeCardapio:    'X-Food',
     logoUrl:         'img/logo.jpg',
@@ -40,10 +41,10 @@ const DEFAULTS_GLOBAIS = {
     chavePix:        '',
     qrCodePix:       '',
     qrCodeMenu:      '',
-    dominios:        ''
+    dominios:        '',
+    maisPedidosIds:  []
 };
 
-// Padrões por aba (para reset individual)
 const DEFAULTS_ABA = {
     aparencia:       { nomeCardapio:'X-Food', logoUrl:'img/logo.jpg', logoLink:'', corPrimaria:'#3b82f6', corSecundaria:'#64748b', fonte:'DM Sans' },
     info:            { tituloBemVindo:'Bem-vindos', endereco:'', whatsApp:'', whatsAppAtivo:false, status:'fechado' },
@@ -120,10 +121,10 @@ function setupEventListeners() {
             item.classList.add('active');
             contentSections.forEach(s => s.classList.remove('active'));
             document.getElementById('section'+capitalize(sec))?.classList.add('active');
-            if (sec==='dashboard')      atualizarDashboard();
+            if (sec==='dashboard')          atualizarDashboard();
             else if (sec==='configuracoes') renderizarConfiguracoes();
-            else if (sec==='pages')     renderizarPages();
-            else if (sec==='produtos')  renderizarFiltrosCategorias();
+            else if (sec==='pages')         renderizarPages();
+            else if (sec==='produtos')      renderizarFiltrosCategorias();
         });
     });
     btnAddProduct.addEventListener('click', () => abrirModalProduto());
@@ -162,12 +163,14 @@ function injetarEstilosExtras() {
     const s = document.createElement('style');
     s.id = 'adminExtrasStyles';
     s.textContent = `
+    /* ── Config tabs ── */
     .config-tabs-nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:24px;background:var(--bg-elevated,#1a1e28);border:1px solid var(--border);border-radius:10px;padding:6px;}
     .config-tab-btn{flex:1;min-width:90px;padding:9px 12px;background:transparent;border:none;border-radius:7px;font-size:.8rem;font-weight:600;font-family:inherit;color:var(--text-muted,#505868);cursor:pointer;transition:all .18s ease;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;}
     .config-tab-btn:hover{background:var(--bg-hover,rgba(255,255,255,.04));color:var(--text-primary,#f0f2f7);}
     .config-tab-btn.active{background:rgba(245,158,11,.12);color:var(--accent,#f59e0b);box-shadow:0 0 0 1px rgba(245,158,11,.25);}
     .config-tab-panel{display:none;}
     .config-tab-panel.active{display:block;animation:sectionFade .2s ease;}
+    /* ── Toggle switch ── */
     .config-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
     .config-switch input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0;}
     .config-switch .slider{position:relative;width:44px;height:24px;background:var(--bg-base,#0d0f14);border:1px solid var(--border);border-radius:12px;transition:all .2s;flex-shrink:0;}
@@ -180,12 +183,14 @@ function injetarEstilosExtras() {
     .toggle-left{display:flex;flex-direction:column;gap:3px;}
     .toggle-left strong{font-size:.875rem;font-weight:600;color:var(--text-primary);}
     .toggle-left span{font-size:.75rem;color:var(--text-muted);}
+    /* ── QR / domínios ── */
     .qr-preview-box{margin-top:10px;text-align:center;}
     .qr-preview-box img{max-width:160px;border-radius:8px;border:1px solid var(--border);}
     .dominios-list{display:flex;flex-direction:column;gap:7px;margin-top:8px;}
     .dominio-item{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:7px;padding:10px 13px;font-size:.8rem;}
     .dominio-item a{color:var(--accent,#f59e0b);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .dominio-item a:hover{text-decoration:underline;}
+    /* ── Adicionais ── */
     .extras-admin-section{border:1px dashed var(--border-strong,rgba(255,255,255,.14));border-radius:10px;padding:14px;background:var(--bg-elevated);}
     .extras-admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
     .extras-admin-header span{font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
@@ -203,18 +208,152 @@ function injetarEstilosExtras() {
     .btn-remove-extra{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;flex-shrink:0;transition:all .18s;}
     .btn-remove-extra:hover{background:var(--danger-dim,rgba(239,68,68,.12));color:var(--danger,#ef4444);}
     .extras-empty-msg{text-align:center;color:var(--text-muted);font-size:.78rem;padding:12px 0 4px;}
+    /* ── Aba actions ── */
     .config-actions-aba{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap;}
     .btn-reset-aba{background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:8px 14px;border-radius:var(--radius-sm,6px);font-size:.8rem;font-weight:500;font-family:inherit;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;}
     .btn-reset-aba:hover{border-color:var(--warning,#f59e0b);color:var(--warning,#f59e0b);background:rgba(245,158,11,.06);}
+
+    /* ══════════════════════════════════════
+       BARRA DE BUSCA DE PRODUTOS
+    ══════════════════════════════════════ */
+    .produtos-search-bar{
+        display:flex;align-items:center;gap:10px;
+        padding:11px 16px;
+        background:var(--bg-surface);
+        border:1px solid var(--border);
+        border-radius:var(--radius,4px);
+        margin-bottom:14px;
+        transition:border-color .18s,box-shadow .18s;
+    }
+    .produtos-search-bar:focus-within{
+        border-color:var(--primary,#00ffe0);
+        box-shadow:0 0 0 3px rgba(0,255,224,.1),0 0 12px rgba(0,255,224,.12);
+    }
+    .produtos-search-bar .search-icon-svg{
+        flex-shrink:0;color:var(--text-muted);transition:color .18s;
+    }
+    .produtos-search-bar:focus-within .search-icon-svg{
+        color:var(--primary,#00ffe0);
+    }
+    #searchProdutos{
+        flex:1;background:transparent;border:none;outline:none;
+        font-size:.88rem;font-family:'Rajdhani',sans-serif;letter-spacing:.04em;
+        color:var(--text-primary);
+    }
+    #searchProdutos::placeholder{color:var(--text-muted);}
+    .search-results-count{
+        font-size:.72rem;font-family:'Rajdhani',sans-serif;
+        letter-spacing:.06em;text-transform:uppercase;
+        color:var(--text-muted);white-space:nowrap;flex-shrink:0;
+    }
+    .search-clear-btn{
+        background:transparent;border:none;cursor:pointer;
+        color:var(--text-muted);padding:3px 7px;border-radius:4px;
+        font-size:.75rem;display:none;transition:all .18s;line-height:1;
+    }
+    .search-clear-btn:hover{color:var(--danger,#ff1744);background:var(--danger-dim,rgba(255,23,68,.1));}
+    .search-clear-btn.visible{display:block;}
+
+    /* ══════════════════════════════════════
+       ABA MAIS PEDIDOS
+    ══════════════════════════════════════ */
+    .mais-pedidos-filter-btn{
+        display:inline-flex;align-items:center;gap:6px;
+        padding:6px 14px;
+        border:1px solid rgba(255,230,0,.3);
+        background:rgba(255,230,0,.05);
+        border-radius:var(--radius-sm,3px);
+        font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+        font-family:'Rajdhani',sans-serif;
+        color:rgba(255,230,0,.8);
+        cursor:pointer;transition:all .18s;
+    }
+    .mais-pedidos-filter-btn:hover{
+        background:rgba(255,230,0,.12);border-color:rgba(255,230,0,.5);
+        box-shadow:0 0 8px rgba(255,230,0,.15);color:var(--accent-gold,#ffe600);
+    }
+    .mais-pedidos-filter-btn.active{
+        background:rgba(255,230,0,.12);border-color:var(--accent-gold,#ffe600);
+        color:var(--accent-gold,#ffe600);box-shadow:0 0 10px rgba(255,230,0,.2);
+    }
+    .mais-pedidos-badge{
+        display:inline-flex;align-items:center;justify-content:center;
+        background:var(--accent-gold,#ffe600);color:#02000a;
+        font-size:.6rem;font-weight:900;
+        width:17px;height:17px;border-radius:50%;line-height:1;
+    }
+
+    /* Botão estrela no card */
+    .mais-pedidos-star{
+        position:absolute;top:10px;right:10px;z-index:11;
+        background:rgba(2,0,10,.75);
+        border:1px solid rgba(255,230,0,.2);
+        width:30px;height:30px;border-radius:var(--radius-sm,3px);
+        display:flex;align-items:center;justify-content:center;
+        cursor:pointer;transition:all .18s;font-size:.85rem;
+        filter:grayscale(1);opacity:.5;
+    }
+    .mais-pedidos-star:hover{
+        filter:grayscale(0);opacity:1;
+        background:rgba(255,230,0,.12);border-color:rgba(255,230,0,.5);
+        box-shadow:0 0 8px rgba(255,230,0,.2);
+    }
+    .mais-pedidos-star.ativo{
+        filter:grayscale(0);opacity:1;
+        background:rgba(255,230,0,.15);border-color:var(--accent-gold,#ffe600);
+        box-shadow:0 0 10px rgba(255,230,0,.3);
+    }
+
+    /* Separador de seção no grid */
+    .grid-section-header{
+        grid-column:1/-1;
+        display:flex;align-items:center;gap:10px;
+        padding:9px 14px;
+        border-radius:var(--radius,4px);
+        margin-top:4px;margin-bottom:2px;
+    }
+    .grid-section-header.gold{
+        background:linear-gradient(90deg,rgba(255,230,0,.08),transparent);
+        border:1px solid rgba(255,230,0,.18);
+    }
+    .grid-section-header.teal{
+        background:linear-gradient(90deg,rgba(0,255,224,.04),transparent);
+        border:1px solid rgba(0,255,224,.1);
+    }
+    .grid-section-header span{
+        font-family:'Orbitron',sans-serif;
+        font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    }
+    .grid-section-header.gold span{color:var(--accent-gold,#ffe600);text-shadow:0 0 8px rgba(255,230,0,.3);}
+    .grid-section-header.teal span{color:var(--text-muted);}
+
+    /* Tag no card */
+    .tag-mais-pedidos{
+        display:inline-flex;align-items:center;gap:4px;
+        font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        font-family:'Rajdhani',sans-serif;
+        color:var(--accent-gold,#ffe600);
+        margin:4px 0 0;
+    }
+
+    /* Sem resultados */
+    .no-results-msg{
+        grid-column:1/-1;text-align:center;padding:60px 20px;
+        color:var(--text-muted);font-family:'Rajdhani',sans-serif;
+        font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;
+        line-height:1.8;
+    }
+    .no-results-msg strong{color:var(--text-primary);}
     `;
     document.head.appendChild(s);
 }
 
-// ─── CONFIGURACOES ────────────────────────────────────────────────────────────
+// ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 async function carregarConfiguracoes() {
     try {
         const snap = await getDoc(doc(db,'configuracoes','geral'));
         if (snap.exists()) configuracoes = { ...configuracoes, ...snap.data() };
+        if (!Array.isArray(configuracoes.maisPedidosIds)) configuracoes.maisPedidosIds = [];
     } catch(e) { console.error(e); }
 }
 
@@ -225,15 +364,12 @@ window.mudarAbaConfig = function(aba) {
 };
 
 function ck(v) { return v===true ? 'checked' : ''; }
-
 function tabBtn(id, label, icon) {
     return `<button class="config-tab-btn ${abaConfigAtiva===id?'active':''}" data-aba="${id}" onclick="mudarAbaConfig('${id}')">${icon}${label}</button>`;
 }
-
 function panelOpen(id)  { return `<div class="config-tab-panel ${abaConfigAtiva===id?'active':''}" data-aba="${id}">`; }
 function panelClose()   { return `</div>`; }
 
-// Botões de ação individuais por aba
 function abaActions(aba) {
     return `
     <div class="config-actions-aba">
@@ -248,7 +384,6 @@ function abaActions(aba) {
     </div>`;
 }
 
-// Reset individual por aba
 window.resetarAba = function(aba) {
     if (!DEFAULTS_ABA[aba]) return;
     if (!confirm('Restaurar os padrões apenas desta aba?\n\nIsso não salva automaticamente — clique em "Salvar" para confirmar.')) return;
@@ -264,7 +399,6 @@ function renderizarConfiguracoes() {
     const cfg = configuracoes;
 
     cc.innerHTML = `
-    <!-- MINI-ABAS NAV -->
     <div class="config-tabs-nav">
         ${tabBtn('aparencia',       'Aparência',       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>')}
         ${tabBtn('info',            'Informações',     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>')}
@@ -274,7 +408,6 @@ function renderizarConfiguracoes() {
         ${tabBtn('qr',              'QR / Links',      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>')}
     </div>
 
-    <!-- ── ABA APARENCIA ── -->
     ${panelOpen('aparencia')}
         <div class="config-section">
             <h3 class="config-title">🎨 Identidade Visual</h3>
@@ -319,7 +452,6 @@ function renderizarConfiguracoes() {
         ${abaActions('aparencia')}
     ${panelClose()}
 
-    <!-- ── ABA INFORMACOES ── -->
     ${panelOpen('info')}
         <div class="config-section">
             <h3 class="config-title">🏠 Estabelecimento</h3>
@@ -366,7 +498,6 @@ function renderizarConfiguracoes() {
         ${abaActions('info')}
     ${panelClose()}
 
-    <!-- ── ABA SERVICOS ── -->
     ${panelOpen('servicos')}
         <div class="config-section">
             <h3 class="config-title">🏷️ Tipos de Atendimento</h3>
@@ -374,38 +505,20 @@ function renderizarConfiguracoes() {
             <div class="config-grid">
                 <div class="config-field full-width">
                     <div class="toggle-row">
-                        <div class="toggle-left">
-                            <strong>🏠 No Local</strong>
-                            <span>Cliente consome no estabelecimento</span>
-                        </div>
-                        <label class="config-switch">
-                            <input type="checkbox" id="configServicoLocal" ${ck(cfg.servicoLocal)}>
-                            <span class="slider"></span>
-                        </label>
+                        <div class="toggle-left"><strong>🏠 No Local</strong><span>Cliente consome no estabelecimento</span></div>
+                        <label class="config-switch"><input type="checkbox" id="configServicoLocal" ${ck(cfg.servicoLocal)}><span class="slider"></span></label>
                     </div>
                 </div>
                 <div class="config-field full-width">
                     <div class="toggle-row">
-                        <div class="toggle-left">
-                            <strong>🚗 Retirada</strong>
-                            <span>Cliente retira o pedido no local</span>
-                        </div>
-                        <label class="config-switch">
-                            <input type="checkbox" id="configServicoRetirada" ${ck(cfg.servicoRetirada)}>
-                            <span class="slider"></span>
-                        </label>
+                        <div class="toggle-left"><strong>🚗 Retirada</strong><span>Cliente retira o pedido no local</span></div>
+                        <label class="config-switch"><input type="checkbox" id="configServicoRetirada" ${ck(cfg.servicoRetirada)}><span class="slider"></span></label>
                     </div>
                 </div>
                 <div class="config-field full-width">
                     <div class="toggle-row">
-                        <div class="toggle-left">
-                            <strong>🛵 Delivery</strong>
-                            <span>Entrega no endereço do cliente</span>
-                        </div>
-                        <label class="config-switch">
-                            <input type="checkbox" id="configServicoDelivery" ${ck(cfg.servicoDelivery)}>
-                            <span class="slider"></span>
-                        </label>
+                        <div class="toggle-left"><strong>🛵 Delivery</strong><span>Entrega no endereço do cliente</span></div>
+                        <label class="config-switch"><input type="checkbox" id="configServicoDelivery" ${ck(cfg.servicoDelivery)}><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
@@ -413,7 +526,6 @@ function renderizarConfiguracoes() {
         ${abaActions('servicos')}
     ${panelClose()}
 
-    <!-- ── ABA FUNCIONALIDADES ── -->
     ${panelOpen('funcionalidades')}
         <div class="config-section">
             <h3 class="config-title">⚙️ Funcionalidades do Cardápio</h3>
@@ -421,14 +533,8 @@ function renderizarConfiguracoes() {
             <div class="config-grid">
                 <div class="config-field full-width">
                     <div class="toggle-row">
-                        <div class="toggle-left">
-                            <strong>🛒 Carrinho de Compras</strong>
-                            <span>Clientes podem adicionar itens e fazer pedidos. Desativado por padrão.</span>
-                        </div>
-                        <label class="config-switch">
-                            <input type="checkbox" id="configCarrinho" ${ck(cfg.carrinhoAtivo)}>
-                            <span class="slider"></span>
-                        </label>
+                        <div class="toggle-left"><strong>🛒 Carrinho de Compras</strong><span>Clientes podem adicionar itens e fazer pedidos. Desativado por padrão.</span></div>
+                        <label class="config-switch"><input type="checkbox" id="configCarrinho" ${ck(cfg.carrinhoAtivo)}><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
@@ -436,7 +542,6 @@ function renderizarConfiguracoes() {
         ${abaActions('funcionalidades')}
     ${panelClose()}
 
-    <!-- ── ABA PAGAMENTO ── -->
     ${panelOpen('pagamento')}
         <div class="config-section">
             <h3 class="config-title">💳 Pagamento PIX</h3>
@@ -455,7 +560,6 @@ function renderizarConfiguracoes() {
         ${abaActions('pagamento')}
     ${panelClose()}
 
-    <!-- ── ABA QR / LINKS ── -->
     ${panelOpen('qr')}
         <div class="config-section">
             <h3 class="config-title">📱 QR Code do Menu</h3>
@@ -497,7 +601,6 @@ function renderizarConfiguracoes() {
         ${abaActions('qr')}
     ${panelClose()}`;
 
-    // Live previews
     document.getElementById('configLogoUrl')?.addEventListener('input', e => {
         const c = document.getElementById('logoPreviewContainer');
         if (!c) return;
@@ -505,7 +608,6 @@ function renderizarConfiguracoes() {
             ? `<div class="image-preview-uploaded"><img src="${e.target.value}" style="max-height:72px;border-radius:8px;" onerror="this.parentElement.innerHTML='<span style=color:#ef4444;font-size:.8rem>URL inválida</span>'"></div>`
             : '';
     });
-
     document.getElementById('configDominios')?.addEventListener('input', e => {
         const c = document.getElementById('dominiosListContainer');
         if (c) c.innerHTML = renderizarListaDominios(e.target.value);
@@ -532,7 +634,6 @@ window.previewQrMenu = function(url) {
         ? `<img src="${url}" alt="QR Menu" onerror="this.parentElement.innerHTML='<span style=font-size:.75rem;color:#ef4444>URL inválida</span>'">`
         : `<span style="font-size:.75rem;color:var(--text-muted);">Nenhuma imagem configurada</span>`;
 };
-
 window.gerarQrMenuExterno = function() {
     window.open('https://www.qr-code-generator.com/?url='+encodeURIComponent('https://exceedparkcardapio.vercel.app/menu.html'),'_blank');
 };
@@ -565,7 +666,8 @@ window.salvarConfiguracoes = async function() {
             chavePix:        getValOr('configChavePix',       configuracoes.chavePix),
             qrCodePix:       getValOr('configQrCodePix',      configuracoes.qrCodePix),
             qrCodeMenu:      getValOr('configQrCodeMenu',     configuracoes.qrCodeMenu),
-            dominios:        getValOr('configDominios',       configuracoes.dominios)
+            dominios:        getValOr('configDominios',       configuracoes.dominios),
+            maisPedidosIds:  configuracoes.maisPedidosIds || []
         };
         await setDoc(doc(db,'configuracoes','geral'), n);
         configuracoes = n;
@@ -627,6 +729,7 @@ function atualizarDashboard() {
     produtos.forEach(p => { const c=p.categoria||'Sem categoria'; porCat[c]=(porCat[c]||0)+1; });
     const ranking = calcularRanking();
     const carrinhoOk = configuracoes.carrinhoAtivo===true;
+    const qtdDestaque = (configuracoes.maisPedidosIds||[]).length;
 
     dc.innerHTML = `
         <div class="stats-grid">
@@ -634,6 +737,12 @@ function atualizarDashboard() {
             <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div class="stat-info"><span class="stat-label">Ativos</span><span class="stat-value">${ativos}</span></div></div>
             <div class="stat-card"><div class="stat-icon gray"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="stat-info"><span class="stat-label">Inativos</span><span class="stat-value">${total-ativos}</span></div></div>
             <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="stat-info"><span class="stat-label">Total Pedidos</span><span class="stat-value">${totPed}</span></div></div>
+            <div class="stat-card" style="border-color:rgba(255,230,0,.2);">
+                <div class="stat-icon" style="background:rgba(255,230,0,.08);color:#ffe600;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stat-info"><span class="stat-label">Mais Pedidos</span><span class="stat-value" style="color:#ffe600;">${qtdDestaque}</span></div>
+            </div>
         </div>
         <div class="charts-grid">
             <div class="chart-card">
@@ -737,59 +846,275 @@ async function salvarCategoria(e) {
     } catch { showToast('Erro','error'); hideLoading(); }
 }
 
+// ─── MAIS PEDIDOS ─────────────────────────────────────────────────────────────
+window.toggleMaisPedidos = async function(produtoId) {
+    if (!Array.isArray(configuracoes.maisPedidosIds)) configuracoes.maisPedidosIds = [];
+    const idx = configuracoes.maisPedidosIds.indexOf(produtoId);
+    if (idx === -1) {
+        configuracoes.maisPedidosIds.push(produtoId);
+        showToast('⭐ Adicionado a Mais Pedidos!', 'success');
+    } else {
+        configuracoes.maisPedidosIds.splice(idx, 1);
+        showToast('Removido de Mais Pedidos', 'info');
+    }
+    try {
+        await setDoc(doc(db,'configuracoes','geral'), { maisPedidosIds: configuracoes.maisPedidosIds }, { merge: true });
+    } catch { showToast('Erro ao salvar Mais Pedidos','error'); }
+    renderizarFiltrosCategorias();
+    renderizarProdutos();
+};
+
 // ─── PRODUTOS ─────────────────────────────────────────────────────────────────
+
 function renderizarFiltrosCategorias() {
     const fc = document.getElementById('categoryFilters');
     if (!fc) return;
-    fc.innerHTML = `<button class="category-filter-btn ${filtroCategoriaProduto==='all'?'active':''}" onclick="window.filtrarPorCategoria('all')">Todos (${produtos.length})</button>`
-        + categorias.map(c=>{const n=produtos.filter(p=>p.categoria===c.nome).length; return `<button class="category-filter-btn ${filtroCategoriaProduto===c.nome?'active':''}" onclick="window.filtrarPorCategoria('${c.nome}')">${c.nome} (${n})</button>`;}).join('');
+
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
+    const qtdDestaque    = maisPedidosIds.length;
+
+    // ── Barra de busca (criada uma única vez) ──────────────────────────────
+    if (!document.getElementById('produtosSearchWrap')) {
+        const wrap = document.createElement('div');
+        wrap.id = 'produtosSearchWrap';
+        wrap.className = 'produtos-search-bar';
+        wrap.innerHTML = `
+            <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+                type="text"
+                id="searchProdutos"
+                placeholder="Buscar produto por nome, categoria ou descrição…"
+                autocomplete="off"
+                spellcheck="false"
+                value="${termoBusca}"
+            >
+            <span class="search-results-count" id="searchResultsCount"></span>
+            <button class="search-clear-btn ${termoBusca?'visible':''}" id="searchClearBtn"
+                onclick="window.limparBuscaProdutos()" title="Limpar busca">✕</button>
+        `;
+        fc.parentElement.insertBefore(wrap, fc);
+
+        document.getElementById('searchProdutos').addEventListener('input', e => {
+            termoBusca = e.target.value;
+            const btn = document.getElementById('searchClearBtn');
+            if (btn) btn.classList.toggle('visible', !!termoBusca);
+            renderizarProdutos();
+        });
+
+        document.getElementById('searchProdutos').addEventListener('keydown', e => {
+            if (e.key === 'Escape') window.limparBuscaProdutos();
+        });
+    }
+
+    // ── Filtros de categoria ────────────────────────────────────────────────
+    fc.innerHTML =
+        // 1º sempre: Mais Pedidos
+        `<button class="mais-pedidos-filter-btn ${filtroCategoriaProduto==='__mais_pedidos__'?'active':''}"
+            onclick="window.filtrarPorCategoria('__mais_pedidos__')">
+            ⭐ Mais Pedidos
+            ${qtdDestaque > 0 ? `<span class="mais-pedidos-badge">${qtdDestaque}</span>` : ''}
+        </button>`
+        // 2º: Todos
+        + `<button class="category-filter-btn ${filtroCategoriaProduto==='all'?'active':''}"
+            onclick="window.filtrarPorCategoria('all')">Todos (${produtos.length})</button>`
+        // Demais categorias
+        + categorias.map(c => {
+            const n = produtos.filter(p=>p.categoria===c.nome).length;
+            return `<button class="category-filter-btn ${filtroCategoriaProduto===c.nome?'active':''}"
+                onclick="window.filtrarPorCategoria('${c.nome}')">${c.nome} (${n})</button>`;
+        }).join('');
 }
-window.filtrarPorCategoria = cat => { filtroCategoriaProduto=cat; renderizarFiltrosCategorias(); renderizarProdutos(); };
+
+window.limparBuscaProdutos = function() {
+    termoBusca = '';
+    const inp = document.getElementById('searchProdutos');
+    const btn = document.getElementById('searchClearBtn');
+    const cnt = document.getElementById('searchResultsCount');
+    if (inp) inp.value = '';
+    if (btn) btn.classList.remove('visible');
+    if (cnt) cnt.textContent = '';
+    renderizarProdutos();
+};
+
+window.filtrarPorCategoria = cat => {
+    filtroCategoriaProduto = cat;
+    renderizarFiltrosCategorias();
+    renderizarProdutos();
+};
 
 async function carregarProdutos() {
     try {
         onSnapshot(collection(db,'produtos'), snap => {
             produtos = [];
             snap.forEach(d => produtos.push({id:d.id,...d.data()}));
-            renderizarFiltrosCategorias(); renderizarProdutos(); atualizarDashboard();
+            renderizarFiltrosCategorias();
+            renderizarProdutos();
+            atualizarDashboard();
         });
     } catch { showToast('Erro ao carregar produtos','error'); }
 }
 
 function renderizarProdutos() {
     if (!productsGrid) return;
-    const lista = filtroCategoriaProduto==='all' ? produtos : produtos.filter(p=>p.categoria===filtroCategoriaProduto);
-    if (!lista.length) { productsGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">Nenhum produto</div>'; return; }
-    productsGrid.innerHTML = lista.map(p => {
-        const ativo = p.ativo!==false;
-        const qtdAd = p.adicionais?.length||0;
-        const imgH  = p.imagem
-            ? `<img src="${p.imagem}" alt="${p.nome}" class="product-image-admin" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="placeholder-image" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem imagem</span></div>`
-            : `<div class="placeholder-image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sem imagem</span></div>`;
+
+    const maisPedidosIds = configuracoes.maisPedidosIds || [];
+
+    // ── 1. Filtra por aba/categoria ──────────────────────────────────────────
+    let lista;
+    if (filtroCategoriaProduto === '__mais_pedidos__') {
+        lista = produtos.filter(p => maisPedidosIds.includes(p.id));
+    } else if (filtroCategoriaProduto === 'all') {
+        lista = [...produtos];
+    } else {
+        lista = produtos.filter(p => p.categoria === filtroCategoriaProduto);
+    }
+
+    // ── 2. Filtra por termo de busca ─────────────────────────────────────────
+    const termo = termoBusca.trim().toLowerCase();
+    if (termo) {
+        lista = lista.filter(p =>
+            (p.nome||'').toLowerCase().includes(termo) ||
+            (p.categoria||'').toLowerCase().includes(termo) ||
+            (p.descricao||'').toLowerCase().includes(termo)
+        );
+    }
+
+    // Atualiza contador de resultados
+    const cnt = document.getElementById('searchResultsCount');
+    if (cnt) {
+        cnt.textContent = termo ? `${lista.length} resultado${lista.length!==1?'s':''}` : '';
+    }
+
+    // ── 3. Sem resultados ────────────────────────────────────────────────────
+    if (!lista.length) {
+        productsGrid.innerHTML = `<div class="no-results-msg">${
+            termo
+                ? `🔍 Nenhum resultado para "<strong>${termoBusca}</strong>"`
+                : filtroCategoriaProduto === '__mais_pedidos__'
+                    ? `⭐ Nenhum produto em Mais Pedidos.<br>
+                       <small style="font-size:.72rem;display:block;margin-top:8px;letter-spacing:normal;text-transform:none;">
+                         Clique na ⭐ de qualquer produto para adicioná-lo a esta aba.
+                       </small>`
+                    : 'Nenhum produto nesta categoria.'
+        }</div>`;
+        return;
+    }
+
+    // ── 4. Ordena: destaques primeiro (apenas na aba "all" sem busca) ────────
+    const comSeparador = filtroCategoriaProduto === 'all' && !termo && maisPedidosIds.length > 0;
+    if (comSeparador) {
+        lista.sort((a, b) => {
+            const aH = maisPedidosIds.includes(a.id) ? 0 : 1;
+            const bH = maisPedidosIds.includes(b.id) ? 0 : 1;
+            return aH - bH;
+        });
+    }
+
+    // ── 5. Monta HTML ────────────────────────────────────────────────────────
+    function renderCard(p) {
+        const ativo = p.ativo !== false;
+        const qtdAd = p.adicionais?.length || 0;
+        const ehDestaque = maisPedidosIds.includes(p.id);
+
+        const imgH = p.imagem
+            ? `<img src="${p.imagem}" alt="${p.nome}" class="product-image-admin"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="placeholder-image" style="display:none;">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <rect x="3" y="3" width="18" height="18" rx="2"/>
+                   <circle cx="8.5" cy="8.5" r="1.5"/>
+                   <polyline points="21 15 16 10 5 21"/>
+                 </svg>
+                 <span>Sem imagem</span>
+               </div>`
+            : `<div class="placeholder-image">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <rect x="3" y="3" width="18" height="18" rx="2"/>
+                   <circle cx="8.5" cy="8.5" r="1.5"/>
+                   <polyline points="21 15 16 10 5 21"/>
+                 </svg>
+                 <span>Sem imagem</span>
+               </div>`;
+
         return `
             <div class="product-card-admin ${!ativo?'product-inactive':''}">
-                <button class="btn-visibility ${ativo?'active':''}" onclick="window.toggleVisibilidadeProduto('${p.id}',${ativo})" title="${ativo?'Ocultar':'Mostrar'}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ativo?'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>':'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}</svg>
+                <!-- Visibilidade -->
+                <button class="btn-visibility ${ativo?'active':''}"
+                    onclick="window.toggleVisibilidadeProduto('${p.id}',${ativo})"
+                    title="${ativo?'Ocultar produto':'Mostrar produto'}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${ativo
+                            ?'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+                            :'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}
+                    </svg>
                 </button>
+                <!-- Estrela Mais Pedidos -->
+                <button
+                    class="mais-pedidos-star ${ehDestaque?'ativo':''}"
+                    onclick="window.toggleMaisPedidos('${p.id}')"
+                    title="${ehDestaque?'Remover de Mais Pedidos':'Adicionar a Mais Pedidos'}"
+                >⭐</button>
                 ${imgH}
                 <div class="product-info-admin">
                     <h3 class="product-name-admin">${p.nome}</h3>
                     <p class="product-category-admin">${p.categoria||'Sem categoria'}</p>
-                    ${qtdAd>0?`<p style="font-size:.73rem;color:var(--accent);font-weight:600;margin:4px 0 0;">🔧 ${qtdAd} adicional(is)</p>`:''}
+                    ${ehDestaque ? `<p class="tag-mais-pedidos">⭐ Mais Pedidos</p>` : ''}
+                    ${qtdAd>0 ? `<p style="font-size:.73rem;color:var(--accent);font-weight:600;margin:4px 0 0;">🔧 ${qtdAd} adicional(is)</p>` : ''}
                     <div class="product-price-admin">R$ ${fmt(p.preco)}</div>
                     <div class="product-actions">
                         <button class="btn-icon" onclick="window.editarProduto('${p.id}')">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
                             Editar
                         </button>
                         <button class="btn-icon danger" onclick="window.excluirProduto('${p.id}')">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
                             Excluir
                         </button>
                     </div>
                 </div>
             </div>`;
-    }).join('');
+    }
+
+    let html = '';
+
+    if (comSeparador) {
+        const listaDestaque = lista.filter(p =>  maisPedidosIds.includes(p.id));
+        const listaResto    = lista.filter(p => !maisPedidosIds.includes(p.id));
+
+        if (listaDestaque.length > 0) {
+            html += `
+            <div class="grid-section-header gold">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span>Mais Pedidos (${listaDestaque.length})</span>
+            </div>`;
+            html += listaDestaque.map(renderCard).join('');
+        }
+
+        if (listaResto.length > 0) {
+            html += `
+            <div class="grid-section-header teal">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>
+                </svg>
+                <span>Outros Produtos (${listaResto.length})</span>
+            </div>`;
+            html += listaResto.map(renderCard).join('');
+        }
+    } else {
+        html = lista.map(renderCard).join('');
+    }
+
+    productsGrid.innerHTML = html;
 }
 
 window.toggleVisibilidadeProduto = async (id, ativo) => {
@@ -1004,4 +1329,4 @@ function showToast(msg, type='success') {
     setTimeout(()=>toast.classList.remove('active'), 3000);
 }
 
-console.log('X-Food Admin v2 inicializado!');
+console.log('X-Food Admin v3 — Busca + Mais Pedidos inicializado!');
