@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS FOOD — Cardápio Gamer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+    --primary: 217 100% 60%;
+    --secondary: 217 85% 48%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 325 91% 60%;
+    --border: 0 0% 14%;
+    --radius: .5rem;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-color: hsl(var(--border));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 2 L4 20 L8.5 15.5 L12.5 22 L15 20.5 L11 13.5 L17 13.5 Z' fill='%234D9FFF' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") 4 2, auto !important; }
+    a, button, [role=button] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10' fill='none' stroke='%234D9FFF' stroke-width='2'/%3E%3Ccircle cx='14' cy='14' r='3' fill='%234D9FFF'/%3E%3Cline x1='14' y1='0' x2='14' y2='8' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='14' y1='20' x2='14' y2='28' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='0' y1='14' x2='8' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3Cline x1='20' y1='14' x2='28' y2='14' stroke='%234D9FFF' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, pointer !important; }
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    font-family: 'Space Grotesk', sans-serif;
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  h1,h2,h3,h4,h5,h6 { font-family: 'Orbitron', sans-serif; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0a0a0a; }
+  ::-webkit-scrollbar-thumb { background: #3381ff4d; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3381ff99; }
+
+  /* Grid BG */
+  .grid-bg {
+    background-image:
+      linear-gradient(hsl(217 100% 60% / .03) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(217 100% 60% / .03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Neon glow */
+  .neon-glow {
+    text-shadow: 0 0 7px hsl(217 100% 60% / .8), 0 0 20px hsl(217 100% 60% / .4), 0 0 40px hsl(217 100% 60% / .2);
+  }
+  .neon-border {
+    box-shadow: 0 0 5px #3381ff80, 0 0 15px #3381ff33, inset 0 0 5px #3381ff1a;
+  }
+  .neon-accent-glow {
+    text-shadow: 0 0 7px hsl(325 91% 60% / .8), 0 0 20px hsl(325 91% 60% / .4);
+  }
+
+  @keyframes pulse-neon { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+  @keyframes scanline-move { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+  @keyframes glitch { 0%,100% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(2px, -1px); } 60% { transform: translate(-1px, 1px); } 80% { transform: translate(1px, -2px); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* SCANLINE OVERLAY */
+  .scanline-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(0 0% 0% / .03) 2px, hsl(0 0% 0% / .03) 4px);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 2rem;
+  }
+
+  .hero-bg-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+  .orb-blue { width: 600px; height: 600px; background: hsl(217 100% 60% / .08); top: -200px; left: -200px; }
+  .orb-pink { width: 400px; height: 400px; background: hsl(325 91% 60% / .06); bottom: -100px; right: -100px; }
+
+  .hero-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(3rem, 10vw, 8rem);
+    font-weight: 900;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #3381ff, #5f42f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeInUp .8s ease both;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-logo-glitch {
+    position: relative;
+    display: inline-block;
+  }
+  .hero-logo-glitch:hover { animation: glitch .3s infinite; }
+
+  .hero-subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: 300;
+    letter-spacing: .4em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    margin-top: .5rem;
+    animation: fadeInUp .8s .2s ease both;
+    z-index: 1;
+  }
+
+  .hero-divider {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    margin: 2rem auto;
+    animation: fadeInUp .8s .3s ease both;
+    z-index: 1;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem 1.5rem;
+    border: 1px solid hsl(var(--primary) / .3);
+    background: hsl(var(--primary) / .05);
+    border-radius: 9999px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .875rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    animation: fadeInUp .8s .4s ease both;
+    z-index: 1;
+    margin-bottom: 3rem;
+  }
+
+  .hero-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 9999px;
+    background: hsl(var(--primary));
+    animation: pulse-neon 2s ease-in-out infinite;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    color: hsl(var(--muted-foreground));
+    font-size: .75rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+    animation: pulse-neon 2s ease-in-out infinite;
+  }
+  .scroll-hint-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, hsl(var(--primary)), transparent);
+  }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: 2rem 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: hsl(var(--background) / .8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .nav-tab {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .875rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .5rem 1.5rem;
+    border: 1px solid hsl(var(--border));
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    border-radius: var(--radius);
+    transition: all .2s;
+    cursor: pointer;
+    margin-bottom: 1rem;
+  }
+  .nav-tab:hover {
+    border-color: hsl(var(--primary) / .4);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / .05);
+  }
+  .nav-tab.active {
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / .1);
+    box-shadow: 0 0 5px #3381ff80, 0 0 15px #3381ff33;
+  }
+
+  /* CONTAINER */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* SECTION */
+  .section {
+    padding: 5rem 0;
+    display: none;
+  }
+  .section.active { display: block; }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    animation: fadeInUp .6s ease both;
+  }
+
+  .section-tag {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .75rem;
+    letter-spacing: .4em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    display: block;
+    margin-bottom: .75rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: hsl(var(--foreground));
+  }
+
+  .section-line {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    margin: 1.5rem auto 0;
+  }
+
+  /* MENU GRID */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* CARD */
+  .menu-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / .6);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    transition: all .3s;
+    animation: fadeInUp .6s ease both;
+    cursor: pointer;
+  }
+  .menu-card:hover {
+    border-color: hsl(var(--primary) / .6);
+    box-shadow: 0 0 25px 4px hsl(220 80% 60% / .2);
+    transform: translateY(-4px);
+  }
+
+  .menu-card-img {
+    aspect-ratio: 16/9;
+    background: hsl(var(--muted));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu-card-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, hsl(var(--card)));
+  }
+
+  .menu-card-badge {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    padding: .25rem .75rem;
+    border-radius: 9999px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    z-index: 2;
+  }
+  .badge-new { background: hsl(var(--primary) / .9); color: white; }
+  .badge-hot { background: hsl(8 100% 56% / .9); color: white; }
+  .badge-special { background: hsl(var(--accent) / .9); color: white; }
+
+  .menu-card-body { padding: 1.25rem; }
+
+  .menu-card-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: hsl(var(--foreground));
+    margin-bottom: .5rem;
+  }
+
+  .menu-card-desc {
+    font-size: .8rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .menu-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .menu-card-price {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    text-shadow: 0 0 7px hsl(217 100% 60% / .5);
+  }
+
+  .menu-card-add {
+    width: 36px; height: 36px;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--primary) / .4);
+    background: hsl(var(--primary) / .1);
+    color: hsl(var(--primary));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .menu-card-add:hover {
+    background: hsl(var(--primary));
+    color: white;
+    box-shadow: 0 0 15px hsl(var(--primary) / .5);
+  }
+
+  /* FEATURED CARD */
+  .featured-card {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 280px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--primary) / .4);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 0 30px 6px hsl(220 80% 60% / .3);
+    animation: fadeInUp .6s ease both;
+    cursor: pointer;
+    transition: all .3s;
+  }
+  .featured-card:hover {
+    box-shadow: 0 0 40px 8px hsl(220 80% 60% / .4);
+    transform: translateY(-2px);
+  }
+
+  .featured-img {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 6rem;
+    background: linear-gradient(135deg, hsl(var(--primary) / .05), hsl(var(--accent) / .05));
+    position: relative;
+  }
+  .featured-img-corner {
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    border-top: 2px solid hsl(var(--primary));
+    border-left: 2px solid hsl(var(--primary));
+  }
+  .featured-img-corner-br {
+    top: auto; left: auto; bottom: 0; right: 0;
+    border-top: none; border-left: none;
+    border-bottom: 2px solid hsl(var(--primary));
+    border-right: 2px solid hsl(var(--primary));
+  }
+
+  .featured-body {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .featured-tag {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .7rem;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+  }
+
+  .featured-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .featured-desc {
+    font-size: .875rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.6;
+  }
+
+  .featured-price {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: hsl(var(--primary));
+    text-shadow: 0 0 7px hsl(217 100% 60% / .8), 0 0 20px hsl(217 100% 60% / .4);
+  }
+
+  .featured-btn {
+    display: inline-flex; align-items: center; gap: .75rem;
+    padding: .75rem 1.5rem;
+    background: linear-gradient(135deg, #3381ff, #5f42f0);
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .875rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: all .2s;
+    cursor: pointer;
+    width: fit-content;
+  }
+  .featured-btn:hover { filter: brightness(1.1); box-shadow: 0 0 20px hsl(var(--primary) / .4); }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 4rem;
+    background: hsl(var(--card));
+  }
+
+  .stat-item {
+    padding: 1.5rem;
+    text-align: center;
+    border-right: 1px solid hsl(var(--border));
+    position: relative;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .stat-item:hover::after { opacity: 1; }
+
+  .stat-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    display: block;
+  }
+
+  .stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .75rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    margin-top: .25rem;
+    display: block;
+  }
+
+  /* COMBO CARD */
+  .combo-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / .6);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    gap: 0;
+    position: relative;
+    animation: fadeInUp .6s ease both;
+    transition: all .3s;
+    cursor: pointer;
+  }
+  .combo-card:hover {
+    border-color: hsl(var(--accent) / .6);
+    box-shadow: 0 0 25px hsl(var(--accent) / .2);
+    transform: translateY(-2px);
+  }
+
+  .combo-level {
+    width: 50px;
+    background: linear-gradient(180deg, hsl(var(--accent) / .3), hsl(var(--accent) / .1));
+    display: flex; align-items: center; justify-content: center;
+    writing-mode: vertical-rl;
+    font-family: 'Orbitron', sans-serif;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: hsl(var(--accent));
+    border-right: 1px solid hsl(var(--accent) / .2);
+    flex-shrink: 0;
+  }
+
+  .combo-body { padding: 1.5rem; flex: 1; }
+
+  .combo-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: .5rem;
+  }
+
+  .combo-items {
+    font-size: .8rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .combo-footer {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .combo-savings {
+    font-size: .75rem;
+    color: hsl(var(--accent));
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .combo-price {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: hsl(var(--accent));
+    text-shadow: 0 0 7px hsl(var(--accent) / .5);
+  }
+
+  /* FOOTER */
+  .footer {
+    border-top: 1px solid hsl(var(--border));
+    padding: 3rem 0;
+    text-align: center;
+  }
+  .footer-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    background: linear-gradient(135deg, #3381ff, #5f42f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: .5rem;
+  }
+  .footer-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .75rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* CART BUTTON */
+  .cart-btn {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #3381ff, #5f42f0);
+    border: none;
+    border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    z-index: 60;
+    box-shadow: 0 0 20px hsl(var(--primary) / .4);
+    transition: all .2s;
+  }
+  .cart-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px hsl(var(--primary) / .6); }
+
+  .cart-count {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: hsl(var(--accent));
+    color: white;
+    width: 22px; height: 22px;
+    border-radius: 9999px;
+    font-size: .7rem;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 10px hsl(var(--accent) / .5);
+    animation: ping 1s cubic-bezier(0,0,.2,1) infinite;
+  }
+
+  /* LIVE badge */
+  .live-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .2rem .75rem;
+    border: 1px solid hsl(8 100% 56% / .5);
+    background: hsl(8 100% 56% / .1);
+    border-radius: 9999px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: hsl(8 100% 56%);
+    margin-bottom: 1rem;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    background: hsl(8 100% 56%);
+    border-radius: 9999px;
+    animation: pulse-neon 1s ease-in-out infinite;
+  }
+
+  /* Progress bar (XP) */
+  .xp-bar-wrap {
+    display: flex; align-items: center; gap: .75rem; margin-top: .5rem;
+  }
+  .xp-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+  }
+  .xp-track {
+    flex: 1; height: 4px;
+    background: hsl(var(--muted));
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3381ff, #5f42f0);
+    border-radius: 9999px;
+    transition: width .6s ease;
+  }
+
+  @media (max-width: 640px) {
+    .featured-card { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .stats-bar .stat-item:nth-child(2) { border-right: none; }
+    .stats-bar .stat-item:nth-child(3) { border-right: 1px solid hsl(var(--border)); }
+    .stats-bar .stat-item:nth-child(3), .stats-bar .stat-item:nth-child(4) { border-top: 1px solid hsl(var(--border)); }
+  }
+</style>
+</head>
+<body class="grid-bg">
+
+<!-- Scanline overlay -->
+<div class="scanline-overlay"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-orb orb-blue"></div>
+  <div class="hero-bg-orb orb-pink"></div>
+
+  <div class="live-badge">
+    <span class="live-dot"></span> Delivery 24h
+  </div>
+
+  <h1 class="hero-logo">
+    <span class="hero-logo-glitch">NEXUS</span>
+  </h1>
+  <p class="hero-subtitle">Food &amp; Drink · Level Up Your Taste</p>
+  <div class="hero-divider"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Sistema online · Pedidos abertos
+    <span class="hero-badge-dot"></span>
+  </div>
+
+  <button class="featured-btn" onclick="document.querySelector('.nav-tabs').scrollIntoView({behavior:'smooth'})">
+    ▶ Ver Cardápio
+  </button>
+
+  <div class="scroll-hint">
+    <div class="scroll-hint-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- NAV TABS -->
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="showSection('lanches')">⚔ Lanches</button>
+  <button class="nav-tab" onclick="showSection('bebidas')">💧 Bebidas</button>
+  <button class="nav-tab" onclick="showSection('combos')">🎮 Combos</button>
+  <button class="nav-tab" onclick="showSection('sobremesas')">🍬 Sobremesas</button>
+</nav>
+
+<!-- ═══ LANCHES ═══ -->
+<section id="lanches" class="section active">
+  <div class="container">
+
+    <div class="section-header">
+      <span class="section-tag">// categoria_01</span>
+      <h2 class="section-title neon-glow">Lanches</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-number">24</span><span class="stat-label">Opções</span></div>
+      <div class="stat-item"><span class="stat-number">4.9★</span><span class="stat-label">Avaliação</span></div>
+      <div class="stat-item"><span class="stat-number">15min</span><span class="stat-label">Preparo</span></div>
+      <div class="stat-item"><span class="stat-number">100%</span><span class="stat-label">Fresh</span></div>
+    </div>
+
+    <div class="menu-grid">
+      <!-- FEATURED -->
+      <div class="featured-card">
+        <div class="featured-img">
+          🍔
+          <div class="featured-img-corner"></div>
+          <div class="featured-img-corner featured-img-corner-br"></div>
+        </div>
+        <div class="featured-body">
+          <span class="featured-tag">// destaque_da_semana</span>
+          <div class="live-badge" style="width:fit-content"><span class="live-dot"></span> Mais Pedido</div>
+          <h3 class="featured-name neon-glow">Ultra Smash Burger</h3>
+          <p class="featured-desc">Dois smash patties 180g, queijo cheddar derretido, bacon crocante, molho especial NEXUS, cebola caramelizada e brioche artesanal.</p>
+          <div class="xp-bar-wrap">
+            <span class="xp-label">Rating XP</span>
+            <div class="xp-track"><div class="xp-fill" style="width:95%"></div></div>
+            <span class="xp-label" style="color:hsl(var(--primary))">95/100</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1.5rem;margin-top:.5rem">
+            <span class="featured-price">R$ 38,90</span>
+            <button class="featured-btn">+ Adicionar ao Pedido</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards normais -->
+      <div class="menu-card">
+        <div class="menu-card-img">🥩
+          <span class="menu-card-badge badge-hot">🔥 Hot</span>
+        </div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Stealth Smash</h3>
+          <p class="menu-card-desc">Patty 180g, queijo gouda, jalapeño, maionese sriracha, rúcula e pão pretzel.</p>
+          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
+            <span class="xp-label">Rating</span>
+            <div class="xp-track"><div class="xp-fill" style="width:88%"></div></div>
+          </div>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 32,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🐔
+          <span class="menu-card-badge badge-new">✦ Novo</span>
+        </div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Cyber Chicken</h3>
+          <p class="menu-card-desc">Frango empanado crocante, coleslaw, picles crocante, molho buffalo e brioche.</p>
+          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
+            <span class="xp-label">Rating</span>
+            <div class="xp-track"><div class="xp-fill" style="width:82%"></div></div>
+          </div>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 29,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🌿</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Pixel Plant</h3>
+          <p class="menu-card-desc">Hambúrguer plant-based 160g, queijo vegano, tomate, alface, maionese de ervas.</p>
+          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
+            <span class="xp-label">Rating</span>
+            <div class="xp-track"><div class="xp-fill" style="width:76%;background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div>
+          </div>
+          <div class="menu-card-footer">
+            <span class="menu-card-price" style="color:#22c55e;text-shadow:0 0 7px #22c55e80">R$ 27,90</span>
+            <button class="menu-card-add" style="border-color:#22c55e80;background:#22c55e1a;color:#22c55e">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🌮
+          <span class="menu-card-badge badge-special">★ Especial</span>
+        </div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Loot Box Wrap</h3>
+          <p class="menu-card-desc">Wrap crocante, frango grelhado, avocado, molho chipotle, queijo parmesão ralado.</p>
+          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
+            <span class="xp-label">Rating</span>
+            <div class="xp-track"><div class="xp-fill" style="width:80%"></div></div>
+          </div>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 25,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🍟</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">XP Fries</h3>
+          <p class="menu-card-desc">Batatas fritas crinkle-cut, tempero cajun especial, molho cheddar e bacon bits.</p>
+          <div class="xp-bar-wrap" style="margin-bottom:.75rem">
+            <span class="xp-label">Rating</span>
+            <div class="xp-track"><div class="xp-fill" style="width:91%"></div></div>
+          </div>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 18,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BEBIDAS ═══ -->
+<section id="bebidas" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">// categoria_02</span>
+      <h2 class="section-title neon-glow">Bebidas</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="menu-grid">
+      <div class="featured-card" style="border-color:hsl(325 91% 60% / .4);box-shadow:0 0 30px 6px hsl(325 91% 60% / .2)">
+        <div class="featured-img" style="background:linear-gradient(135deg,hsl(325 91% 60% / .08),hsl(217 100% 60% / .05))">
+          ⚡
+          <div class="featured-img-corner" style="border-color:hsl(325 91% 60%)"></div>
+          <div class="featured-img-corner featured-img-corner-br" style="border-color:hsl(325 91% 60%)"></div>
+        </div>
+        <div class="featured-body">
+          <span class="featured-tag" style="color:hsl(325 91% 60%)">// energy_drink</span>
+          <div class="live-badge" style="width:fit-content;border-color:hsl(325 91% 60% / .5);background:hsl(325 91% 60% / .1);color:hsl(325 91% 60%)">
+            <span class="live-dot" style="background:hsl(325 91% 60%)"></span> Exclusivo
+          </div>
+          <h3 class="featured-name neon-accent-glow">NEXUS Energy™</h3>
+          <p class="featured-desc">Nossa bebida energética exclusiva com taurina, vitamina B, cafeína natural e eletrólitos. Disponível nos sabores: Tropical Glitch, Berry Neon e Classic Blue.</p>
+          <span class="featured-price" style="color:hsl(325 91% 60%);text-shadow:0 0 7px hsl(325 91% 60% / .8)">R$ 14,90</span>
+          <button class="featured-btn" style="background:linear-gradient(135deg,hsl(325 91% 60%),#8b2fc9)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🧃<span class="menu-card-badge badge-new">✦ Novo</span></div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Respawn Juice</h3>
+          <p class="menu-card-desc">Suco detox com gengibre, limão siciliano, cúrcuma e água de coco. 500ml.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price" style="color:#22c55e;text-shadow:0 0 7px #22c55e80">R$ 12,90</span>
+            <button class="menu-card-add" style="border-color:#22c55e80;background:#22c55e1a;color:#22c55e">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🥤</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Milk Shake 8-Bit</h3>
+          <p class="menu-card-desc">Milk shake artesanal 450ml. Sabores: Oreo Matrix, Caramelo Hacker, Morango GG.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 19,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">☕</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Dark Mode Coffee</h3>
+          <p class="menu-card-desc">Cold brew 300ml, 48h de extração. Dose dupla de espresso com gelo e leite vegetal.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 13,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🍺</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Craft Beer Pack</h3>
+          <p class="menu-card-desc">Cervejas artesanais selecionadas. IPA, Stout e Lager. Long neck 355ml cada.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 16,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMBOS ═══ -->
+<section id="combos" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">// categoria_03</span>
+      <h2 class="section-title neon-glow">Combos</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div style="display:grid;gap:1rem">
+      <div class="combo-card">
+        <div class="combo-level">STARTER</div>
+        <div class="combo-body">
+          <h3 class="combo-name">Solo Queue Pack</h3>
+          <p class="combo-items">1x Burger à escolha (pequeno) + Batata P + 1x Refrigerante 350ml</p>
+          <div class="combo-footer">
+            <span class="combo-savings">Economia: R$ 8,00</span>
+            <span class="combo-price">R$ 34,90</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="combo-card">
+        <div class="combo-level" style="background:linear-gradient(180deg,hsl(217 100% 60% / .3),hsl(217 100% 60% / .1));border-color:hsl(217 100% 60% / .2);color:hsl(var(--primary))">GOLD</div>
+        <div class="combo-body">
+          <h3 class="combo-name">Duo Mode Bundle</h3>
+          <p class="combo-items">2x Ultra Smash Burger + 2x Batata G + 2x NEXUS Energy™ + 2x Sobremesa</p>
+          <div class="combo-footer">
+            <span class="combo-savings" style="color:hsl(var(--primary))">Economia: R$ 22,00</span>
+            <span class="combo-price" style="color:hsl(var(--primary));text-shadow:0 0 7px hsl(var(--primary) / .5)">R$ 89,90</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="combo-card" style="border-color:hsl(8 100% 56% / .4)">
+        <div class="combo-level" style="background:linear-gradient(180deg,hsl(8 100% 56% / .3),hsl(8 100% 56% / .1));border-color:hsl(8 100% 56% / .2);color:hsl(8 100% 56%)">SQUAD</div>
+        <div class="combo-body">
+          <h3 class="combo-name">Squad Wipe Feast</h3>
+          <p class="combo-items">4x Burger à escolha + 4x Batata G + 4x Bebida + 1x Nachos + 4x Sobremesa</p>
+          <div class="combo-footer">
+            <span class="combo-savings" style="color:hsl(8 100% 56%)">Economia: R$ 45,00</span>
+            <span class="combo-price" style="color:hsl(8 100% 56%);text-shadow:0 0 7px hsl(8 100% 56% / .5)">R$ 159,90</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="combo-card" style="border-color:hsl(45 100% 60% / .4)">
+        <div class="combo-level" style="background:linear-gradient(180deg,hsl(45 100% 60% / .3),hsl(45 100% 60% / .1));border-color:hsl(45 100% 60% / .2);color:hsl(45 100% 60%)">RAID</div>
+        <div class="combo-body">
+          <h3 class="combo-name">Clan Raid Party</h3>
+          <p class="combo-items">8x Burger à escolha + 4x Batata XG + 8x Bebida + 2x Porção Nachos + 8x Sobremesa + Entrega Grátis</p>
+          <div class="combo-footer">
+            <span class="combo-savings" style="color:hsl(45 100% 60%)">Economia: R$ 90,00</span>
+            <span class="combo-price" style="color:hsl(45 100% 60%);text-shadow:0 0 7px hsl(45 100% 60% / .5)">R$ 299,90</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SOBREMESAS ═══ -->
+<section id="sobremesas" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">// categoria_04</span>
+      <h2 class="section-title neon-glow">Sobremesas</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="menu-grid">
+      <div class="featured-card" style="border-color:hsl(325 91% 60% / .4);box-shadow:0 0 30px 6px hsl(325 91% 60% / .2)">
+        <div class="featured-img" style="font-size:5rem">🍰
+          <div class="featured-img-corner" style="border-color:hsl(325 91% 60%)"></div>
+          <div class="featured-img-corner featured-img-corner-br" style="border-color:hsl(325 91% 60%)"></div>
+        </div>
+        <div class="featured-body">
+          <span class="featured-tag" style="color:hsl(325 91% 60%)">// boss_dessert</span>
+          <h3 class="featured-name" style="-webkit-text-fill-color:unset;background:none;color:hsl(var(--foreground))">Final Boss Cake</h3>
+          <p class="featured-desc">Cheesecake de chocolate belga com calda de frutas vermelhas, farofinha de brownie e sorvete de baunilha. Uma batalha para o seu paladar.</p>
+          <span class="featured-price" style="color:hsl(325 91% 60%);text-shadow:0 0 7px hsl(325 91% 60% / .8)">R$ 22,90</span>
+          <button class="featured-btn" style="background:linear-gradient(135deg,hsl(325 91% 60%),#8b2fc9)">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🍦<span class="menu-card-badge badge-hot">🔥 Top</span></div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Pixel Ice Cream</h3>
+          <p class="menu-card-desc">Sorvete artesanal 2 bolas. Sabores da semana: Cookies & Code e Caramel Rush.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 14,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🍩<span class="menu-card-badge badge-new">✦ Novo</span></div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Glitch Donut Box</h3>
+          <p class="menu-card-desc">4 donuts artesanais com coberturas temáticas: Neon Blue, Pink Glitch, Dark Mode e Gold Rush.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">R$ 24,90</span>
+            <button class="menu-card-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-img">🫐</div>
+        <div class="menu-card-body">
+          <h3 class="menu-card-name">Berry Respawn Bowl</h3>
+          <p class="menu-card-desc">Açaí 500ml com granola, banana, morango, blueberry e leite condensado.</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price" style="color:#a855f7;text-shadow:0 0 7px #a855f780">R$ 18,90</span>
+            <button class="menu-card-add" style="border-color:#a855f780;background:#a855f71a;color:#a855f7">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">NEXUS FOOD</div>
+    <p class="footer-text">// delivering legendary experiences · 2025</p>
+    <div style="margin-top:1.5rem;display:flex;justify-content:center;gap:2rem">
+      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">⚡ Entrega 24/7</span>
+      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">🎮 Cardápio Gamer</span>
+      <span style="font-family:'Rajdhani',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))">🔥 Feito na hora</span>
+    </div>
+  </div>
+</footer>
+
+<!-- CART BUTTON -->
+<button class="cart-btn" id="cartBtn" onclick="alert('Carrinho em breve! 🎮')">
+  🛒
+  <span class="cart-count" id="cartCount">0</span>
+</button>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Add to cart
+  let count = 0;
+  document.querySelectorAll('.menu-card-add, .featured-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      count++;
+      const el = document.getElementById('cartCount');
+      el.textContent = count;
+      el.style.animation = 'none';
+      setTimeout(() => el.style.animation = '', 10);
+    });
+  });
+
+  // Staggered animations on section change
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationDelay = `${i * 0.1}s`;
+      }
+    });
+  });
+  document.querySelectorAll('.menu-card, .combo-card, .featured-card').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
