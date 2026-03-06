@@ -18,8 +18,6 @@ let categoriaAtiva = 'todas';
 let pedidoAtualId = null;
 
 // ─── PADRÕES: tudo DESATIVADO ─────────────────────────────────────────────────
-// Evita o "flash" onde botões aparecem e depois somem.
-// O Firebase sobrescreve esses valores na primeira leitura.
 let configuracoes = {
     nomeCardapio:    'X-Food',
     logoUrl:         'img/logo.jpg',
@@ -59,7 +57,6 @@ const orderNumber  = document.getElementById('orderNumber');
 const loading      = document.getElementById('loading');
 
 // ─── Ocultar elementos IMEDIATAMENTE antes do Firebase responder ──────────────
-// Garante que nada aparece antes de sabermos o estado real salvo no banco.
 (function esconderElementosInicial() {
     const ct = document.getElementById('cartToggle');
     if (ct) ct.style.visibility = 'hidden';
@@ -77,12 +74,13 @@ const loading      = document.getElementById('loading');
 window.addEventListener('DOMContentLoaded', () => {
     initApp();
     criarModalProduto();
+    inicializarHamburger();
 });
 
 async function initApp() {
     try {
         showLoading();
-        await carregarConfiguracoes(); // aguarda 1ª leitura real do Firebase
+        await carregarConfiguracoes();
         await carregarCategorias();
         await carregarProdutos();
         setupEventListeners();
@@ -94,13 +92,234 @@ async function initApp() {
 }
 
 // ========================================================
+// HAMBURGER MENU
+// ========================================================
+
+function inicializarHamburger() {
+    // Cria o botão hamburger no header
+    const headerContainer = document.querySelector('.header .container');
+    if (!headerContainer) return;
+
+    // Cria wrapper para ações do header se não existir
+    let headerActions = headerContainer.querySelector('.header-actions');
+    if (!headerActions) {
+        headerActions = document.createElement('div');
+        headerActions.className = 'header-actions';
+
+        // Move o cart-toggle para dentro do header-actions
+        const existingCartToggle = headerContainer.querySelector('#cartToggle');
+        if (existingCartToggle) {
+            headerActions.appendChild(existingCartToggle);
+        }
+        headerContainer.appendChild(headerActions);
+    }
+
+    // Cria botão hamburger
+    const hamburgerBtn = document.createElement('button');
+    hamburgerBtn.id = 'hamburgerToggle';
+    hamburgerBtn.className = 'hamburger-toggle';
+    hamburgerBtn.setAttribute('aria-label', 'Menu de categorias');
+    hamburgerBtn.innerHTML = `
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    `;
+
+    // Insere o hamburger ANTES do cart-toggle no header-actions
+    const cartToggleBtn = headerActions.querySelector('#cartToggle');
+    if (cartToggleBtn) {
+        headerActions.insertBefore(hamburgerBtn, cartToggleBtn);
+    } else {
+        headerActions.appendChild(hamburgerBtn);
+    }
+
+    // Cria o drawer do hamburger
+    const drawer = document.createElement('div');
+    drawer.id = 'hamburgerDrawer';
+    drawer.className = 'hamburger-drawer';
+    drawer.innerHTML = `
+        <div class="hamburger-drawer-header">
+            <h3>Categorias</h3>
+        </div>
+        <div class="hamburger-drawer-search">
+            <div class="hamburger-search-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input 
+                    type="text" 
+                    id="hamburgerSearchInput"
+                    class="hamburger-search-input" 
+                    placeholder="Buscar nos pratos..."
+                    autocomplete="off"
+                >
+            </div>
+        </div>
+        <div class="hamburger-drawer-categories" id="hamburgerCategoriesList">
+            <!-- Categorias injetadas dinamicamente -->
+        </div>
+        <div class="hamburger-drawer-footer">
+            <p id="hamburgerProductCount">Carregando...</p>
+        </div>
+    `;
+
+    // Overlay do hamburger
+    const overlay = document.createElement('div');
+    overlay.id = 'hamburgerOverlay';
+    overlay.className = 'hamburger-drawer-overlay';
+
+    document.body.appendChild(drawer);
+    document.body.appendChild(overlay);
+
+    // Event listeners do hamburger
+    hamburgerBtn.addEventListener('click', toggleHamburger);
+    overlay.addEventListener('click', fecharHamburger);
+
+    // Busca em tempo real
+    const searchInput = document.getElementById('hamburgerSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termo = e.target.value.trim();
+            buscarProdutos(termo);
+        });
+
+        // Fecha com ESC
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') fecharHamburger();
+        });
+    }
+}
+
+function toggleHamburger() {
+    const drawer  = document.getElementById('hamburgerDrawer');
+    const overlay = document.getElementById('hamburgerOverlay');
+    const btn     = document.getElementById('hamburgerToggle');
+    if (!drawer) return;
+
+    const isOpen = drawer.classList.contains('active');
+
+    if (isOpen) {
+        fecharHamburger();
+    } else {
+        drawer.classList.add('active');
+        overlay.classList.add('active');
+        btn.classList.add('open');
+        document.body.style.overflow = '';
+
+        // Foca no campo de busca ao abrir
+        setTimeout(() => {
+            const input = document.getElementById('hamburgerSearchInput');
+            if (input) input.focus();
+        }, 300);
+
+        atualizarHamburgerCategorias();
+    }
+}
+
+function fecharHamburger() {
+    const drawer  = document.getElementById('hamburgerDrawer');
+    const overlay = document.getElementById('hamburgerOverlay');
+    const btn     = document.getElementById('hamburgerToggle');
+    if (!drawer) return;
+
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+    if (btn) btn.classList.remove('open');
+}
+
+function atualizarHamburgerCategorias() {
+    const lista = document.getElementById('hamburgerCategoriesList');
+    const count = document.getElementById('hamburgerProductCount');
+    if (!lista) return;
+
+    const total = produtos.filter(p => p.ativo !== false).length;
+    if (count) count.textContent = `${total} prato${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'is' : ''}`;
+
+    // Conta produtos por categoria
+    const porCategoria = {};
+    produtos.filter(p => p.ativo !== false).forEach(p => {
+        const cat = p.categoria || 'Outros';
+        porCategoria[cat] = (porCategoria[cat] || 0) + 1;
+    });
+
+    let html = `
+        <button class="hamburger-cat-btn ${categoriaAtiva === 'todas' ? 'active' : ''}" 
+                onclick="selecionarCategoriaHamburger('todas')">
+            <span class="cat-dot"></span>
+            Todas
+            <span class="hamburger-cat-count">${total}</span>
+        </button>
+    `;
+
+    categorias.forEach(cat => {
+        const qtd = porCategoria[cat.nome] || 0;
+        html += `
+            <button class="hamburger-cat-btn ${categoriaAtiva === cat.nome ? 'active' : ''}"
+                    onclick="selecionarCategoriaHamburger('${cat.nome}')">
+                <span class="cat-dot"></span>
+                ${cat.nome}
+                <span class="hamburger-cat-count">${qtd}</span>
+            </button>
+        `;
+    });
+
+    lista.innerHTML = html;
+}
+
+window.selecionarCategoriaHamburger = function(categoria) {
+    // Limpa busca se existir
+    const searchInput = document.getElementById('hamburgerSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    // Atualiza categoria ativa nos dois lugares (drawer + barra de categorias)
+    categoriaAtiva = categoria;
+
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    const targetBtn = [...document.querySelectorAll('.category-btn')].find(b => b.dataset.category === categoria);
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    filtrarProdutos();
+    fecharHamburger();
+
+    // Scroll suave até os produtos
+    setTimeout(() => {
+        const menu = document.getElementById('menu');
+        if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 350);
+};
+
+function buscarProdutos(termo) {
+    if (!termo) {
+        filtrarProdutos();
+        atualizarHamburgerCategorias();
+        return;
+    }
+
+    const termoLower = termo.toLowerCase();
+    const resultados = produtos.filter(p => 
+        p.ativo !== false && (
+            p.nome?.toLowerCase().includes(termoLower) ||
+            p.descricao?.toLowerCase().includes(termoLower) ||
+            p.categoria?.toLowerCase().includes(termoLower)
+        )
+    );
+
+    renderizarProdutos(resultados);
+
+    // Atualiza contador no drawer
+    const count = document.getElementById('hamburgerProductCount');
+    if (count) count.textContent = `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''} para "${termo}"`;
+}
+
+// ========================================================
 // CONFIGURACOES
 // ========================================================
 
 async function carregarConfiguracoes() {
-    // Retorna Promise que resolve apenas após a 1ª leitura do Firestore,
-    // garantindo que aplicarConfiguracoes() rode com dados reais
-    // ANTES de qualquer elemento ser exibido ao usuário.
     return new Promise((resolve) => {
         try {
             const configRef = doc(db, 'configuracoes', 'geral');
@@ -110,7 +329,6 @@ async function carregarConfiguracoes() {
                 if (docSnap.exists()) {
                     configuracoes = { ...configuracoes, ...docSnap.data() };
                 }
-                // Se não existir, mantém padrões (tudo desativado)
                 aplicarConfiguracoes(configuracoes);
 
                 if (primeiraLeitura) {
@@ -132,14 +350,12 @@ async function carregarConfiguracoes() {
 
 function aplicarConfiguracoes(config) {
 
-    // Nome e titulo
     if (config.nomeCardapio) {
         document.title = config.nomeCardapio;
         const logoText = document.querySelector('.logo-text');
         if (logoText) logoText.textContent = config.nomeCardapio;
     }
 
-    // ── LOGO ─────────────────────────────────────────────────────────────────
     const logoSrc = (config.logoUrl && config.logoUrl !== '#') ? config.logoUrl : 'img/logo.jpg';
 
     const logoImgHeader = document.querySelector('.header .logo-img');
@@ -173,11 +389,9 @@ function aplicarConfiguracoes(config) {
         });
     }
 
-    // Cores
     if (config.corPrimaria)   document.documentElement.style.setProperty('--primary-color',   config.corPrimaria);
     if (config.corSecundaria) document.documentElement.style.setProperty('--secondary-color', config.corSecundaria);
 
-    // Fonte
     if (config.fonte && config.fonte !== 'DM Sans') {
         const fontLink = document.createElement('link');
         fontLink.rel  = 'stylesheet';
@@ -186,25 +400,21 @@ function aplicarConfiguracoes(config) {
         document.body.style.fontFamily = "'" + config.fonte + "', sans-serif";
     }
 
-    // Titulo boas-vindas
     if (config.tituloBemVindo) {
         const heroTitle = document.querySelector('.hero-title');
         if (heroTitle) heroTitle.textContent = config.tituloBemVindo;
     }
 
-    // Endereco
     if (config.endereco) {
         const heroAddress = document.querySelector('.hero-address span');
         if (heroAddress) heroAddress.textContent = config.endereco;
     }
 
-    // WhatsApp link href
     if (config.whatsApp) {
         const whatsappBtn = document.querySelector('.btn-hero-secondary[href*="wa.me"]');
         if (whatsappBtn) whatsappBtn.href = 'https://wa.me/' + config.whatsApp;
     }
 
-    // ── WHATSAPP: exibir SOMENTE se === true ──────────────────────────────────
     const whatsAppAtivo = config.whatsAppAtivo === true;
 
     const whatsappFloat = document.querySelector('.whatsapp-float');
@@ -224,7 +434,6 @@ function aplicarConfiguracoes(config) {
         el.style.display    = whatsAppAtivo ? '' : 'none';
     });
 
-    // Status
     const statusBadge = document.querySelector('.status-badge');
     if (statusBadge && config.status) {
         statusBadge.classList.remove('open', 'closed');
@@ -237,7 +446,6 @@ function aplicarConfiguracoes(config) {
         }
     }
 
-    // ── SERVIÇOS: exibir SOMENTE os === true ──────────────────────────────────
     const heroFeatures = document.querySelector('.hero-features');
     if (heroFeatures) {
         const badges = [];
@@ -248,7 +456,6 @@ function aplicarConfiguracoes(config) {
         heroFeatures.style.visibility = '';
     }
 
-    // ── CARRINHO: exibir SOMENTE se === true ──────────────────────────────────
     const cartToggleBtn = document.getElementById('cartToggle');
     if (cartToggleBtn) {
         cartToggleBtn.style.visibility = '';
@@ -436,6 +643,7 @@ async function carregarCategorias() {
             categorias = [];
             snapshot.forEach((d) => { categorias.push({ id: d.id, ...d.data() }); });
             renderizarCategorias();
+            atualizarHamburgerCategorias();
         });
     } catch (error) { console.error('Erro ao carregar categorias:', error); }
 }
@@ -452,6 +660,8 @@ function renderizarCategorias() {
             btn.classList.add('active');
             categoriaAtiva = btn.dataset.category;
             filtrarProdutos();
+            // Também atualiza o hamburger quando clica na barra de categorias
+            atualizarHamburgerCategorias();
         });
     });
 }
@@ -470,6 +680,7 @@ async function carregarProdutos() {
                 if (produto.ativo !== false) produtos.push(produto);
             });
             filtrarProdutos();
+            atualizarHamburgerCategorias();
         });
     } catch (error) { console.error('Erro ao carregar produtos:', error); }
 }
