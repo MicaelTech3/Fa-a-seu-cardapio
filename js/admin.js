@@ -336,7 +336,37 @@ function injetarEstilosExtras() {
         margin:4px 0 0;
     }
 
-    /* Sem resultados */
+    /* ══════════════════════════════════════
+       BOTÃO E ESTILOS DE PROMOÇÃO (ADMIN)
+    ══════════════════════════════════════ */
+    /* ── Botão promoção inline (ao lado do preço) ── */
+    .promo-inline-btn{
+        display:inline-flex;align-items:center;justify-content:center;
+        width:30px;height:30px;border-radius:var(--radius-sm,3px);
+        background:rgba(2,0,10,.75);
+        border:1px solid rgba(249,115,22,.25);
+        cursor:pointer;transition:all .18s;font-size:.85rem;
+        filter:grayscale(1);opacity:.5;flex-shrink:0;
+    }
+    .promo-inline-btn:hover{
+        filter:grayscale(0);opacity:1;
+        background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.5);
+        box-shadow:0 0 8px rgba(249,115,22,.2);
+    }
+    .promo-inline-btn.ativo{
+        filter:grayscale(0);opacity:1;
+        background:rgba(249,115,22,.18);border-color:#f97316;
+        box-shadow:0 0 10px rgba(249,115,22,.35);
+        animation:promoPulse 2s infinite;
+    }
+    @keyframes promoPulse{0%,100%{box-shadow:0 0 10px rgba(249,115,22,.35)}50%{box-shadow:0 0 18px rgba(249,115,22,.6)}}
+    .preco-original-admin{
+        text-decoration:line-through;color:var(--text-muted);font-size:.8rem;display:block;
+    }
+    .preco-promo-admin{
+        color:#f97316;font-weight:800;font-size:1rem;display:block;
+    }
+    
     .no-results-msg{
         grid-column:1/-1;text-align:center;padding:60px 20px;
         color:var(--text-muted);font-family:'Rajdhani',sans-serif;
@@ -1062,7 +1092,19 @@ function renderizarProdutos() {
                     <p class="product-category-admin">${p.categoria||'Sem categoria'}</p>
                     ${ehDestaque ? `<p class="tag-mais-pedidos">⭐ Mais Pedidos</p>` : ''}
                     ${qtdAd>0 ? `<p style="font-size:.73rem;color:var(--accent);font-weight:600;margin:4px 0 0;">🔧 ${qtdAd} adicional(is)</p>` : ''}
-                    <div class="product-price-admin">R$ ${fmt(p.preco)}</div>
+                    <div class="product-price-admin" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <div style="display:flex;flex-direction:column;">
+                            ${p.precoPromocional
+                                ? `<span class="preco-original-admin">R$ ${fmt(p.preco)}</span>
+                                   <span class="preco-promo-admin">🏷️ R$ ${fmt(p.precoPromocional)}</span>`
+                                : `<span>R$ ${fmt(p.preco)}</span>`}
+                        </div>
+                        <button
+                            class="promo-inline-btn ${p.precoPromocional ? 'ativo' : ''}"
+                            onclick="window.abrirModalPromocao('${p.id}')"
+                            title="${p.precoPromocional ? 'Editar promoção' : 'Criar promoção'}"
+                        >🏷️</button>
+                    </div>
                     <div class="product-actions">
                         <button class="btn-icon" onclick="window.editarProduto('${p.id}')">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1329,4 +1371,137 @@ function showToast(msg, type='success') {
     setTimeout(()=>toast.classList.remove('active'), 3000);
 }
 
-console.log('X-Food Admin v3 — Busca + Mais Pedidos inicializado!');
+// ─── PROMOÇÕES ────────────────────────────────────────────────────────────────
+
+function injetarModalPromocao() {
+    if (document.getElementById('promoModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `
+    <div class="modal" id="promoModal">
+        <div class="modal-overlay" id="promoModalOverlay"></div>
+        <div class="modal-content" style="max-width:420px;">
+            <button class="modal-close" id="closePromoModal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div style="text-align:center;margin-bottom:20px;">
+                <span style="font-size:2.5rem;">🏷️</span>
+                <h2 style="margin:10px 0 4px;font-size:1.3rem;" id="promoModalTitle">Criar Promoção</h2>
+                <p style="font-size:.82rem;color:var(--text-muted);" id="promoModalSub">Defina um preço promocional para este produto.</p>
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+                <label>Produto</label>
+                <input type="text" id="promoNomeProduto" readonly class="config-input" style="opacity:.6;cursor:default;">
+            </div>
+            <div class="form-group" style="margin-bottom:8px;">
+                <label>Preço Original</label>
+                <input type="text" id="promoPrecoOriginal" readonly class="config-input" style="opacity:.6;cursor:default;">
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label>💸 Preço Promocional *</label>
+                <input type="number" id="promoPrecoNovo" step="0.01" min="0.01" placeholder="0,00" class="config-input" style="font-size:1.1rem;font-weight:700;">
+                <small style="color:var(--text-muted)">Deixe vazio ou zero para remover a promoção.</small>
+            </div>
+            <div id="promoDesconto" style="display:none;margin-bottom:18px;padding:12px 16px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;text-align:center;">
+                <span style="font-size:.9rem;font-weight:700;color:#22c55e;" id="promoDescontoTexto"></span>
+            </div>
+            <div class="modal-actions" style="gap:10px;">
+                <button class="btn-primary" id="btnSalvarPromo" style="flex:1;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Salvar Promoção
+                </button>
+                <button class="btn-danger" id="btnRemoverPromo" style="display:none;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                    </svg>
+                    Remover
+                </button>
+                <button class="btn-secondary" id="cancelPromoModal">Cancelar</button>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(div.firstElementChild);
+
+    // Eventos
+    document.getElementById('closePromoModal').addEventListener('click', fecharModalPromocao);
+    document.getElementById('cancelPromoModal').addEventListener('click', fecharModalPromocao);
+    document.getElementById('promoModalOverlay').addEventListener('click', fecharModalPromocao);
+    document.getElementById('btnSalvarPromo').addEventListener('click', salvarPromocao);
+    document.getElementById('btnRemoverPromo').addEventListener('click', removerPromocao);
+    document.getElementById('promoPrecoNovo').addEventListener('input', calcularDesconto);
+}
+
+let promoEditandoId = null;
+
+window.abrirModalPromocao = function(id) {
+    injetarModalPromocao();
+    const p = produtos.find(x => x.id === id);
+    if (!p) return;
+    promoEditandoId = id;
+
+    document.getElementById('promoNomeProduto').value   = p.nome;
+    document.getElementById('promoPrecoOriginal').value = 'R$ ' + fmt(p.preco);
+    document.getElementById('promoPrecoNovo').value     = p.precoPromocional ? fmt(p.precoPromocional).replace(',','.') : '';
+    document.getElementById('promoModalTitle').textContent = p.precoPromocional ? 'Editar Promoção' : 'Criar Promoção';
+    document.getElementById('btnRemoverPromo').style.display = p.precoPromocional ? 'inline-flex' : 'none';
+
+    calcularDesconto();
+    document.getElementById('promoModal').classList.add('active');
+    setTimeout(() => document.getElementById('promoPrecoNovo').focus(), 100);
+};
+
+function fecharModalPromocao() {
+    const m = document.getElementById('promoModal');
+    if (m) m.classList.remove('active');
+    promoEditandoId = null;
+}
+
+function calcularDesconto() {
+    const p   = produtos.find(x => x.id === promoEditandoId);
+    if (!p) return;
+    const novo = parseFloat(document.getElementById('promoPrecoNovo')?.value || 0);
+    const box  = document.getElementById('promoDesconto');
+    const txt  = document.getElementById('promoDescontoTexto');
+    if (!box || !txt) return;
+    if (novo > 0 && novo < p.preco) {
+        const pct = Math.round((1 - novo / p.preco) * 100);
+        box.style.display   = 'block';
+        txt.textContent     = `🎉 Desconto de ${pct}% — economia de R$ ${fmt(p.preco - novo)}`;
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function salvarPromocao() {
+    if (!promoEditandoId) return;
+    const p   = produtos.find(x => x.id === promoEditandoId);
+    const novo = parseFloat(document.getElementById('promoPrecoNovo')?.value || 0);
+    if (!novo || novo <= 0) { await removerPromocao(); return; }
+    if (novo >= p.preco) { showToast('Preço promocional deve ser menor que o original!', 'error'); return; }
+    try {
+        showLoading();
+        await updateDoc(doc(db, 'produtos', promoEditandoId), { precoPromocional: novo });
+        showToast('Promoção salva! 🏷️', 'success');
+        fecharModalPromocao();
+        hideLoading();
+    } catch { showToast('Erro ao salvar promoção', 'error'); hideLoading(); }
+}
+
+async function removerPromocao() {
+    if (!promoEditandoId) return;
+    if (!confirm('Remover a promoção deste produto?')) return;
+    try {
+        showLoading();
+        await updateDoc(doc(db, 'produtos', promoEditandoId), { precoPromocional: null });
+        showToast('Promoção removida!', 'info');
+        fecharModalPromocao();
+        hideLoading();
+    } catch { showToast('Erro ao remover promoção', 'error'); hideLoading(); }
+}
+
+console.log('X-Food Admin v3 — Busca + Mais Pedidos + Promoções inicializado!');

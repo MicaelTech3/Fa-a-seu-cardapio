@@ -578,7 +578,19 @@ function abrirModalProduto(produtoId) {
 
     document.getElementById('detailName').textContent        = produto.nome;
     document.getElementById('detailDescription').textContent = produto.descricao || '';
-    document.getElementById('detailBasePrice').textContent   = 'R$ ' + formatarPreco(produto.preco);
+
+    // Preço no modal — exibe promo se existir
+    const temPromocao = produto.precoPromocional && produto.precoPromocional > 0 && produto.precoPromocional < produto.preco;
+    const basePriceEl = document.getElementById('detailBasePrice');
+    if (temPromocao) {
+        const pct = Math.round((1 - produto.precoPromocional / produto.preco) * 100);
+        basePriceEl.innerHTML = `
+            <span style="text-decoration:line-through;color:#9ca3af;font-size:.9em;font-weight:400;">R$ ${formatarPreco(produto.preco)}</span>
+            <span style="color:#f97316;font-weight:800;font-size:1.2em;margin-left:6px;">R$ ${formatarPreco(produto.precoPromocional)}</span>
+            <span style="background:#f97316;color:#fff;font-size:.7em;font-weight:800;padding:2px 8px;border-radius:20px;margin-left:6px;">-${pct}%</span>`;
+    } else {
+        basePriceEl.textContent = 'R$ ' + formatarPreco(produto.preco);
+    }
 
     const adicionais    = produto.adicionais || [];
     const extrasSection = document.getElementById('detailExtrasSection');
@@ -602,15 +614,18 @@ function abrirModalProduto(produtoId) {
         extrasList.innerHTML = '';
     }
 
-    atualizarPrecoModal(produto.preco);
+    atualizarPrecoModal(temPromocao ? produto.precoPromocional : produto.preco);
+    modal.dataset.produtoId = produto.id;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 window.toggleExtra = function(el) {
     el.classList.toggle('selected');
-    const basePriceText = document.getElementById('detailBasePrice').textContent;
-    const basePrice = parseFloat(basePriceText.replace('R$ ', '').replace(',', '.'));
+    const produtoId = document.getElementById('productDetailModal').dataset.produtoId;
+    const produto   = produtoId ? produtos.find(p => p.id === produtoId) : null;
+    const temPromo  = produto?.precoPromocional && produto.precoPromocional > 0 && produto.precoPromocional < produto.preco;
+    const basePrice = temPromo ? produto.precoPromocional : parseFloat(document.getElementById('detailBasePrice').textContent.replace(/[^0-9,]/g,'').replace(',','.') || 0);
     let extrasTotal = 0;
     document.getElementById('productDetailModal').querySelectorAll('.extra-item.selected').forEach(item => {
         extrasTotal += parseFloat(item.dataset.price || 0);
@@ -660,12 +675,18 @@ function renderizarCategorias() {
     const maisPedidosIds = configuracoes.maisPedidosIds || [];
     const qtdDestaque    = maisPedidosIds.length;
 
+    const produtosEmPromocao = produtos.filter(p => p.precoPromocional && p.precoPromocional > 0 && p.precoPromocional < p.preco);
+    const btnPromocao = produtosEmPromocao.length > 0
+        ? `<button class="category-btn promocao-cat ${categoriaAtiva === '__promocao__' ? 'active' : ''}" data-category="__promocao__">🏷️ Promoção</button>`
+        : '';
+
     // Botão Mais Pedidos como PRIMEIRO (só aparece se houver destaques configurados)
     const btnMaisPedidos = qtdDestaque > 0
         ? `<button class="category-btn mais-pedidos-cat ${categoriaAtiva === '__mais_pedidos__' ? 'active' : ''}" data-category="__mais_pedidos__">⭐ Mais Pedidos</button>`
         : '';
 
     categoriesContainer.innerHTML =
+        btnPromocao +
         btnMaisPedidos +
         `<button class="category-btn ${categoriaAtiva === 'todas' ? 'active' : ''}" data-category="todas">Todas</button>` +
         categorias.map(cat =>
@@ -707,7 +728,10 @@ function filtrarProdutos() {
     const maisPedidosIds = configuracoes.maisPedidosIds || [];
 
     let filtrados;
-    if (categoriaAtiva === '__mais_pedidos__') {
+    if (categoriaAtiva === '__promocao__') {
+        filtrados = produtos.filter(p => p.precoPromocional && p.precoPromocional > 0 && p.precoPromocional < p.preco);
+        renderizarProdutos(filtrados, false);
+    } else if (categoriaAtiva === '__mais_pedidos__') {
         // Aba Mais Pedidos: só os produtos marcados como destaque
         filtrados = produtos.filter(p => maisPedidosIds.includes(p.id));
         renderizarProdutos(filtrados, false);
@@ -725,14 +749,28 @@ function filtrarProdutos() {
 function renderizarCardProduto(produto) {
     const temAdicionais = produto.adicionais && produto.adicionais.length > 0;
     const imgSrc = produto.imagem || 'img/logo.jpg';
+    const temPromocao = produto.precoPromocional && produto.precoPromocional > 0 && produto.precoPromocional < produto.preco;
+    const pct = temPromocao ? Math.round((1 - produto.precoPromocional / produto.preco) * 100) : 0;
+
+    const precoHTML = temPromocao
+        ? `<div class="product-price-wrap">
+               <span class="product-price promo-price">R$ ${formatarPreco(produto.precoPromocional)}</span>
+               <span class="product-price-original">R$ ${formatarPreco(produto.preco)}</span>
+               <span class="promo-badge-pct">-${pct}%</span>
+           </div>`
+        : `<span class="product-price">R$ ${formatarPreco(produto.preco)}</span>`;
+
     return `
-        <div class="product-card" data-id="${produto.id}" onclick="abrirModalProduto('${produto.id}')">
-            <img src="${imgSrc}" alt="${produto.nome}" class="product-image" onerror="this.src='img/logo.jpg'">
+        <div class="product-card ${temPromocao ? 'product-card--promo' : ''}" data-id="${produto.id}" onclick="abrirModalProduto('${produto.id}')">
+            <div class="product-image-wrap" style="position:relative;">
+                ${temPromocao ? `<span class="promo-ribbon">🏷️ PROMO</span>` : ''}
+                <img src="${imgSrc}" alt="${produto.nome}" class="product-image" onerror="this.src='img/logo.jpg'">
+            </div>
             <div class="product-info">
                 <h3 class="product-name">${produto.nome}</h3>
                 ${produto.descricao ? '<p class="product-description">' + produto.descricao + '</p>' : ''}
                 <div class="product-footer">
-                    <span class="product-price">R$ ${formatarPreco(produto.preco)}</span>
+                    ${precoHTML}
                     <button class="btn-add" onclick="event.stopPropagation(); abrirModalProduto('${produto.id}')">
                         ${temAdicionais
                             ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Montar'
@@ -749,7 +787,60 @@ function injetarEstiloBadge() {
     if (!document.getElementById('extrasBadgeStyle')) {
         const s = document.createElement('style');
         s.id = 'extrasBadgeStyle';
-        s.textContent = '.product-extras-badge{margin-top:8px;display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;color:var(--primary-color,#3b82f6);background:rgba(59,130,246,.08);padding:4px 10px;border-radius:20px;}';
+        s.textContent = `
+        .product-extras-badge{margin-top:8px;display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;color:var(--primary-color,#3b82f6);background:rgba(59,130,246,.08);padding:4px 10px;border-radius:20px;}
+
+        /* ── Promoção ── */
+        .promocao-cat{
+            background:linear-gradient(135deg,#f97316,#ef4444) !important;
+            color:#fff !important;
+            font-weight:700 !important;
+            border-radius:20px !important;
+            border:none !important;
+            box-shadow:0 2px 8px rgba(249,115,22,.35);
+            animation:promoTabPulse 3s infinite;
+        }
+        .promocao-cat.active{
+            box-shadow:0 0 0 3px rgba(249,115,22,.4), 0 4px 14px rgba(249,115,22,.5) !important;
+        }
+        @keyframes promoTabPulse{0%,100%{box-shadow:0 2px 8px rgba(249,115,22,.35)}50%{box-shadow:0 2px 16px rgba(249,115,22,.6)}}
+
+        .product-card--promo{
+            border:2px solid #f97316 !important;
+            box-shadow:0 4px 20px rgba(249,115,22,.2);
+            position:relative;
+        }
+        .product-image-wrap{
+            position:relative;overflow:hidden;
+        }
+        .product-image-wrap .product-image{
+            width:100%;display:block;
+        }
+        .promo-ribbon{
+            position:absolute;top:10px;left:0;
+            background:linear-gradient(135deg,#f97316,#ef4444);
+            color:#fff;font-size:.7rem;font-weight:800;
+            padding:4px 12px 4px 10px;
+            border-radius:0 20px 20px 0;
+            letter-spacing:.04em;text-transform:uppercase;
+            box-shadow:0 2px 8px rgba(249,115,22,.4);
+            z-index:2;
+        }
+        .product-price-wrap{
+            display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+        }
+        .promo-price{
+            color:#f97316 !important;font-weight:800 !important;font-size:1.1rem !important;
+        }
+        .product-price-original{
+            text-decoration:line-through;color:#9ca3af;font-size:.8rem;
+        }
+        .promo-badge-pct{
+            background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;
+            font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:20px;
+            letter-spacing:.04em;
+        }
+        `;
         document.head.appendChild(s);
     }
 }
