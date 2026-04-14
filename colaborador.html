@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colaborador — X-Food</title>
+  <link rel="shortcut icon" href="img/log_exceedpark_white.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary:    #00ffe0;
+      --secondary:  #7000ff;
+      --accent:     #ff006a;
+      --gold:       #ffe600;
+      --bg-base:    #02000a;
+      --bg-surface: #07041a;
+      --bg-elev:    #0e0926;
+      --border:     rgba(0,255,224,.1);
+      --border-s:   rgba(0,255,224,.22);
+      --text-p:     #e0fff8;
+      --text-s:     rgba(224,255,248,.6);
+      --text-m:     rgba(224,255,248,.3);
+      --success:    #00ff88;
+      --danger:     #ff1744;
+      --warning:    #ffe600;
+      --r:          4px;
+      --r-sm:       3px;
+      --t:          all .2s cubic-bezier(.4,0,.2,1);
+      --glow:       0 0 10px rgba(0,255,224,.7),0 0 30px rgba(0,255,224,.3);
+      --shadow-lg:  0 12px 40px rgba(0,0,0,.8),0 0 30px rgba(0,255,224,.06);
+      --col-purple: #7000ff;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:'Rajdhani',sans-serif;background:var(--bg-base);color:var(--text-p);
+      font-size:14px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;min-height:100vh;
+      background-image:
+        linear-gradient(rgba(0,255,200,.02) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,255,200,.02) 1px,transparent 1px),
+        radial-gradient(ellipse 80% 50% at 20% 0%,rgba(112,0,255,.1) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 100%,rgba(255,0,106,.06) 0%,transparent 60%);
+      background-size:40px 40px,40px 40px,100% 100%,100% 100%;
+      background-attachment:fixed;
+    }
+    body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,200,.008) 3px,rgba(0,255,200,.008) 4px);}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-track{background:var(--bg-base);}
+    ::-webkit-scrollbar-thumb{background:rgba(0,255,224,.25);border-radius:2px;}
+
+    @keyframes spin   {to{transform:rotate(360deg)}}
+    @keyframes fadeUp {from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes scIn   {from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    @keyframes ping   {75%,100%{transform:scale(2);opacity:0}}
+    @keyframes glowAn {0%,100%{box-shadow:0 0 6px rgba(0,255,136,.3)}50%{box-shadow:0 0 16px rgba(0,255,136,.7)}}
+
+    /* ═══════════ LOGIN ═══════════ */
+    #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .login-box{background:var(--bg-surface);border:1px solid var(--border-s);border-radius:6px;padding:44px 40px;width:100%;max-width:440px;box-shadow:var(--shadow-lg);animation:scIn .35s ease;position:relative;overflow:hidden;}
+    .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary),var(--secondary),transparent);}
+    .login-head{text-align:center;margin-bottom:32px;}
+    .login-icon{width:68px;height:68px;background:rgba(0,255,224,.08);border:1px solid rgba(0,255,224,.3);border-radius:var(--r);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:var(--glow);}
+    .login-icon svg{width:32px;height:32px;color:var(--primary);}
+    .login-head h1{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);text-shadow:0 0 14px rgba(0,255,224,.4);}
+    .login-head p{font-size:.78rem;color:var(--text-m);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;}
+    .badge-r{display:inline-block;background:rgba(112,0,255,.15);border:1px solid rgba(112,0,255,.35);color:#a855f7;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 12px;border-radius:20px;margin-top:10px;}
+    .form-g{margin-bottom:16px;}
+    .form-g label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-s);margin-bottom:7px;}
+    .form-g input,.form-g select{width:100%;padding:11px 14px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text-p);font-size:.9rem;font-family:'Rajdhani',sans-serif;outline:none;transition:var(--t);}
+    .form-g input:focus,.form-g select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,255,224,.1);}
+    .form-g input::placeholder{color:var(--text-m);}
+    .form-g select option{background:var(--bg-elev);}
+    .btn-login{width:100%;padding:13px;background:rgba(0,255,224,.1);color:var(--primary);border:1px solid rgba(0,255,224,.35);border-radius:var(--r-sm);font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-login:hover{background:rgba(0,255,224,.18);box-shadow:var(--glow);}
+    .login-err{margin-top:12px;padding:10px 14px;background:rgba(255,23,68,.1);border:1px solid var(--danger);border-radius:var(--r-sm);color:var(--danger);font-size:.82rem;font-weight:600;display:none;animation:fadeUp .2s ease;}
+    .login-err.show{display:block;}
+
+    /* ═══════════ APP ═══════════ */
+    #app{display:none;flex-direction:column;min-height:100vh;}
+    .hdr{position:sticky;top:0;z-index:200;background:rgba(7,4,26,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;}
+    .hdr-l{display:flex;align-items:center;gap:12px;}
+    .hdr-brand{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);text-shadow:0 0 10px rgba(0,255,224,.3);}
+    .badge-colab{background:rgba(112,0,255,.15);border:1px solid rgba(112,0,255,.35);color:#a855f7;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
+    .hdr-user{font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:700;color:var(--text-s);}
+    .hdr-user span{color:var(--primary);}
+    .hdr-r{display:flex;align-items:center;gap:10px;}
+    .store-pill{display:flex;align-items:center;gap:7px;background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;padding:5px 12px;}
+    .store-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);}
+    .store-dot.on{background:var(--success);animation:glowAn 2s infinite;}
+    .store-txt{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-s);}
+    .btn-sair{background:transparent;border:1px solid var(--border);color:var(--text-m);padding:7px 14px;border-radius:var(--r-sm);font-family:'Rajdhani',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:6px;}
+    .btn-sair:hover{border-color:var(--danger);color:var(--danger);}
+
+    /* tabs */
+    .tabs{background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;}
+    .tab{padding:14px 18px;background:transparent;border:none;border-bottom:2px solid transparent;font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-m);cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:7px;}
+    .tab:hover{color:var(--text-p);}
+    .tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .tab-cnt{background:rgba(0,255,224,.08);border:1px solid rgba(0,255,224,.15);color:var(--primary);border-radius:10px;font-size:.62rem;padding:1px 7px;}
+
+    /* app body */
+    .app-body{padding:24px;max-width:1200px;margin:0 auto;flex:1;}
+    .panel{display:none;}
+    .panel.active{display:block;animation:fadeUp .2s ease;}
+
+    /* stats */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+    .sc{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;display:flex;align-items:center;gap:13px;transition:var(--t);}
+    .sc:hover{border-color:var(--border-s);}
+    .sc-ico{width:40px;height:40px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ic-t{background:rgba(0,255,224,.08);color:var(--primary);}
+    .ic-g{background:rgba(255,230,0,.08);color:var(--gold);}
+    .ic-s{background:rgba(0,255,136,.08);color:var(--success);}
+    .ic-p{background:rgba(112,0,255,.08);color:#a855f7;}
+    .sc-lbl{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-m);}
+    .sc-val{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;color:var(--text-p);line-height:1.1;}
+
+    /* barra de limite */
+    .lbar-wrap{margin-bottom:20px;}
+    .lbar-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .lbar-info span{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-s);}
+    .lbar-info strong{font-family:'IBM Plex Mono',monospace;font-size:.88rem;color:var(--text-p);}
+    .lbar{height:6px;background:rgba(0,255,224,.08);border-radius:3px;overflow:hidden;}
+    .lbar-fill{height:100%;border-radius:3px;transition:width .5s ease;background:linear-gradient(90deg,var(--primary),var(--secondary));}
+    .lbar-fill.w{background:linear-gradient(90deg,var(--gold),var(--accent));}
+    .lbar-fill.d{background:linear-gradient(90deg,var(--danger),#ff006a);}
+
+    /* filtros */
+    .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+    .tb-tit{font-family:'Orbitron',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-s);}
+    .pill{padding:6px 14px;background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-s);cursor:pointer;transition:var(--t);}
+    .pill:hover{border-color:var(--border-s);color:var(--text-p);}
+    .pill.active{border-color:rgba(0,255,224,.4);color:var(--primary);background:rgba(0,255,224,.06);}
+    .pill.pill-col{border-color:rgba(112,0,255,.3);color:#a855f7;background:rgba(112,0,255,.06);}
+    .pill.pill-col.active{border-color:rgba(112,0,255,.6);background:rgba(112,0,255,.12);color:#c084fc;}
+
+    /* grid produtos */
+    .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+    .pcard{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:var(--t);animation:fadeUp .2s ease;position:relative;}
+    .pcard:hover{border-color:var(--border-s);box-shadow:0 4px 20px rgba(0,0,0,.5);}
+    .pcard.pcard-col{border-color:rgba(112,0,255,.25);}
+    .pcard.pcard-col:hover{border-color:rgba(112,0,255,.5);box-shadow:0 4px 20px rgba(112,0,255,.15);}
+    .pcard-col-badge{position:absolute;top:10px;left:10px;z-index:5;background:rgba(112,0,255,.85);color:#fff;font-size:.58rem;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;}
+    .pcard img{width:100%;height:150px;object-fit:cover;background:var(--bg-elev);display:block;}
+    .pcard-body{padding:14px;}
+    .pcard-cat{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.12);display:inline-block;padding:2px 8px;border-radius:20px;margin-bottom:6px;}
+    .pcard-cat.cat-col{color:#a855f7;background:rgba(112,0,255,.06);border-color:rgba(112,0,255,.15);}
+    .pcard-nome{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--text-p);margin-bottom:4px;}
+    .pcard-desc{font-size:.78rem;color:var(--text-m);line-height:1.5;margin-bottom:10px;}
+    .pcard-precos{display:flex;align-items:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+    .p-orig{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--text-m);text-decoration:line-through;}
+    .p-final{font-family:'IBM Plex Mono',monospace;font-size:1.12rem;font-weight:700;color:var(--success);}
+    .p-final.col-price{color:#c084fc;}
+    .p-desc{font-size:.62rem;font-weight:700;color:var(--success);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.2);padding:2px 7px;border-radius:20px;}
+    .btn-add{width:100%;padding:10px;background:rgba(0,255,224,.08);color:var(--primary);border:1px solid rgba(0,255,224,.25);border-radius:var(--r-sm);font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;gap:7px;}
+    .btn-add:hover{background:rgba(0,255,224,.16);box-shadow:0 0 12px rgba(0,255,224,.15);}
+    .btn-add.btn-add-col{background:rgba(112,0,255,.08);color:#c084fc;border-color:rgba(112,0,255,.25);}
+    .btn-add.btn-add-col:hover{background:rgba(112,0,255,.16);box-shadow:0 0 12px rgba(112,0,255,.2);}
+
+    /* separador de seção */
+    .section-divider{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:10px 0;margin:8px 0 4px;}
+    .section-divider-line{flex:1;height:1px;background:var(--border);}
+    .section-divider-label{font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;padding:4px 14px;border-radius:2px;}
+    .sdl-teal{color:var(--primary);background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.15);}
+    .sdl-purple{color:#c084fc;background:rgba(112,0,255,.08);border:1px solid rgba(112,0,255,.2);}
+
+    /* carrinho FAB */
+    .cart-fab{position:fixed;bottom:28px;right:28px;z-index:300;width:60px;height:60px;border-radius:50%;background:var(--primary);color:#02000a;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:var(--glow),0 4px 20px rgba(0,0,0,.5);transition:var(--t);}
+    .cart-fab:hover{transform:scale(1.08);}
+    .fab-cnt{position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-base);}
+
+    /* drawer */
+    .cart-drawer{position:fixed;inset:0;z-index:400;display:flex;justify-content:flex-end;pointer-events:none;}
+    .cart-ov{position:absolute;inset:0;background:rgba(2,0,10,.75);opacity:0;transition:opacity .3s;}
+    .cart-panel{position:relative;z-index:1;width:100%;max-width:420px;background:var(--bg-surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+    .cart-drawer.open .cart-ov{opacity:1;pointer-events:all;}
+    .cart-drawer.open .cart-panel{transform:translateX(0);pointer-events:all;}
+    .cart-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .cart-hdr h3{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);}
+    .cart-cls{background:transparent;border:1px solid var(--border);color:var(--text-m);width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;}
+    .cart-cls:hover{border-color:var(--danger);color:var(--danger);}
+    .cart-items{flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:10px;}
+    .cart-emp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-m);padding:40px;text-align:center;}
+    .cart-emp svg{opacity:.2;margin-bottom:14px;}
+    .cart-emp p{font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;}
+    .citem{display:flex;gap:12px;align-items:center;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;}
+    .citem img{width:46px;height:46px;border-radius:var(--r-sm);object-fit:cover;flex-shrink:0;}
+    .ci-info{flex:1;min-width:0;}
+    .ci-nome{font-size:.88rem;font-weight:700;color:var(--text-p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ci-preco{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--success);margin-bottom:6px;}
+    .ci-type{font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:10px;margin-bottom:4px;display:inline-block;}
+    .ci-type.cardapio{background:rgba(0,255,224,.08);color:var(--primary);border:1px solid rgba(0,255,224,.15);}
+    .ci-type.col{background:rgba(112,0,255,.1);color:#a855f7;border:1px solid rgba(112,0,255,.2);}
+    .ci-ctrl{display:flex;align-items:center;gap:8px;}
+    .ci-b{background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.2);color:var(--primary);width:26px;height:26px;border-radius:var(--r-sm);cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:var(--t);}
+    .ci-b:hover{background:rgba(0,255,224,.14);}
+    .ci-q{font-family:'IBM Plex Mono',monospace;font-size:.82rem;min-width:20px;text-align:center;color:var(--text-p);}
+    .ci-rm{background:transparent;border:none;color:var(--text-m);cursor:pointer;padding:4px;margin-left:auto;transition:var(--t);}
+    .ci-rm:hover{color:var(--danger);}
+    .cart-obs-wrap{padding:0 20px 10px;}
+    .cart-obs-wrap label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-s);display:block;margin-bottom:6px;}
+    .cart-obs-wrap textarea{width:100%;padding:9px 12px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text-p);font-family:'Rajdhani',sans-serif;font-size:.88rem;outline:none;resize:none;transition:var(--t);}
+    .cart-obs-wrap textarea:focus{border-color:var(--primary);}
+    .cart-ftr{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-elev);}
+    .cart-tot{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .cart-tot span{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-m);}
+    .cart-tot strong{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--text-p);}
+    .lim-warn{margin-bottom:10px;padding:10px 14px;background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.3);border-radius:var(--r-sm);color:var(--danger);font-size:.78rem;font-weight:700;display:none;}
+    .lim-warn.show{display:block;}
+    .btn-finalizar{width:100%;padding:13px;background:linear-gradient(135deg,rgba(0,255,224,.15),rgba(112,0,255,.15));color:var(--primary);border:1px solid rgba(0,255,224,.4);border-radius:var(--r-sm);font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:var(--t);}
+    .btn-finalizar:hover{background:linear-gradient(135deg,rgba(0,255,224,.22),rgba(112,0,255,.22));box-shadow:var(--glow);}
+    .btn-finalizar:disabled{opacity:.4;cursor:not-allowed;}
+
+    /* meus pedidos */
+    .ped-list{display:flex;flex-direction:column;gap:12px;}
+    .ped-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;animation:fadeUp .2s ease;}
+    .ped-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);}
+    .ped-num{font-family:'IBM Plex Mono',monospace;font-size:.82rem;color:var(--text-p);flex:1;}
+    .ped-hora{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--text-m);}
+    .ped-st{padding:3px 10px;border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+    .ped-st.novo      {background:rgba(0,255,224,.1);color:var(--primary);border:1px solid rgba(0,255,224,.25);}
+    .ped-st.preparando{background:rgba(255,230,0,.1);color:var(--gold);border:1px solid rgba(255,230,0,.25);}
+    .ped-st.pronto    {background:rgba(0,255,136,.1);color:var(--success);border:1px solid rgba(0,255,136,.25);}
+    .ped-itens{padding:12px 16px;display:flex;flex-direction:column;gap:5px;}
+    .ped-row{display:flex;gap:8px;font-size:.85rem;}
+    .ped-qty{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--primary);background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.12);padding:2px 7px;border-radius:var(--r-sm);min-width:28px;text-align:center;}
+    .ped-nome{color:var(--text-s);flex:1;}
+    .ped-obs{padding:8px 16px;font-size:.78rem;color:var(--text-m);font-style:italic;}
+    .ped-tot{padding:10px 16px;border-top:1px solid var(--border);background:var(--bg-elev);display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:.85rem;}
+    .ped-tot span{color:var(--text-m);}
+    .ped-tot strong{color:var(--text-p);}
+
+    /* empty */
+    .empty{text-align:center;padding:60px 24px;color:var(--text-m);}
+    .empty svg{opacity:.15;margin-bottom:14px;}
+    .empty h3{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-s);margin-bottom:6px;}
+    .empty p{font-size:.8rem;}
+
+    /* modal confirmação */
+    .modal-wrap{position:fixed;inset:0;z-index:500;background:rgba(2,0,10,.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
+    .modal-wrap.open{display:flex;}
+    .modal-box{background:var(--bg-surface);border:1px solid var(--border-s);border-radius:6px;padding:36px 32px;width:100%;max-width:400px;text-align:center;animation:scIn .3s ease;position:relative;overflow:hidden;}
+    .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--success),transparent);}
+    .m-icon{font-size:3rem;margin-bottom:14px;}
+    .m-title{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--success);margin-bottom:8px;}
+    .m-sub{font-size:.88rem;color:var(--text-s);margin-bottom:18px;}
+    .m-num{font-family:'IBM Plex Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--primary);margin-bottom:20px;}
+    .progress{display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+    .ps{display:flex;flex-direction:column;align-items:center;gap:5px;}
+    .ps-dot{width:14px;height:14px;border-radius:50%;background:rgba(0,255,224,.1);border:1px solid rgba(0,255,224,.2);transition:var(--t);}
+    .ps-dot.on{background:var(--primary);box-shadow:0 0 10px rgba(0,255,224,.5);}
+    .ps-line{width:40px;height:1px;background:rgba(0,255,224,.15);}
+    .ps-lbl{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-m);}
+    .ps-lbl.on{color:var(--primary);}
+    .btn-mfch{padding:11px 32px;background:rgba(0,255,224,.08);color:var(--primary);border:1px solid rgba(0,255,224,.3);border-radius:var(--r-sm);font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:var(--t);}
+    .btn-mfch:hover{background:rgba(0,255,224,.16);}
+
+    /* toast */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-elev);border:1px solid var(--border-s);color:var(--text-p);padding:12px 20px;border-radius:var(--r);box-shadow:var(--shadow-lg);z-index:1000;transform:translateY(12px);opacity:0;transition:all .3s ease;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Rajdhani',sans-serif;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.success{border-color:var(--success);color:var(--success);background:rgba(0,255,136,.1);}
+    .toast.error  {border-color:var(--danger); color:var(--danger); background:rgba(255,23,68,.1);}
+    .toast.info   {border-color:var(--primary);color:var(--primary);background:rgba(0,255,224,.08);}
+    .toast.warning{border-color:var(--gold);   color:var(--gold);   background:rgba(255,230,0,.08);}
+
+    /* loading */
+    .loading{position:fixed;inset:0;background:rgba(2,0,10,.92);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:900;}
+    .loading.show{display:flex;}
+    .spinner{width:44px;height:44px;border:3px solid rgba(0,255,224,.15);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;box-shadow:0 0 15px rgba(0,255,224,.2);}
+
+    /* aviso carrinho desativado */
+    .carrinho-off-banner{background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.3);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;text-align:center;color:var(--danger);font-size:.85rem;font-weight:700;letter-spacing:.06em;display:none;}
+
+    @media(max-width:768px){
+      .stats{grid-template-columns:repeat(2,1fr);}
+      .pgrid{grid-template-columns:1fr;}
+      .app-body{padding:14px;}
+      .hdr{padding:0 14px;}
+    }
+    @media(max-width:480px){
+      .stats{grid-template-columns:1fr 1fr;}
+      .sc-val{font-size:1.1rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-head">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+        </svg>
+      </div>
+      <h1>X-Food</h1>
+      <p>Acesso Colaborador</p>
+      <div><span class="badge-r">🔒 Área Restrita</span></div>
+    </div>
+    <div class="form-g" id="groupNome">
+      <label>Seu Nome</label>
+      <input type="text" id="inNomeColab" placeholder="Digite seu usuário..." autocomplete="off">
+    </div>
+    <div class="form-g" id="groupCpf" style="display:none;">
+      <label style="color:var(--danger)">Login falhou! Use o CPF</label>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:-5px; margin-bottom:5px;">Entre em contato com gestão ou Equipe T.I.</p>
+      <input type="text" id="inCpfColab" placeholder="Digite seu CPF (apenas números)" autocomplete="off">
+    </div>
+    <div class="form-g">
+      <label>Senha</label>
+      <input type="password" id="inSenha" placeholder="••••••••" maxlength="5" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="btnLogin">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Entrar
+    </button>
+    <div class="login-err" id="loginErr">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- ════════════ APP ════════════ -->
+<div id="app">
+  <header class="hdr">
+    <div class="hdr-l">
+      <span class="hdr-brand">X-Food</span>
+      <span class="badge-colab">Colaborador</span>
+      <span class="hdr-user" id="hdrUser">—</span>
+    </div>
+    <div class="hdr-r">
+      <div class="store-pill">
+        <div class="store-dot" id="storeDot" style="position:relative;"></div>
+        <span class="store-txt" id="storeTxt">—</span>
+      </div>
+      <button class="btn-sair" id="btnSair">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="cardapio">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Cardápio
+    </button>
+    <button class="tab" data-tab="pedidos">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Meus Pedidos
+      <span class="tab-cnt" id="tabCnt">0</span>
+    </button>
+  </nav>
+
+  <main class="app-body">
+    <!-- Cardápio -->
+    <div class="panel active" id="panel-cardapio">
+      <div class="stats">
+        <div class="sc"><div class="sc-ico ic-t"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div><div class="sc-lbl">Limite Mensal</div><div class="sc-val" id="sLimite">—</div></div></div>
+        <div class="sc"><div class="sc-ico ic-g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 100 4h4a2 2 0 110 4H8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/></svg></div><div><div class="sc-lbl">Gasto</div><div class="sc-val" id="sGasto">—</div></div></div>
+        <div class="sc"><div class="sc-ico ic-s"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="sc-lbl">Disponível</div><div class="sc-val" id="sDisp">—</div></div></div>
+        <div class="sc"><div class="sc-ico ic-p"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div><div class="sc-lbl">Desconto</div><div class="sc-val" id="sDesc">—</div></div></div>
+      </div>
+
+      <div class="lbar-wrap">
+        <div class="lbar-info"><span>Uso do limite mensal</span><strong id="lbarTxt">R$ 0,00 / R$ 0,00</strong></div>
+        <div class="lbar"><div class="lbar-fill" id="lbarFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="carrinho-off-banner" id="carrinhoOffBanner">
+        🚫 O carrinho de colaboradores está temporariamente desativado pelo administrador.
+      </div>
+
+      <div class="toolbar" id="catFilter">
+        <span class="tb-tit">Categoria</span>
+        <button class="pill active" data-cat="todos">Todos</button>
+      </div>
+
+      <div class="pgrid" id="pgrid">
+        <div class="empty" style="grid-column:1/-1">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          <h3>Carregando cardápio...</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meus Pedidos -->
+    <div class="panel" id="panel-pedidos">
+      <div class="ped-list" id="pedList">
+        <div class="empty">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <h3>Nenhum pedido ainda</h3><p>Seus pedidos aparecerão aqui.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- FAB -->
+<button class="cart-fab" id="cartFab">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.73L23 6H6"/></svg>
+  <span class="fab-cnt" id="fabCnt">0</span>
+</button>
+
+<!-- Drawer Carrinho -->
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-ov" id="cartOv"></div>
+  <div class="cart-panel">
+    <div class="cart-hdr">
+      <h3>🛒 Carrinho</h3>
+      <button class="cart-cls" id="cartCls"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-emp" id="cartEmp">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.73L23 6H6"/></svg>
+        <p>Carrinho vazio</p>
+      </div>
+    </div>
+    <div class="cart-obs-wrap">
+      <label>Observação (opcional)</label>
+      <textarea id="cartObs" rows="2" placeholder="Ex: sem cebola, bem passado..."></textarea>
+    </div>
+    <div class="cart-ftr">
+      <div class="cart-tot"><span>Total com desconto</span><strong id="cartTot">R$ 0,00</strong></div>
+      <div class="lim-warn" id="limWarn">⚠️ Seu pedido ultrapassa o limite disponível e foi bloqueado!</div>
+      <button class="btn-finalizar" id="btnFinalizar">Finalizar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmação -->
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal-box">
+    <div class="m-icon">✅</div>
+    <div class="m-title">Pedido Enviado!</div>
+    <div class="m-sub">Acompanhe o status do seu pedido:</div>
+    <div class="m-num" id="mNum">#—</div>
+    <div class="progress">
+      <div class="ps"><div class="ps-dot on" id="d-novo"></div><span class="ps-lbl on">Novo</span></div>
+      <div class="ps-line"></div>
+      <div class="ps"><div class="ps-dot" id="d-prep"></div><span class="ps-lbl" id="l-prep">Preparando</span></div>
+      <div class="ps-line"></div>
+      <div class="ps"><div class="ps-dot" id="d-pron"></div><span class="ps-lbl" id="l-pron">Pronto</span></div>
+    </div>
+    <button class="btn-mfch" id="btnFchMod">Fechar</button>
+  </div>
+</div>
+
+<div class="toast"   id="toast"></div>
+<div class="loading" id="loading"><div class="spinner"></div></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+import {
+  getFirestore, collection, doc, addDoc, getDoc, getDocs,
+  onSnapshot, query, orderBy, where, updateDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDEneDt3pzeq2tXbU5unBiG63R9pHHFUK4",
+  authDomain:"cardapio-excd.firebaseapp.com",
+  projectId:"cardapio-excd",
+  storageBucket:"cardapio-excd.firebasestorage.app",
+  messagingSenderId:"622683922763",
+  appId:"1:622683922763:web:ab392a76b35df7275e48ce"
+});
+const db = getFirestore(app);
+
+// ── Estado ──────────────────────────────────────────────────────────────────
+let colab         = null;
+let desconto      = 35;        // % desconto cardápio principal
+let carrinhoAtivo = true;
+let carrinho      = [];
+let prodAll       = [];        // pratos do cardápio principal
+let pratosCol     = [];        // pratos exclusivos colaborador
+let catAll        = [];
+let catAtiva      = 'todos';
+let unsubPed      = null;
+
+// ── DOM ──────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const loginScreen = $('loginScreen');
+const appEl       = $('app');
+const inNomeColab = $('inNomeColab');
+const inCpfColab  = $('inCpfColab');
+const inSenha     = $('inSenha');
+const btnLogin    = $('btnLogin');
+const loginErr    = $('loginErr');
+const btnSair     = $('btnSair');
+const loading     = $('loading');
+const toast       = $('toast');
+const cartFab     = $('cartFab');
+const cartDrawer  = $('cartDrawer');
+const cartOv      = $('cartOv');
+const cartCls     = $('cartCls');
+const cartItemsEl = $('cartItems');
+const cartEmp     = $('cartEmp');
+const cartTot     = $('cartTot');
+const fabCnt      = $('fabCnt');
+const btnFinal    = $('btnFinalizar');
+const limWarn     = $('limWarn');
+const modalWrap   = $('modalWrap');
+const mNum        = $('mNum');
+const btnFchMod   = $('btnFchMod');
+const pgrid       = $('pgrid');
+const pedList     = $('pedList');
+
+let loginErros = 0;
+
+btnLogin.addEventListener('click', async () => {
+  const nomeDigitado = inNomeColab.value.trim();
+  const cpfDigitado  = inCpfColab.value.trim();
+  const senha        = inSenha.value.trim();
+
+  if (loginErros < 3 && !nomeDigitado) { loginErr.textContent='Informe seu nome e senha.'; loginErr.classList.add('show'); return; }
+  if (loginErros >= 3 && !cpfDigitado) { loginErr.textContent='Informe seu CPF e senha.'; loginErr.classList.add('show'); return; }
+  if (!senha) { loginErr.textContent='Informe a senha.'; loginErr.classList.add('show'); return; }
+
+  showLoading();
+  try {
+    let q;
+    if (loginErros >= 3) {
+      q = query(collection(db,'colaboradores'), where('cpf','==',cpfDigitado));
+    } else {
+      q = query(collection(db,'colaboradores'), where('nome','==',nomeDigitado));
+    }
+    const snap = await getDocs(q);
+    
+    if (snap.empty) throw new Error();
+    const docData = snap.docs[0];
+    if (docData.data().senha !== senha) throw new Error();
+
+    colab = { id: docData.id, ...docData.data() };
+    loginErr.classList.remove('show');
+    loginErros = 0; 
+    await iniciar();
+    hideLoading();
+  } catch {
+    loginErros++;
+    if (loginErros >= 3) {
+      $('groupNome').style.display = 'none';
+      $('groupCpf').style.display  = 'block';
+      loginErr.textContent = 'Erro de acesso! Entre em contato com gestão ou Equipe T.I.';
+    } else {
+      loginErr.textContent = 'Nome ou senha incorretos. Tente novamente.';
+    }
+    loginErr.classList.add('show');
+    hideLoading();
+  }
+});
+inSenha.addEventListener('keydown', e=>{ if(e.key==='Enter') btnLogin.click(); });
+
+// ── Logout ─────────────────────────────────────────────────────────────────
+btnSair.addEventListener('click', ()=>{
+  colab=null; carrinho=[];
+  if(unsubPed){unsubPed();unsubPed=null;}
+  appEl.style.display='none'; loginScreen.style.display='flex'; cartFab.style.display='none';
+  inSenha.value=''; inNomeColab.value=''; inCpfColab.value=''; loginErros=0;
+  $('groupNome').style.display = 'block';
+  $('groupCpf').style.display  = 'none';
+  showToast('Saiu com sucesso!','info');
+});
+
+// ── Iniciar ────────────────────────────────────────────────────────────────
+async function iniciar() {
+  loginScreen.style.display='none';
+  appEl.style.display='flex'; appEl.style.flexDirection='column';
+  $('hdrUser').innerHTML=`Olá, <span>${colab.nome}</span>`;
+  await carregarConfig();
+  await carregarCats();
+  await carregarProdutos();
+  await carregarPratosCol();
+  ouvirPedidos();
+  atualizarStats();
+}
+
+// ── Config ─────────────────────────────────────────────────────────────────
+async function carregarConfig() {
+  try {
+    // Config colaborador (desconto, carrinho)
+    const s1 = await getDoc(doc(db,'config_col','geral'));
+    if(s1.exists()){
+      desconto      = colab.desconto != null ? colab.desconto : (s1.data().desconto ?? 35);
+      carrinhoAtivo = s1.data().carrinhoAtivo !== false;
+    }
+    // Status da loja
+    const s2 = await getDoc(doc(db,'configuracoes','geral'));
+    if(s2.exists()){
+      const st=s2.data().status||'fechado';
+      $('storeDot').className='store-dot'+(st==='aberto'?' on':'');
+      $('storeTxt').textContent=st==='aberto'?'Aberta':'Fechada';
+    }
+    // Exibe/oculta FAB e banner
+    cartFab.style.display = carrinhoAtivo ? 'flex' : 'none';
+    const banner = $('carrinhoOffBanner');
+    if(banner) banner.style.display = carrinhoAtivo ? 'none' : 'block';
+    if(btnFinal) btnFinal.disabled = !carrinhoAtivo;
+  } catch(e){ console.error(e); }
+}
+
+// ── Categorias ─────────────────────────────────────────────────────────────
+async function carregarCats() {
+  const snap = await getDocs(collection(db,'categorias'));
+  catAll = snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+function renderFiltros() {
+  const fc = $('catFilter');
+  const temColabs = pratosCol.filter(p=>p.ativo!==false).length > 0;
+
+  fc.innerHTML =
+    '<span class="tb-tit">Categoria</span>' +
+    `<button class="pill ${catAtiva==='todos'?'active':''}" data-cat="todos">Todos</button>` +
+    (temColabs ? `<button class="pill pill-col ${catAtiva==='__exclusivos__'?'active':''}" data-cat="__exclusivos__">🟣 Exclusivos Col.</button>` : '') +
+    catAll.map(c=>`<button class="pill ${catAtiva===c.nome?'active':''}" data-cat="${c.nome}">${c.nome}</button>`).join('');
+
+  fc.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>{
+    catAtiva=b.dataset.cat;
+    fc.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderProdutos();
+  }));
+}
+
+// ── Produtos (cardápio principal) ──────────────────────────────────────────
+async function carregarProdutos() {
+  const snap = await getDocs(collection(db,'produtos'));
+  prodAll = snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.ativo!==false);
+  renderFiltros();
+  renderProdutos();
+}
+
+// ── Pratos Colaborador ──────────────────────────────────────────────────────
+async function carregarPratosCol() {
+  const snap = await getDocs(collection(db,'pratos_col'));
+  pratosCol = snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.ativo!==false);
+  renderFiltros();
+  renderProdutos();
+}
+
+// ── Renderizar produtos ─────────────────────────────────────────────────────
+function renderProdutos() {
+  let listaCardapio = prodAll;
+  let listaCol      = pratosCol;
+
+  if (catAtiva==='__exclusivos__') {
+    listaCardapio = [];
+    // listaCol já está tudo
+  } else if (catAtiva!=='todos') {
+    listaCardapio = prodAll.filter(p=>p.categoria===catAtiva);
+    listaCol = pratosCol.filter(p=>p.categoria===catAtiva);
+  }
+
+  const temCardapio = listaCardapio.length > 0;
+  const temCol      = listaCol.length > 0;
+
+  if (!temCardapio && !temCol) {
+    pgrid.innerHTML=`<div class="empty" style="grid-column:1/-1">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      <h3>Nenhum produto disponível</h3><p>Selecione outra categoria.</p></div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Pratos do cardápio principal (com desconto fixo de X%)
+  if (temCardapio && catAtiva !== '__exclusivos__') {
+    html += `
+    <div class="section-divider" style="grid-column:1/-1">
+      <div class="section-divider-line"></div>
+      <span class="section-divider-label sdl-teal">🍽️ Cardápio — ${desconto}% off</span>
+      <div class="section-divider-line"></div>
+    </div>`;
+    html += listaCardapio.map(p => renderCardCardapio(p)).join('');
+  }
+
+  // Pratos exclusivos colaborador
+  if (temCol) {
+    html += `
+    <div class="section-divider" style="grid-column:1/-1">
+      <div class="section-divider-line"></div>
+      <span class="section-divider-label sdl-purple">🟣 Exclusivos Colaborador</span>
+      <div class="section-divider-line"></div>
+    </div>`;
+    html += listaCol.map(p => renderCardCol(p)).join('');
+  }
+
+  pgrid.innerHTML = html;
+}
+
+function renderCardCardapio(p) {
+  const orig  = p.precoPromocional && p.precoPromocional > 0 && p.precoPromocional < p.preco
+                ? p.precoPromocional : p.preco;
+  const final = orig * (1 - desconto/100);
+  const precoBase = p.precoPromocional && p.precoPromocional < p.preco ? p.precoPromocional : p.preco;
+
+  return `<div class="pcard">
+    <img src="${p.imagem||'img/logo.jpg'}" alt="${p.nome}" onerror="this.src='img/logo.jpg'">
+    <div class="pcard-body">
+      <span class="pcard-cat">${p.categoria||'Sem categoria'}</span>
+      <div class="pcard-nome">${p.nome}</div>
+      ${p.descricao?`<div class="pcard-desc">${p.descricao}</div>`:''}
+      <div class="pcard-precos">
+        <span class="p-orig">R$ ${fmt(precoBase)}</span>
+        <span class="p-final">R$ ${fmt(final)}</span>
+        <span class="p-desc">-${desconto}%</span>
+      </div>
+      <button class="btn-add" onclick="addCart('${p.id}','cardapio')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Adicionar
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderCardCol(p) {
+  const temDesc   = p.temDesconto === true && p.desconto > 0;
+  const precoFinal = temDesc ? p.preco * (1 - p.desconto/100) : p.preco;
+
+  return `<div class="pcard pcard-col">
+    <span class="pcard-col-badge">Exclusivo Col.</span>
+    <img src="${p.imagem||'img/logo.jpg'}" alt="${p.nome}" onerror="this.src='img/logo.jpg'">
+    <div class="pcard-body">
+      <span class="pcard-cat cat-col">${p.categoria||'Colaborador'}</span>
+      <div class="pcard-nome">${p.nome}</div>
+      ${p.descricao?`<div class="pcard-desc">${p.descricao}</div>`:''}
+      <div class="pcard-precos">
+        ${temDesc?`<span class="p-orig">R$ ${fmt(p.preco)}</span>`:''}
+        <span class="p-final col-price">R$ ${fmt(precoFinal)}</span>
+        ${temDesc?`<span class="p-desc" style="background:rgba(112,0,255,.1);border-color:rgba(112,0,255,.2);color:#c084fc;">-${p.desconto}%</span>`:''}
+      </div>
+      <button class="btn-add btn-add-col" onclick="addCart('${p.id}','col')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Adicionar
+      </button>
+    </div>
+  </div>`;
+}
+
+// ── Carrinho ────────────────────────────────────────────────────────────────
+window.addCart = (id, tipo) => {
+  if (!carrinhoAtivo) { showToast('Carrinho desativado pelo admin.','warning'); return; }
+
+  let p, preco, nome, img;
+
+  if (tipo==='cardapio') {
+    p = prodAll.find(x=>x.id===id);
+    if (!p) return;
+    const base = p.precoPromocional && p.precoPromocional < p.preco ? p.precoPromocional : p.preco;
+    preco = base * (1 - desconto/100);
+    nome  = p.nome;
+    img   = p.imagem||'';
+  } else {
+    p = pratosCol.find(x=>x.id===id);
+    if (!p) return;
+    preco = p.temDesconto && p.desconto > 0 ? p.preco*(1-p.desconto/100) : p.preco;
+    nome  = p.nome;
+    img   = p.imagem||'';
+  }
+
+  const item = carrinho.find(i=>i.id===id&&i.tipo===tipo);
+  if (item) item.quantidade++;
+  else carrinho.push({ id, nome, preco, img, quantidade:1, tipo });
+  atualizarCarrinho();
+  showToast(`${nome} adicionado!`,'success');
+};
+
+window.incQtd = (id,tipo) => { const i=carrinho.find(x=>x.id===id&&x.tipo===tipo); if(i){i.quantidade++;atualizarCarrinho();} };
+window.decQtd = (id,tipo) => {
+  const i=carrinho.find(x=>x.id===id&&x.tipo===tipo); if(!i) return;
+  if(i.quantidade>1) i.quantidade--;
+  else carrinho=carrinho.filter(x=>!(x.id===id&&x.tipo===tipo));
+  atualizarCarrinho();
+};
+window.rmItem = (id,tipo) => { carrinho=carrinho.filter(x=>!(x.id===id&&x.tipo===tipo)); atualizarCarrinho(); };
+
+function atualizarCarrinho() {
+  const tot  = carrinho.reduce((s,i)=>s+i.preco*i.quantidade,0);
+  const qtd  = carrinho.reduce((s,i)=>s+i.quantidade,0);
+  const disp = Math.max(0,(colab.limite||0)-(colab.gasto||0));
+  const over = tot>disp && carrinho.length>0;
+
+  fabCnt.textContent  = qtd;
+  cartTot.textContent = 'R$ '+fmt(tot);
+  limWarn.classList.toggle('show', over);
+  btnFinal.disabled   = over || !carrinhoAtivo;
+
+  if (!carrinho.length) {
+    cartItemsEl.innerHTML=''; cartEmp.style.display='flex';
+  } else {
+    cartEmp.style.display='none';
+    cartItemsEl.innerHTML = carrinho.map(i=>`
+      <div class="citem">
+        <img src="${i.img||'img/logo.jpg'}" onerror="this.src='img/logo.jpg'">
+        <div class="ci-info">
+          <span class="ci-type ${i.tipo==='col'?'col':'cardapio'}">${i.tipo==='col'?'Exclusivo':'Cardápio'}</span>
+          <div class="ci-nome">${i.nome}</div>
+          <div class="ci-preco">R$ ${fmt(i.preco)} / un</div>
+          <div class="ci-ctrl">
+            <button class="ci-b" onclick="decQtd('${i.id}','${i.tipo}')">−</button>
+            <span class="ci-q">${i.quantidade}</span>
+            <button class="ci-b" onclick="incQtd('${i.id}','${i.tipo}')">+</button>
+          </div>
+        </div>
+        <button class="ci-rm" onclick="rmItem('${i.id}','${i.tipo}')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+        </button>
+      </div>`).join('');
+  }
+}
+
+cartFab.addEventListener('click',  ()=>{ cartDrawer.classList.add('open'); document.body.style.overflow='hidden'; });
+cartOv.addEventListener('click',   fecharCart);
+cartCls.addEventListener('click',  fecharCart);
+function fecharCart() { cartDrawer.classList.remove('open'); document.body.style.overflow=''; }
+
+// ── Finalizar ───────────────────────────────────────────────────────────────
+btnFinal.addEventListener('click', async () => {
+  if (!carrinho.length){ showToast('Carrinho vazio!','warning'); return; }
+  if (!carrinhoAtivo)  { showToast('Carrinho desativado.','error'); return; }
+  const tot  = carrinho.reduce((s,i)=>s+i.preco*i.quantidade,0);
+  const disp = Math.max(0,(colab.limite||0)-(colab.gasto||0));
+  if (tot>disp){ showToast('Limite insuficiente!','error'); return; }
+
+  const obs = $('cartObs').value.trim();
+  showLoading();
+  try {
+    const ref = await addDoc(collection(db,'pedidos_col'),{
+      colaboradorId:   colab.id,
+      colaboradorNome: colab.nome,
+      itens: carrinho.map(i=>({id:i.id, nome:i.nome, quantidade:i.quantidade, preco:i.preco, tipo:i.tipo})),
+      total:    tot,
+      desconto: desconto,
+      observacao: obs,
+      status: 'novo',
+      data:   serverTimestamp()
+    });
+
+    const novoGasto = (colab.gasto||0) + tot;
+    await updateDoc(doc(db,'colaboradores',colab.id),{gasto:novoGasto});
+    colab.gasto = novoGasto;
+    atualizarStats();
+
+    carrinho=[]; $('cartObs').value='';
+    atualizarCarrinho(); fecharCart();
+    hideLoading();
+
+    mNum.textContent='#'+ref.id.substring(0,8).toUpperCase();
+    setProgress('novo');
+    modalWrap.classList.add('open');
+    monitorar(ref.id);
+    showToast('Pedido enviado! ✅','success');
+  } catch(e){ console.error(e); showToast('Erro ao enviar pedido.','error'); hideLoading(); }
+});
+
+function setProgress(status) {
+  const idx=['novo','preparando','pronto'].indexOf(status);
+  ['novo','prep','pron'].forEach((k,i)=>{ $('d-'+k)?.classList.toggle('on',i<=idx); });
+  $('l-prep')?.classList.toggle('on',idx>=1);
+  $('l-pron')?.classList.toggle('on',idx>=2);
+}
+
+function monitorar(pedId) {
+  const r=doc(db,'pedidos_col',pedId);
+  onSnapshot(r,snap=>{
+    if(!snap.exists()) return;
+    const st=snap.data().status;
+    if(modalWrap.classList.contains('open')) setProgress(st);
+    if(st==='pronto') showToast('🎉 Seu pedido está pronto!','success');
+  });
+}
+
+btnFchMod.addEventListener('click', ()=>modalWrap.classList.remove('open'));
+modalWrap.addEventListener('click', e=>{ if(e.target===modalWrap) modalWrap.classList.remove('open'); });
+
+// ── Meus Pedidos ────────────────────────────────────────────────────────────
+function ouvirPedidos() {
+  if (!colab) return;
+  const q=query(collection(db,'pedidos_col'),where('colaboradorId','==',colab.id),orderBy('data','desc'));
+  unsubPed=onSnapshot(q,snap=>{
+    const lista=snap.docs.map(d=>({id:d.id,...d.data()}));
+    $('tabCnt').textContent=lista.length;
+    renderPedidos(lista);
+  });
+}
+
+function renderPedidos(lista) {
+  if(!lista.length){
+    pedList.innerHTML=`<div class="empty">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <h3>Nenhum pedido ainda</h3><p>Seus pedidos aparecerão aqui.</p></div>`;
+    return;
+  }
+  const stLbl={novo:'Novo',preparando:'Preparando',pronto:'Pronto'};
+  pedList.innerHTML=lista.map(p=>{
+    const num  =p.id.substring(0,8).toUpperCase();
+    const hora =p.data?.toDate?p.data.toDate().toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'—';
+    const st   =p.status||'novo';
+    return `<div class="ped-card">
+      <div class="ped-hdr">
+        <span class="ped-num">#${num}</span>
+        <span class="ped-hora">${hora}</span>
+        <span class="ped-st ${st}">${stLbl[st]||st}</span>
+      </div>
+      <div class="ped-itens">${(p.itens||[]).map(i=>`<div class="ped-row"><span class="ped-qty">${i.quantidade}x</span><span class="ped-nome">${i.nome}</span><span style="font-size:.7rem;color:var(--text-m);font-family:'IBM Plex Mono',monospace;">R$ ${fmt(i.preco*i.quantidade)}</span></div>`).join('')}</div>
+      ${p.observacao?`<div class="ped-obs">📝 ${p.observacao}</div>`:''}
+      <div class="ped-tot"><span>Total (c/ descontos)</span><strong>R$ ${fmt(p.total||0)}</strong></div>
+    </div>`;
+  }).join('');
+}
+
+// ── Stats ───────────────────────────────────────────────────────────────────
+function atualizarStats() {
+  const lim =colab.limite||0, gas=colab.gasto||0;
+  const disp=Math.max(0,lim-gas), pct=lim>0?Math.min(100,(gas/lim)*100):0;
+  $('sLimite').textContent='R$ '+fmt(lim);
+  $('sGasto').textContent ='R$ '+fmt(gas);
+  $('sDisp').textContent  ='R$ '+fmt(disp);
+  $('sDesc').textContent  =desconto+'%';
+  $('lbarTxt').textContent=`R$ ${fmt(gas)} / R$ ${fmt(lim)}`;
+  const fill=$('lbarFill');
+  fill.style.width=pct+'%';
+  fill.className='lbar-fill'+(pct>=100?' d':pct>=80?' w':'');
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  $('panel-'+btn.dataset.tab).classList.add('active');
+}));
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function fmt(v){ return parseFloat(v||0).toFixed(2).replace('.',','); }
+function showLoading(){ loading.classList.add('show'); }
+function hideLoading(){ loading.classList.remove('show'); }
+function showToast(msg,type='success'){
+  toast.textContent=msg; toast.className=`toast ${type} show`;
+  setTimeout(()=>toast.classList.remove('show'),3200);
+}
+</script>
+</body>
+</html>

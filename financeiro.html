@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>X-Food | Relatório Financeiro Colaboradores</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Orbitron:wght@600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --elev: #21262d;
+      --border: #30363d;
+      --border-s: #484f58;
+      --text-p: #c9d1d9;
+      --text-s: #8b949e;
+      --primary: #00ffe0;
+      --purple: #a855f7;
+      --danger: #f85149;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text-p); min-height: 100vh; padding: 40px; }
+
+    .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
+    .title h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+    .title p { color: var(--text-s); font-size: 1rem; margin-top: 5px; }
+    
+    .actions { display: flex; gap: 15px; }
+    button { padding: 10px 20px; font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .btn-print { background: rgba(0,255,224,0.1); color: var(--primary); border: 1px solid var(--primary); }
+    .btn-print:hover { background: rgba(0,255,224,0.2); box-shadow: 0 0 10px rgba(0,255,224,0.3); }
+
+    .filters { margin-bottom: 20px; display: flex; gap: 20px; background: var(--surface); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--text-s); font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+    .form-group input { padding: 8px 12px; font-family: 'IBM Plex Mono', monospace; background: var(--elev); border: 1px solid var(--border); color: var(--text-p); border-radius: 4px; }
+    
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 15px 20px; text-align: left; }
+    th { background: var(--elev); font-family: 'Orbitron', sans-serif; font-size: 0.85rem; letter-spacing: 1px; color: var(--text-s); border-bottom: 2px solid var(--border); text-transform: uppercase; }
+    td { border-bottom: 1px solid var(--border); font-size: 1.1rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+
+    .col-user { font-weight: 700; color: #fff; }
+    .col-cpf { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; color: var(--text-s); }
+    .val { font-family: 'IBM Plex Mono', monospace; font-weight: bold; }
+    .val.limite { color: var(--text-p); }
+    .val.gasto { color: var(--danger); }
+    .val.saldo { color: var(--primary); }
+
+    .loading { text-align: center; padding: 40px; font-size: 1.2rem; color: var(--text-s); }
+
+    /* Estilos exclusivos para Impressão / PDF */
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .header { border-bottom-color: #ccc; }
+      .title h1 { color: #000; }
+      .actions, .filters { display: none; }
+      table { border-color: #ccc; }
+      th { background: #f0f0f0; color: #333; border-bottom-color: #aaa; }
+      td, tr { border-bottom-color: #eee; }
+      .col-user, .val.limite, .val.gasto, .val.saldo { color: #000; }
+      .col-cpf { color: #555; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">
+      <h1>Relatório de Consumo Diário/Mensal</h1>
+      <p id="subTitle">Carregando dados dos colaboradores...</p>
+    </div>
+    <div class="actions">
+      <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="form-group">
+      <label>Mês de Referência (YYYY-MM)</label>
+      <input type="month" id="inMesRef">
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button class="btn-print" id="btnBuscar" style="padding: 9px 15px; font-size: 0.9rem;">Filtrar</button>
+    </div>
+  </div>
+
+  <table id="tabelaFin">
+    <thead>
+      <tr>
+        <th>Colaborador</th>
+        <th>CPF</th>
+        <th>Limite Total</th>
+        <th>Total Gasto</th>
+        <th>Saldo Disponível</th>
+      </tr>
+    </thead>
+    <tbody id="listaFin">
+      <tr><td colspan="5" class="loading">Sincronizando com o banco de dados...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Conecta ao JS como módulo -->
+  <script type="module" src="./js/financeiro.js"></script>
+</body>
+</html>
