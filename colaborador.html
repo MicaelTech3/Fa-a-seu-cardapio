@@ -828,7 +828,7 @@ btnFinal.addEventListener('click', async () => {
   const obs = $('cartObs').value.trim();
   showLoading();
   try {
-    const ref = await addDoc(collection(db,'pedidos_col'),{
+      const ref = await addDoc(collection(db,'pedidos_col'),{
       colaboradorId:   colab.id,
       colaboradorNome: colab.nome,
       itens: carrinho.map(i=>({id:i.id, nome:i.nome, quantidade:i.quantidade, preco:i.preco, tipo:i.tipo})),
@@ -838,11 +838,8 @@ btnFinal.addEventListener('click', async () => {
       status: 'novo',
       data:   serverTimestamp()
     });
-
-    const novoGasto = (colab.gasto||0) + tot;
-    await updateDoc(doc(db,'colaboradores',colab.id),{gasto:novoGasto});
-    colab.gasto = novoGasto;
-    atualizarStats();
+    // O débito no gasto do colaborador agora só ocorre quando o ADMIN aceitar o pedido (no admin.js)
+    // Aqui apenas registramos o pedido como "novo" sem descontar o limite ainda
 
     carrinho=[]; $('cartObs').value='';
     atualizarCarrinho(); fecharCart();

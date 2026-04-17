@@ -379,10 +379,12 @@ function injetarEstilosExtras() {
     .pedcol-status.novo{background:rgba(0,255,224,.08);color:var(--primary);border:1px solid rgba(0,255,224,.2);}
     .pedcol-status.preparando{background:rgba(255,230,0,.08);color:var(--accent-gold,#ffe600);border:1px solid rgba(255,230,0,.2);}
     .pedcol-status.pronto{background:rgba(0,255,136,.08);color:var(--success);border:1px solid rgba(0,255,136,.2);}
+    .pedcol-status.aceito{background:rgba(59,130,246,.08);color:#60a5fa;border:1px solid rgba(59,130,246,.2);}
     .pedcol-items{margin-bottom:10px;}
     .pedcol-item-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.85rem;}
     .pedcol-item-row:last-child{border-bottom:none;}
     .pedcol-desconto-tag{font-size:.7rem;color:#f97316;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);padding:2px 8px;border-radius:20px;margin-bottom:8px;display:inline-block;}
+    .pedcol-pendente-tag{font-size:.7rem;color:#facc15;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.2);padding:2px 8px;border-radius:20px;margin-bottom:8px;display:inline-block;}
     .pedcol-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;}
     .pedcol-total{font-family:'IBM Plex Mono',monospace;color:var(--primary);font-size:1rem;}
 
@@ -398,6 +400,36 @@ function injetarEstilosExtras() {
     .modal-extra-content h2{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary);margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border);}
     .modal-extra-close{position:absolute;top:16px;right:16px;background:rgba(255,0,106,.08);border:1px solid rgba(255,0,106,.2);cursor:pointer;padding:7px;border-radius:var(--radius-sm);transition:all .2s;color:rgba(255,0,106,.7);display:flex;align-items:center;justify-content:center;width:32px;height:32px;}
     .modal-extra-close:hover{background:rgba(255,0,106,.2);color:#ff006a;transform:rotate(90deg);}
+
+    /* ── Histórico por Mês ── */
+    .mes-modal-wrap{position:fixed;inset:0;z-index:3000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+    .mes-modal-wrap.active{display:flex;}
+    .mes-modal-overlay{position:fixed;inset:0;background:rgba(0,0,8,.85);backdrop-filter:blur(8px);z-index:0;}
+    .mes-modal-box{position:relative;z-index:1;background:linear-gradient(145deg,var(--bg-surface,#07041a),var(--bg-elevated,#0e0926));border:1px solid rgba(0,255,224,.2);border-radius:10px;padding:28px;width:100%;max-width:780px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.8);}
+    .mes-modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary,#00ffe0),var(--secondary,#7000ff),transparent);border-radius:10px 10px 0 0;}
+    .mes-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+    .mes-modal-title{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary,#00ffe0);}
+    .mes-modal-close{background:rgba(255,0,106,.08);border:1px solid rgba(255,0,106,.2);cursor:pointer;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,0,106,.7);font-size:1rem;transition:all .2s;}
+    .mes-modal-close:hover{background:rgba(255,0,106,.2);color:#ff006a;transform:rotate(90deg);}
+    .mes-tabs-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+    .mes-tab-btn{padding:7px 16px;background:var(--bg-base,#02000a);border:1px solid var(--border);border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted,#505868);cursor:pointer;transition:all .18s;}
+    .mes-tab-btn:hover{border-color:rgba(0,255,224,.3);color:var(--text-primary);}
+    .mes-tab-btn.active{background:rgba(0,255,224,.08);border-color:rgba(0,255,224,.4);color:var(--primary,#00ffe0);}
+    .mes-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+    .mes-summary-card{background:var(--bg-base,#02000a);border:1px solid var(--border);border-radius:8px;padding:14px 16px;text-align:center;}
+    .mes-summary-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px;}
+    .mes-summary-val{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--text-primary);}
+    .mes-summary-val.teal{color:var(--primary,#00ffe0);}
+    .mes-summary-val.gold{color:#ffe600;}
+    .mes-ped-card{background:var(--bg-base,#02000a);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;transition:border-color .18s;}
+    .mes-ped-card:hover{border-color:rgba(0,255,224,.2);}
+    .mes-ped-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+    .mes-ped-num{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--text-primary);}
+    .mes-ped-colab{font-size:.7rem;color:var(--text-muted);}
+    .mes-ped-items{font-size:.8rem;color:var(--text-secondary,rgba(224,255,248,.6));margin-bottom:6px;line-height:1.7;}
+    .mes-ped-footer{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;}
+    .mes-ped-total{font-family:'IBM Plex Mono',monospace;color:var(--primary,#00ffe0);font-weight:700;}
+    .mes-empty{text-align:center;padding:40px;color:var(--text-muted);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;}
     `;
     document.head.appendChild(s);
 }
@@ -908,7 +940,6 @@ window.salvarColab = async function() {
         if (desconto !== null) dados.desconto = desconto; else dados.desconto = null;
 
         if (editandoColab) {
-            const c = colaboradores.find(x=>x.id===editandoColab);
             await updateDoc(doc(db,'colaboradores',editandoColab), dados);
         } else {
             dados.gasto = 0;
@@ -1143,7 +1174,10 @@ function renderizarPedidosCols() {
     sec.innerHTML = `
     <div class="section-header">
         <h1>Pedidos Colaboradores</h1>
-        <button class="btn-danger" onclick="limparTodosPedidosCols()">🗑️ Limpar Todos</button>
+        <!-- ✅ MUDANÇA 3: Botão "Todos os Meses" no lugar do "Limpar Todos" -->
+        <button class="btn-secondary" onclick="abrirHistoricoMeses()" style="display:inline-flex;align-items:center;gap:6px;">
+            📅 Todos os Meses
+        </button>
     </div>
     <div class="orders-filter" id="pedColFilters">
         ${['all','novo','aceito','preparando','pronto'].map(s=>`
@@ -1166,6 +1200,8 @@ window.filtrarPedidosCols = function(status) {
     el.innerHTML = lista.map(pd => {
         const data = pd.data ? new Date(pd.data.seconds*1000).toLocaleString('pt-BR') : '—';
         const st   = pd.status || 'novo';
+        // ✅ MUDANÇA 1: tag "aguardando débito" quando pedido ainda não foi aceito
+        const pendente = (st === 'novo');
         return `
         <div class="pedcol-card">
             <div class="pedcol-header">
@@ -1176,6 +1212,7 @@ window.filtrarPedidosCols = function(status) {
                 <span class="pedcol-status ${st}">${st}</span>
             </div>
             ${pd.desconto>0 ? `<span class="pedcol-desconto-tag">🏷️ Desconto de ${pd.desconto}% aplicado</span>` : ''}
+            ${pendente ? `<span class="pedcol-pendente-tag">⏳ Aguardando confirmação — valor ainda não debitado</span>` : ''}
             <div class="pedcol-items">
                 ${(pd.itens||[]).map(it=>`
                     <div class="pedcol-item-row">
@@ -1191,35 +1228,182 @@ window.filtrarPedidosCols = function(status) {
                     ${st==='novo'       ? `<button class="btn-status info"       onclick="atualizarStatusPedCol('${pd.id}','aceito')">Aceitar</button>` : ''}
                     ${st==='aceito'     ? `<button class="btn-status preparando" onclick="atualizarStatusPedCol('${pd.id}','preparando')">Iniciar Preparo</button>` : ''}
                     ${st==='preparando' ? `<button class="btn-status pronto"     onclick="atualizarStatusPedCol('${pd.id}','pronto')">Marcar Pronto</button>` : ''}
-                    ${st==='novo'       ? `<button class="btn-status danger"     onclick="excluirPedidoCol('${pd.id}')">Excluir</button>` : ''}
+                    ${st==='novo'       ? `<button class="btn-status danger"     onclick="cancelarPedidoCol('${pd.id}')">Cancelar</button>` : ''}
                 </div>
             </div>
         </div>`;
     }).join('');
 }
 
+// ✅ MUDANÇA 1: ao aceitar → debita o gasto do colaborador
 window.atualizarStatusPedCol = async function(id, s) {
-    try { await updateDoc(doc(db,'pedidos_col',id), {status:s, dataAtualizacao:serverTimestamp()}); showToast(`Pedido ${s}!`,'success'); }
-    catch { showToast('Erro','error'); }
+    try {
+        const pedido = pedidosCols.find(p => p.id === id);
+        await updateDoc(doc(db,'pedidos_col',id), {status:s, dataAtualizacao:serverTimestamp()});
+
+        // Débito acontece apenas ao ACEITAR
+        if (s === 'aceito' && pedido && pedido.colaboradorId) {
+            const colabRef = doc(db,'colaboradores', pedido.colaboradorId);
+            const colabSnap = await getDoc(colabRef);
+            if (colabSnap.exists()) {
+                const gastoAtual = colabSnap.data().gasto || 0;
+                await updateDoc(colabRef, { gasto: gastoAtual + (pedido.total || 0) });
+            }
+        }
+
+        showToast(`Pedido ${s}!`,'success');
+    } catch { showToast('Erro','error'); }
 };
 
-window.excluirPedidoCol = async function(id) {
-    if (!confirm('Excluir?')) return;
-    try { showLoading(); await deleteDoc(doc(db,'pedidos_col',id)); showToast('Excluído!','success'); hideLoading(); }
-    catch { showToast('Erro','error'); hideLoading(); }
-};
-
-window.limparTodosPedidosCols = async function() {
-    if (!confirm('Excluir TODOS os pedidos de colaboradores?')) return;
-    if (!confirm('Confirme novamente.')) return;
+// ✅ MUDANÇA 1: cancelar pedido NÃO reverte gasto (pois nunca foi debitado)
+window.cancelarPedidoCol = async function(id) {
+    if (!confirm('Cancelar este pedido? O valor não será debitado do colaborador.')) return;
     try {
         showLoading();
-        const snap = await getDocs(collection(db,'pedidos_col'));
-        await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'pedidos_col',d.id))));
-        showToast(`${snap.size} pedidos excluídos!`,'success');
+        await deleteDoc(doc(db,'pedidos_col',id));
+        showToast('Pedido cancelado!','info');
         hideLoading();
     } catch { showToast('Erro','error'); hideLoading(); }
 };
+
+// ─── HISTÓRICO POR MÊS ────────────────────────────────────────────────────────
+// ✅ MUDANÇA 3: modal de histórico agrupado por mês
+let mesSelecionado = null;
+
+window.abrirHistoricoMeses = function() {
+    garantirModalHistoricoMeses();
+    const modal = document.getElementById('mesModal');
+    modal.classList.add('active');
+    renderizarMesTabs();
+};
+
+function garantirModalHistoricoMeses() {
+    if (document.getElementById('mesModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `
+    <div class="mes-modal-wrap" id="mesModal">
+        <div class="mes-modal-overlay" id="mesModalOverlay"></div>
+        <div class="mes-modal-box">
+            <div class="mes-modal-header">
+                <span class="mes-modal-title">📅 Histórico por Mês</span>
+                <button class="mes-modal-close" onclick="fecharHistoricoMeses()">✕</button>
+            </div>
+            <div class="mes-tabs-nav" id="mesTabs"></div>
+            <div id="mesConteudo"></div>
+        </div>
+    </div>`;
+    document.body.appendChild(div.firstElementChild);
+    document.getElementById('mesModalOverlay').addEventListener('click', fecharHistoricoMeses);
+}
+
+window.fecharHistoricoMeses = function() {
+    document.getElementById('mesModal')?.classList.remove('active');
+};
+
+function getMesKey(pedido) {
+    if (!pedido.data) return 'Sem data';
+    const d = new Date(pedido.data.seconds * 1000);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function getMesLabel(key) {
+    if (key === 'Sem data') return 'Sem data';
+    const [ano, mes] = key.split('-');
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    return `${meses[parseInt(mes)-1]} ${ano}`;
+}
+
+function renderizarMesTabs() {
+    // Agrupa todos os pedidos por mês (apenas aceitos/preparando/pronto, ou seja, confirmados)
+    const todosPedidos = [...pedidosCols]; // inclui todos os status para o histórico
+    const meses = {};
+    todosPedidos.forEach(p => {
+        const k = getMesKey(p);
+        if (!meses[k]) meses[k] = [];
+        meses[k].push(p);
+    });
+
+    const chaves = Object.keys(meses).sort().reverse(); // mais recente primeiro
+
+    if (!chaves.length) {
+        document.getElementById('mesTabs').innerHTML = '';
+        document.getElementById('mesConteudo').innerHTML = `<div class="mes-empty">Nenhum pedido encontrado.</div>`;
+        return;
+    }
+
+    // Se não há mês selecionado, usa o mais recente
+    if (!mesSelecionado || !meses[mesSelecionado]) {
+        mesSelecionado = chaves[0];
+    }
+
+    document.getElementById('mesTabs').innerHTML = chaves.map(k => `
+        <button class="mes-tab-btn ${mesSelecionado===k?'active':''}" onclick="window.selecionarMes('${k}')">
+            ${getMesLabel(k)}
+            <span style="background:rgba(0,255,224,.1);color:var(--primary,#00ffe0);border-radius:10px;padding:1px 7px;font-size:.62rem;margin-left:4px;">${meses[k].length}</span>
+        </button>`).join('');
+
+    renderizarConteudoMes(meses[mesSelecionado] || []);
+}
+
+window.selecionarMes = function(key) {
+    mesSelecionado = key;
+    renderizarMesTabs();
+};
+
+function renderizarConteudoMes(lista) {
+    const el = document.getElementById('mesConteudo');
+    if (!lista.length) {
+        el.innerHTML = `<div class="mes-empty">Nenhum pedido neste mês.</div>`;
+        return;
+    }
+
+    // Apenas pedidos confirmados (aceitos, preparando ou prontos) contam no total financeiro
+    const confirmados = lista.filter(p => ['aceito','preparando','pronto'].includes(p.status));
+    const totalPedidos = lista.length;
+    const totalConfirmados = confirmados.length;
+    const totalValor = confirmados.reduce((s,p) => s+(p.total||0), 0);
+
+    el.innerHTML = `
+    <div class="mes-summary">
+        <div class="mes-summary-card">
+            <div class="mes-summary-label">Total Pedidos</div>
+            <div class="mes-summary-val">${totalPedidos}</div>
+        </div>
+        <div class="mes-summary-card">
+            <div class="mes-summary-label">Confirmados</div>
+            <div class="mes-summary-val teal">${totalConfirmados}</div>
+        </div>
+        <div class="mes-summary-card">
+            <div class="mes-summary-label">Valor Debitado</div>
+            <div class="mes-summary-val gold">R$ ${fmt(totalValor)}</div>
+        </div>
+    </div>
+    ${lista.map(pd => {
+        const data = pd.data ? new Date(pd.data.seconds*1000).toLocaleString('pt-BR') : '—';
+        const st = pd.status || 'novo';
+        const confirmado = ['aceito','preparando','pronto'].includes(st);
+        return `
+        <div class="mes-ped-card">
+            <div class="mes-ped-header">
+                <div>
+                    <div class="mes-ped-num">#${pd.id.substring(0,8).toUpperCase()}</div>
+                    <div class="mes-ped-colab">👤 ${pd.colaboradorNome||'—'} · ${data}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="pedcol-status ${st}" style="font-size:.6rem;">${st}</span>
+                    ${!confirmado ? `<span style="font-size:.6rem;color:#facc15;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.2);padding:2px 7px;border-radius:4px;">não debitado</span>` : ''}
+                </div>
+            </div>
+            <div class="mes-ped-items">
+                ${(pd.itens||[]).map(it=>`${it.quantidade}x ${it.nome}`).join(' · ')}
+            </div>
+            <div class="mes-ped-footer">
+                <span class="mes-ped-total">R$ ${fmt(pd.total||0)}</span>
+                ${pd.observacao ? `<span style="font-size:.72rem;color:var(--text-muted);font-style:italic;">📝 ${pd.observacao}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('')}`;
+}
 
 // ─── PAGES ────────────────────────────────────────────────────────────────────
 function renderizarPages() {
@@ -1649,6 +1833,7 @@ window.renderizarPedidosColNaAbaPrincipal = function() {
     el.innerHTML = lista.map(pd => {
         const data = pd.data ? new Date(pd.data.seconds*1000).toLocaleString('pt-BR') : '—';
         const st   = pd.status || 'novo';
+        const pendente = (st === 'novo');
         return `
         <div class="pedcol-card">
             <div class="pedcol-header">
@@ -1659,6 +1844,7 @@ window.renderizarPedidosColNaAbaPrincipal = function() {
                 <span class="pedcol-status ${st}">${st}</span>
             </div>
             ${pd.desconto>0 ? `<span class="pedcol-desconto-tag">🏷️ Desconto de ${pd.desconto}% aplicado</span>` : ''}
+            ${pendente ? `<span class="pedcol-pendente-tag">⏳ Aguardando confirmação — valor ainda não debitado</span>` : ''}
             <div class="pedcol-items">
                 ${(pd.itens||[]).map(it=>`
                     <div class="pedcol-item-row">
@@ -1674,7 +1860,7 @@ window.renderizarPedidosColNaAbaPrincipal = function() {
                     ${st==='novo'       ? `<button class="btn-status info"       onclick="atualizarStatusPedCol('${pd.id}','aceito')">Aceitar</button>` : ''}
                     ${st==='aceito'     ? `<button class="btn-status preparando" onclick="atualizarStatusPedCol('${pd.id}','preparando')">Iniciar Preparo</button>` : ''}
                     ${st==='preparando' ? `<button class="btn-status pronto"     onclick="atualizarStatusPedCol('${pd.id}','pronto')">Marcar Pronto</button>` : ''}
-                    ${st==='novo'       ? `<button class="btn-status danger"     onclick="excluirPedidoCol('${pd.id}')">Excluir</button>` : ''}
+                    ${st==='novo'       ? `<button class="btn-status danger"     onclick="cancelarPedidoCol('${pd.id}')">Cancelar</button>` : ''}
                 </div>
             </div>
         </div>`;
