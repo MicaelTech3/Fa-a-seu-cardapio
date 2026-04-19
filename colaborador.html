@@ -174,8 +174,8 @@
 
     /* drawer */
     .cart-drawer{position:fixed;inset:0;z-index:400;display:flex;justify-content:flex-end;pointer-events:none;}
-    .cart-ov{position:absolute;inset:0;background:rgba(2,0,10,.75);opacity:0;transition:opacity .3s;}
-    .cart-panel{position:relative;z-index:1;width:100%;max-width:420px;background:var(--bg-surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+    .cart-ov{position:absolute;inset:0;background:rgba(2,0,10,.75);opacity:0;transition:opacity .3s;z-index:1;}
+    .cart-panel{position:relative;z-index:10;width:100%;max-width:420px;background:var(--bg-surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
     .cart-drawer.open .cart-ov{opacity:1;pointer-events:all;}
     .cart-drawer.open .cart-panel{transform:translateX(0);pointer-events:all;}
     .cart-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -210,7 +210,7 @@
     .cart-tot strong{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--text-p);}
     .lim-warn{margin-bottom:10px;padding:10px 14px;background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.3);border-radius:var(--r-sm);color:var(--danger);font-size:.78rem;font-weight:700;display:none;}
     .lim-warn.show{display:block;}
-    .btn-finalizar{width:100%;padding:13px;background:linear-gradient(135deg,rgba(0,255,224,.15),rgba(112,0,255,.15));color:var(--primary);border:1px solid rgba(0,255,224,.4);border-radius:var(--r-sm);font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:var(--t);}
+    .btn-finalizar{width:100%;padding:13px;background:linear-gradient(135deg,rgba(0,255,224,.15),rgba(112,0,255,.15));color:var(--primary);border:1px solid rgba(0,255,224,.4);border-radius:var(--r-sm);font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;}
     .btn-finalizar:hover{background:linear-gradient(135deg,rgba(0,255,224,.22),rgba(112,0,255,.22));box-shadow:var(--glow);}
     .btn-finalizar:disabled{opacity:.4;cursor:not-allowed;}
 
@@ -259,8 +259,8 @@
     .btn-mfch:hover{background:rgba(0,255,224,.16);}
 
     /* toast */
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-elev);border:1px solid var(--border-s);color:var(--text-p);padding:12px 20px;border-radius:var(--r);box-shadow:var(--shadow-lg);z-index:1000;transform:translateY(12px);opacity:0;transition:all .3s ease;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Rajdhani',sans-serif;}
-    .toast.show{transform:translateY(0);opacity:1;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-elev);border:1px solid var(--border-s);color:var(--text-p);padding:12px 20px;border-radius:var(--r);box-shadow:var(--shadow-lg);z-index:1000;transform:translateY(12px);opacity:0;pointer-events:none;transition:all .3s ease;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Rajdhani',sans-serif;}
+    .toast.show{transform:translateY(0);opacity:1;pointer-events:auto;}
     .toast.success{border-color:var(--success);color:var(--success);background:rgba(0,255,136,.1);}
     .toast.error  {border-color:var(--danger); color:var(--danger); background:rgba(255,23,68,.1);}
     .toast.info   {border-color:var(--primary);color:var(--primary);background:rgba(0,255,224,.08);}
@@ -788,6 +788,13 @@ function atualizarCarrinho() {
   limWarn.classList.toggle('show', over);
   btnFinal.disabled   = over || !carrinhoAtivo;
 
+  // Controle de visibilidade do FAB
+  if (carrinhoAtivo && !cartDrawer.classList.contains('open')) {
+    cartFab.style.display = 'flex';
+  } else if (!carrinhoAtivo) {
+    cartFab.style.display = 'none';
+  }
+
   if (!carrinho.length) {
     cartItemsEl.innerHTML=''; cartEmp.style.display='flex';
   } else {
@@ -812,10 +819,10 @@ function atualizarCarrinho() {
   }
 }
 
-cartFab.addEventListener('click',  ()=>{ cartDrawer.classList.add('open'); document.body.style.overflow='hidden'; });
+cartFab.addEventListener('click',  ()=>{ cartDrawer.classList.add('open'); document.body.style.overflow='hidden'; cartFab.style.display='none'; });
 cartOv.addEventListener('click',   fecharCart);
 cartCls.addEventListener('click',  fecharCart);
-function fecharCart() { cartDrawer.classList.remove('open'); document.body.style.overflow=''; }
+function fecharCart() { cartDrawer.classList.remove('open'); document.body.style.overflow=''; if(carrinhoAtivo) cartFab.style.display='flex'; }
 
 // ── Finalizar ───────────────────────────────────────────────────────────────
 btnFinal.addEventListener('click', async () => {

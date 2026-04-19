@@ -61,7 +61,10 @@ let configuracoes = { ...DEFAULTS_GLOBAIS };
 let configColaborador = {
     desconto: 35,
     carrinhoAtivo: true,
-    limiteDefault: 0
+    limiteDefault: 0,
+    autoResetAtivo: false,
+    autoResetData: '',
+    autoResetUltimaExecucao: ''
 };
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -125,19 +128,31 @@ function setupEventListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             const sec = item.dataset.section;
-            abaAtiva = sec;
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
-            contentSections.forEach(s => s.classList.remove('active'));
-            document.getElementById('section'+capitalize(sec))?.classList.add('active');
-            if (sec==='dashboard')          atualizarDashboard();
-            else if (sec==='configuracoes') renderizarConfiguracoes();
-            else if (sec==='pages')         renderizarPages();
-            else if (sec==='produtos')      renderizarFiltrosCategorias();
-            else if (sec==='colaboradores') renderizarColaboradores();
-            else if (sec==='pratosCols')    renderizarPratosCol();
-            else if (sec==='pedidosCols')   renderizarPedidosCols();
-            else if (sec==='configCols')    renderizarConfigCols();
+
+            const executarNavegacao = () => {
+                abaAtiva = sec;
+                navItems.forEach(n => n.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                // Remove active de TODAS as seções, incluindo as criadas dinamicamente
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                document.getElementById('section'+capitalize(sec))?.classList.add('active');
+                if (sec==='dashboard')          atualizarDashboard();
+                else if (sec==='configuracoes') renderizarConfiguracoes();
+                else if (sec==='pages')         renderizarPages();
+                else if (sec==='produtos')      renderizarFiltrosCategorias();
+                else if (sec==='colaboradores') renderizarColaboradores();
+                else if (sec==='pratosCols')    renderizarPratosCol();
+                else if (sec==='pedidosCols')   renderizarPedidosCols();
+                else if (sec==='configCols')    renderizarConfigCols();
+            };
+
+            // ── Senha obrigatória para Configurações ──────────────────────────
+            if (sec === 'configuracoes') {
+                pedirSenhaAdmin('Configurações', executarNavegacao);
+            } else {
+                executarNavegacao();
+            }
         });
     });
     btnAddProduct.addEventListener('click', () => abrirModalProduto());
@@ -160,6 +175,111 @@ function setupEventListeners() {
     });
     productModal.addEventListener('click',  e => { if (e.target===productModal)  fecharModalProduto(); });
     categoryModal.addEventListener('click', e => { if (e.target===categoryModal) fecharModalCategoria(); });
+}
+
+// ─── Modal de Senha Administrativa (com olho) ────────────────────────────────
+function garantirModalSenhaAdmin() {
+    if (document.getElementById('adminPwModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `
+    <div id="adminPwModal" style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,8,.88);backdrop-filter:blur(10px);">
+        <div style="background:linear-gradient(145deg,var(--bg-surface,#0e0b1a),var(--bg-elevated,#1a1e28));border:1px solid var(--border-strong,rgba(255,255,255,.15));border-radius:14px;padding:32px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.8);animation:scaleIn .22s cubic-bezier(.34,1.56,.64,1);">
+            <div style="font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary,#00ffe0);margin-bottom:8px;">🔒 Senha Administrativa</div>
+            <div id="adminPwTitulo" style="font-size:.82rem;color:var(--text-muted,#8892a4);margin-bottom:22px;line-height:1.5;"></div>
+            <div style="position:relative;display:flex;align-items:center;">
+                <input id="adminPwInput" type="password" autocomplete="off" placeholder="Digite a senha…"
+                    style="width:100%;padding:11px 46px 11px 14px;background:var(--bg-base,#02000a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:8px;color:var(--text-primary,#f0f2f7);font-family:inherit;font-size:.92rem;outline:none;box-sizing:border-box;transition:border-color .18s;"
+                    onfocus="this.style.borderColor='var(--primary,#00ffe0)'"
+                    onblur="this.style.borderColor=document.getElementById('adminPwErro').style.display==='block'?'#f87171':'var(--border,rgba(255,255,255,.1))'">
+                <button id="adminPwEyeBtn" type="button" title="Mostrar/ocultar senha"
+                    style="position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--text-muted,#505868);padding:4px;display:flex;align-items:center;transition:color .18s;"
+                    onmouseover="this.style.color='var(--primary,#00ffe0)'"
+                    onmouseout="this.style.color='var(--text-muted,#505868)'"
+                    onclick="window._adminPwToggleEye()">
+                    <svg id="adminPwEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="adminPwErro" style="display:none;font-size:.75rem;color:#f87171;margin-top:8px;padding:6px 10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:6px;">❌ Senha incorreta. Tente novamente.</div>
+            <div style="display:flex;gap:10px;margin-top:22px;">
+                <button onclick="window._adminPwCancelar()"
+                    style="flex:1;padding:10px 0;background:transparent;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:8px;color:var(--text-muted,#8892a4);font-family:inherit;font-size:.85rem;cursor:pointer;transition:all .18s;"
+                    onmouseover="this.style.background='rgba(255,255,255,.04)';this.style.color='var(--text-primary,#f0f2f7)'"
+                    onmouseout="this.style.background='transparent';this.style.color='var(--text-muted,#8892a4)'">
+                    Cancelar
+                </button>
+                <button onclick="window._adminPwConfirmar()"
+                    style="flex:1;padding:10px 0;background:var(--primary,#00ffe0);border:none;border-radius:8px;color:#000;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .18s;"
+                    onmouseover="this.style.opacity='.82'"
+                    onmouseout="this.style.opacity='1'">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(div.firstElementChild);
+    document.getElementById('adminPwInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter')  window._adminPwConfirmar();
+        if (e.key === 'Escape') window._adminPwCancelar();
+    });
+}
+
+let _adminPwCallback = null;
+
+window._adminPwToggleEye = function() {
+    const inp  = document.getElementById('adminPwInput');
+    const icon = document.getElementById('adminPwEyeIcon');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+        inp.type = 'password';
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+    inp.focus();
+};
+
+window._adminPwConfirmar = function() {
+    const val = document.getElementById('adminPwInput').value;
+    if (val !== 'Sabactani1#') {
+        const erro = document.getElementById('adminPwErro');
+        const inp  = document.getElementById('adminPwInput');
+        erro.style.display = 'block';
+        inp.style.borderColor = '#f87171';
+        inp.select();
+        return;
+    }
+    _adminPwFechar();
+    if (typeof _adminPwCallback === 'function') { const cb = _adminPwCallback; _adminPwCallback = null; cb(); }
+};
+
+window._adminPwCancelar = function() {
+    _adminPwFechar();
+    _adminPwCallback = null;
+    if (typeof showToast === 'function') showToast('Operação cancelada', 'info');
+};
+
+function _adminPwFechar() {
+    const modal = document.getElementById('adminPwModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    const inp  = document.getElementById('adminPwInput');
+    const icon = document.getElementById('adminPwEyeIcon');
+    inp.value = '';
+    inp.type  = 'password';
+    inp.style.borderColor = 'var(--border,rgba(255,255,255,.1))';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    document.getElementById('adminPwErro').style.display = 'none';
+}
+
+function pedirSenhaAdmin(titulo, callback) {
+    garantirModalSenhaAdmin();
+    _adminPwCallback = callback;
+    document.getElementById('adminPwTitulo').textContent = `Acesso necessário para: ${titulo}`;
+    _adminPwFechar();                                    // limpa estado anterior
+    document.getElementById('adminPwModal').style.display = 'flex'; // reabre
+    setTimeout(() => document.getElementById('adminPwInput')?.focus(), 60);
 }
 
 async function carregarDados() {
@@ -192,7 +312,8 @@ function injetarNavColaboradores() {
         abaAtiva = 'moduloColaborador';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         btn.classList.add('active');
-        contentSections.forEach(s => s.classList.remove('active'));
+        // Remove active de TODAS as seções, incluindo as estáticas e dinâmicas
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
 
         let secId = 'sectionModuloColaborador';
         let sec = document.getElementById(secId);
@@ -227,6 +348,7 @@ window.renderizarModuloColaborador = function() {
                 <button class="config-tab-btn ${abaColabAtiva==='colaboradores'?'active':''}" onclick="window.mudarAbaColab('colaboradores')">👥 Membros</button>
                 <button class="config-tab-btn ${abaColabAtiva==='pratosCols'?'active':''}" onclick="window.mudarAbaColab('pratosCols')">🍽️ Pratos</button>
                 <button class="config-tab-btn ${abaColabAtiva==='pedidosCols'?'active':''}" onclick="window.mudarAbaColab('pedidosCols')">📋 Pedidos</button>
+                <button class="config-tab-btn ${abaColabAtiva==='relatorios'?'active':''}" onclick="window.mudarAbaColab('relatorios')">📊 Relatórios</button>
                 <button class="config-tab-btn ${abaColabAtiva==='configCols'?'active':''}" onclick="window.mudarAbaColab('configCols')">⚙️ Configurações</button>
             </div>
             <div id="colabSubContent" style="margin-top:20px;"></div>
@@ -236,24 +358,26 @@ window.renderizarModuloColaborador = function() {
     if (abaColabAtiva === 'colaboradores') renderizarColaboradores();
     else if (abaColabAtiva === 'pratosCols') renderizarPratosCol();
     else if (abaColabAtiva === 'pedidosCols') renderizarPedidosCols();
+    else if (abaColabAtiva === 'relatorios') renderizarRelatorios();
     else if (abaColabAtiva === 'configCols') renderizarConfigCols();
 };
 
 window.mudarAbaColab = function(aba) {
-    if (aba === 'configCols') {
-        const pw = prompt('Digite a senha administrativa para acessar as Configurações:');
-        if (pw !== 'excdadm') {
-            if (typeof showToast === 'function') showToast('Senha incorreta', 'error');
-            return;
-        }
+    const _aplicar = () => {
+        abaColabAtiva = aba;
+        window.renderizarModuloColaborador();
+        const btns = document.querySelectorAll('#sectionModuloColaborador .config-tab-btn');
+        btns.forEach(b => {
+            b.classList.remove('active');
+            if(b.getAttribute('onclick').includes(aba)) b.classList.add('active');
+        });
+    };
+    if (aba === 'configCols' || aba === 'relatorios') {
+        const label = aba === 'relatorios' ? 'Relatórios do Colaborador' : 'Configurações do Colaborador';
+        pedirSenhaAdmin(label, _aplicar);
+    } else {
+        _aplicar();
     }
-    abaColabAtiva = aba;
-    window.renderizarModuloColaborador();
-    const btns = document.querySelectorAll('#sectionModuloColaborador .config-tab-btn');
-    btns.forEach(b => {
-        b.classList.remove('active');
-        if(b.getAttribute('onclick').includes(aba)) b.classList.add('active');
-    });
 };
 
 // ─── ESTILOS EXTRAS ───────────────────────────────────────────────────────────
@@ -718,6 +842,7 @@ async function carregarConfigColaborador() {
     try {
         const snap = await getDoc(doc(db,'config_col','geral'));
         if (snap.exists()) configColaborador = { ...configColaborador, ...snap.data() };
+        iniciarAgendadorAutoReset();
     } catch(e) { console.error(e); }
 }
 
@@ -770,6 +895,30 @@ function renderizarConfigCols() {
     </div>
 
     <div class="config-col-section">
+        <h3 class="config-col-title">🗓️ Reset Automático de Gastos</h3>
+        <div class="config-grid">
+            <div class="config-field full-width">
+                <div class="toggle-row">
+                    <div class="toggle-left">
+                        <strong>⏰ Zerar gastos automaticamente em uma data/hora</strong>
+                        <span>Quando ativado e a data/hora chegar, todos os gastos dos colaboradores serão zerados automaticamente.</span>
+                    </div>
+                    <label class="config-switch">
+                        <input type="checkbox" id="ccAutoResetAtivo" ${ck(cfg.autoResetAtivo===true)} onchange="toggleAutoResetField()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="config-field full-width" id="autoResetDateField" style="display:${cfg.autoResetAtivo ? 'block' : 'none'};">
+                <label>📅 Data e horário do reset</label>
+                <input type="datetime-local" id="ccAutoResetData" value="${cfg.autoResetData||''}" class="config-input" style="max-width:280px;">
+                <small>O reset será executado automaticamente assim que este painel estiver aberto e a data/hora for atingida.</small>
+                ${cfg.autoResetUltimaExecucao ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);border-radius:6px;font-size:.78rem;color:#22c55e;">✅ Último reset executado em: <strong>${new Date(cfg.autoResetUltimaExecucao).toLocaleString('pt-BR')}</strong></div>` : ''}
+            </div>
+        </div>
+    </div>
+
+    <div class="config-col-section">
         <h3 class="config-col-title">📊 Resumo dos Colaboradores</h3>
         ${renderizarResumoColaboradores()}
     </div>`;
@@ -792,16 +941,77 @@ window.salvarConfigColaborador = async function() {
     try {
         showLoading();
         const n = {
-            desconto:      parseFloat(document.getElementById('ccDesconto')?.value || 35),
-            limiteDefault: parseFloat(document.getElementById('ccLimiteDefault')?.value || 0),
-            carrinhoAtivo: document.getElementById('ccCarrinho')?.checked ?? true
+            desconto:              parseFloat(document.getElementById('ccDesconto')?.value || 35),
+            limiteDefault:         parseFloat(document.getElementById('ccLimiteDefault')?.value || 0),
+            carrinhoAtivo:         document.getElementById('ccCarrinho')?.checked ?? true,
+            autoResetAtivo:        document.getElementById('ccAutoResetAtivo')?.checked ?? false,
+            autoResetData:         document.getElementById('ccAutoResetData')?.value || '',
+            autoResetUltimaExecucao: configColaborador.autoResetUltimaExecucao || ''
         };
         await setDoc(doc(db,'config_col','geral'), n);
         configColaborador = n;
+        iniciarAgendadorAutoReset();
         showToast('Config salva!', 'success');
         hideLoading();
     } catch { showToast('Erro ao salvar','error'); hideLoading(); }
 };
+
+// ─── AUTO RESET AGENDADOR ─────────────────────────────────────────────────────
+let autoResetInterval = null;
+
+window.toggleAutoResetField = function() {
+    const ativo = document.getElementById('ccAutoResetAtivo')?.checked;
+    const field = document.getElementById('autoResetDateField');
+    if (field) field.style.display = ativo ? 'block' : 'none';
+};
+
+function iniciarAgendadorAutoReset() {
+    if (autoResetInterval) clearInterval(autoResetInterval);
+    autoResetInterval = setInterval(verificarAutoReset, 30000); // checa a cada 30s
+    verificarAutoReset(); // checa imediatamente ao iniciar/salvar
+}
+
+async function verificarAutoReset() {
+    const cfg = configColaborador;
+    if (!cfg.autoResetAtivo || !cfg.autoResetData) return;
+
+    const agora = new Date();
+    const dataReset = new Date(cfg.autoResetData);
+    if (isNaN(dataReset.getTime())) return;
+
+    // Já executou para esta data/hora?
+    if (cfg.autoResetUltimaExecucao) {
+        const ultimaExec = new Date(cfg.autoResetUltimaExecucao);
+        if (ultimaExec >= dataReset) return; // já executou para esta configuração
+    }
+
+    // Hora chegou?
+    if (agora < dataReset) return;
+
+    try {
+        // Executa o reset
+        if (colaboradores.length) {
+            await Promise.all(colaboradores.map(c => updateDoc(doc(db,'colaboradores',c.id), { gasto: 0 })));
+        }
+
+        // Registra a execução e desativa o agendamento
+        const execTime = agora.toISOString();
+        const novaConfig = { ...cfg, autoResetAtivo: false, autoResetUltimaExecucao: execTime };
+        await setDoc(doc(db,'config_col','geral'), novaConfig);
+        configColaborador = novaConfig;
+
+        showToast(`⏰ Reset automático executado! ${colaboradores.length} colaborador(es) zerado(s).`, 'success');
+
+        // Atualiza UI se a aba estiver aberta
+        if (abaAtiva === 'moduloColaborador' && abaColabAtiva === 'configCols') renderizarConfigCols();
+        if (abaAtiva === 'moduloColaborador' && abaColabAtiva === 'colaboradores') renderizarColaboradores();
+
+        clearInterval(autoResetInterval);
+        autoResetInterval = null;
+    } catch(e) {
+        console.error('Erro no auto reset:', e);
+    }
+}
 
 // ─── COLABORADORES ────────────────────────────────────────────────────────────
 async function carregarColaboradores() {
@@ -821,10 +1031,16 @@ function renderizarColaboradores() {
     sec.innerHTML = `
     <div class="section-header">
         <h1>Colaboradores</h1>
-        <button class="btn-primary" onclick="abrirModalColab()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Novo Colaborador
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn-danger" onclick="zerarTodosGastos()" style="display:inline-flex;align-items:center;gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.17"/></svg>
+                Zerar Todos
+            </button>
+            <button class="btn-primary" onclick="abrirModalColab()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Novo Colaborador
+            </button>
+        </div>
     </div>
     ${!colaboradores.length
         ? `<div style="text-align:center;padding:60px;color:var(--text-muted);">Nenhum colaborador cadastrado.</div>`
@@ -833,6 +1049,19 @@ function renderizarColaboradores() {
 
     garantirModalColab();
 }
+
+window.zerarTodosGastos = async function() {
+    if (!colaboradores.length) { showToast('Nenhum colaborador cadastrado.', 'error'); return; }
+    if (!confirm(`Zerar o gasto de TODOS os ${colaboradores.length} colaboradores?`)) return;
+    pedirSenhaAdmin('Zerar Todos os Gastos', async () => {
+        try {
+            showLoading();
+            await Promise.all(colaboradores.map(c => updateDoc(doc(db, 'colaboradores', c.id), { gasto: 0 })));
+            showToast(`Gasto de ${colaboradores.length} colaborador(es) zerado!`, 'success');
+            hideLoading();
+        } catch { showToast('Erro ao zerar gastos.', 'error'); hideLoading(); }
+    });
+};
 
 function renderColabCard(c) {
     const lim  = c.limite || 0;
@@ -888,33 +1117,33 @@ function garantirModalColab() {
 }
 
 window.abrirModalColab = function() {
-    const pw = prompt('Senha administrativa para criar colaboradores:');
-    if (pw !== 'excdadm') { showToast('Senha incorreta', 'error'); return; }
-    garantirModalColab();
-    editandoColab = null;
-    document.getElementById('colabModalTitle').textContent = 'Novo Colaborador';
-    document.getElementById('colabNome').value   = '';
-    document.getElementById('colabSenha').value  = '';
-    if(document.getElementById('colabCpf')) document.getElementById('colabCpf').value = '';
-    if(document.getElementById('colabDesconto')) document.getElementById('colabDesconto').value = '';
-    document.getElementById('colabLimite').value = configColaborador.limiteDefault || 0;
-    document.getElementById('colabModal').classList.add('active');
+    pedirSenhaAdmin('Novo Colaborador', () => {
+        garantirModalColab();
+        editandoColab = null;
+        document.getElementById('colabModalTitle').textContent = 'Novo Colaborador';
+        document.getElementById('colabNome').value   = '';
+        document.getElementById('colabSenha').value  = '';
+        if(document.getElementById('colabCpf')) document.getElementById('colabCpf').value = '';
+        if(document.getElementById('colabDesconto')) document.getElementById('colabDesconto').value = '';
+        document.getElementById('colabLimite').value = configColaborador.limiteDefault || 0;
+        document.getElementById('colabModal').classList.add('active');
+    });
 };
 
 window.editarColab = function(id) {
-    const pw = prompt('Senha administrativa para editar colaboradores:');
-    if (pw !== 'excdadm') { showToast('Senha incorreta', 'error'); return; }
-    garantirModalColab();
-    const c = colaboradores.find(x => x.id===id);
-    if (!c) return;
-    editandoColab = id;
-    document.getElementById('colabModalTitle').textContent = 'Editar Colaborador';
-    document.getElementById('colabNome').value   = c.nome   || '';
-    document.getElementById('colabSenha').value  = c.senha  || '';
-    if(document.getElementById('colabCpf')) document.getElementById('colabCpf').value = c.cpf || '';
-    if(document.getElementById('colabDesconto')) document.getElementById('colabDesconto').value = c.desconto || '';
-    document.getElementById('colabLimite').value = c.limite || 0;
-    document.getElementById('colabModal').classList.add('active');
+    pedirSenhaAdmin('Editar Colaborador', () => {
+        garantirModalColab();
+        const c = colaboradores.find(x => x.id===id);
+        if (!c) return;
+        editandoColab = id;
+        document.getElementById('colabModalTitle').textContent = 'Editar Colaborador';
+        document.getElementById('colabNome').value   = c.nome   || '';
+        document.getElementById('colabSenha').value  = c.senha  || '';
+        if(document.getElementById('colabCpf')) document.getElementById('colabCpf').value = c.cpf || '';
+        if(document.getElementById('colabDesconto')) document.getElementById('colabDesconto').value = c.desconto || '';
+        document.getElementById('colabLimite').value = c.limite || 0;
+        document.getElementById('colabModal').classList.add('active');
+    });
 };
 
 window.fecharModalColab = function() {
@@ -953,18 +1182,22 @@ window.salvarColab = async function() {
 
 window.resetarGastoColab = async function(id, nome) {
     if (!confirm(`Zerar o gasto de ${nome}?`)) return;
-    try {
-        showLoading();
-        await updateDoc(doc(db,'colaboradores',id), { gasto: 0 });
-        showToast('Gasto zerado!','success');
-        hideLoading();
-    } catch { showToast('Erro','error'); hideLoading(); }
+    pedirSenhaAdmin('Zerar Gasto', async () => {
+        try {
+            showLoading();
+            await updateDoc(doc(db,'colaboradores',id), { gasto: 0 });
+            showToast('Gasto zerado!','success');
+            hideLoading();
+        } catch { showToast('Erro','error'); hideLoading(); }
+    });
 };
 
 window.excluirColab = async function(id) {
     if (!confirm('Excluir colaborador?')) return;
-    try { showLoading(); await deleteDoc(doc(db,'colaboradores',id)); showToast('Excluído!','success'); hideLoading(); }
-    catch { showToast('Erro','error'); hideLoading(); }
+    pedirSenhaAdmin('Excluir Colaborador', async () => {
+        try { showLoading(); await deleteDoc(doc(db,'colaboradores',id)); showToast('Excluído!','success'); hideLoading(); }
+        catch { showToast('Erro','error'); hideLoading(); }
+    });
 };
 
 // ─── PRATOS COLABORADOR ───────────────────────────────────────────────────────
@@ -1094,21 +1327,23 @@ window.abrirModalPratoCol = function() {
 };
 
 window.editarPratoCol = function(id) {
-    garantirModalPratoCol();
-    const p = pratosCol.find(x=>x.id===id);
-    if (!p) return;
-    editandoPratoCol = id;
-    document.getElementById('pratoColModalTitle').textContent = 'Editar Prato Colaborador';
-    document.getElementById('pcNome').value       = p.nome||'';
-    document.getElementById('pcPreco').value      = p.preco||0;
-    document.getElementById('pcCategoria').value  = p.categoria||'';
-    document.getElementById('pcDesc').value       = p.descricao||'';
-    document.getElementById('pcImagem').value     = p.imagem||'';
-    document.getElementById('pcTemDesconto').checked = p.temDesconto===true;
-    document.getElementById('pcDesconto').value   = p.desconto||0;
-    document.getElementById('pcAtivo').checked    = p.ativo!==false;
-    document.getElementById('pcDescontoField').style.display = p.temDesconto===true ? 'flex' : 'none';
-    document.getElementById('pratoColModal').classList.add('active');
+    pedirSenhaAdmin('Editar Prato do Colaborador', () => {
+        garantirModalPratoCol();
+        const p = pratosCol.find(x=>x.id===id);
+        if (!p) return;
+        editandoPratoCol = id;
+        document.getElementById('pratoColModalTitle').textContent = 'Editar Prato Colaborador';
+        document.getElementById('pcNome').value       = p.nome||'';
+        document.getElementById('pcPreco').value      = p.preco||0;
+        document.getElementById('pcCategoria').value  = p.categoria||'';
+        document.getElementById('pcDesc').value       = p.descricao||'';
+        document.getElementById('pcImagem').value     = p.imagem||'';
+        document.getElementById('pcTemDesconto').checked = p.temDesconto===true;
+        document.getElementById('pcDesconto').value   = p.desconto||0;
+        document.getElementById('pcAtivo').checked    = p.ativo!==false;
+        document.getElementById('pcDescontoField').style.display = p.temDesconto===true ? 'flex' : 'none';
+        document.getElementById('pratoColModal').classList.add('active');
+    });
 };
 
 window.fecharModalPratoCol = function() {
@@ -1144,15 +1379,19 @@ window.salvarPratoCol = async function() {
     } catch { showToast('Erro ao salvar','error'); hideLoading(); }
 };
 
-window.toggleVisibilidadePratoCol = async function(id, ativo) {
-    try { await updateDoc(doc(db,'pratos_col',id), {ativo:!ativo}); showToast(!ativo?'Ativado!':'Desativado!','success'); }
-    catch { showToast('Erro','error'); }
+window.toggleVisibilidadePratoCol = function(id, ativo) {
+    pedirSenhaAdmin(ativo ? 'Desativar Prato' : 'Ativar Prato', async () => {
+        try { await updateDoc(doc(db,'pratos_col',id), {ativo:!ativo}); showToast(!ativo?'Prato ativado!':'Prato desativado!','success'); }
+        catch { showToast('Erro','error'); }
+    });
 };
 
 window.excluirPratoCol = async function(id) {
-    if (!confirm('Excluir prato?')) return;
-    try { showLoading(); await deleteDoc(doc(db,'pratos_col',id)); showToast('Excluído!','success'); hideLoading(); }
-    catch { showToast('Erro','error'); hideLoading(); }
+    if (!confirm('Excluir prato do colaborador?')) return;
+    pedirSenhaAdmin('Excluir Prato do Colaborador', async () => {
+        try { showLoading(); await deleteDoc(doc(db,'pratos_col',id)); showToast('Prato excluído!','success'); hideLoading(); }
+        catch { showToast('Erro','error'); hideLoading(); }
+    });
 };
 
 // ─── PEDIDOS COLABORADOR ──────────────────────────────────────────────────────
@@ -1987,5 +2226,898 @@ function showToast(msg,type='success') {
     toast.textContent=msg; toast.className=`toast ${type} active`;
     setTimeout(()=>toast.classList.remove('active'),3000);
 }
+
+// ─── RELATÓRIOS DE COLABORADORES ─────────────────────────────────────────────
+
+// ── Estado do filtro de relatórios ────────────────────────────────────────────
+let relFiltros    = { dataInicio: null, dataFim: null, colaboradorId: 'all' };
+let _relCal       = { ano: new Date().getFullYear(), mes: new Date().getMonth(), fase: 'primeiro' };
+let _relCalAberto = false; // controla se o dropdown do calendário está visível
+// fase 'primeiro': próximo clique define o início; 'segundo': próximo clique define o fim
+
+// Filtra lista de pedidos conforme o período selecionado no calendário
+function _relFiltrarPorPeriodo(lista) {
+    if (!relFiltros.dataInicio) return lista.filter(p => p.data);
+    return lista.filter(p => {
+        if (!p.data) return false;
+        const d = p.data.seconds ? new Date(p.data.seconds * 1000) : (p.data.toDate ? p.data.toDate() : new Date(p.data));
+        return d >= relFiltros.dataInicio && d <= relFiltros.dataFim;
+    });
+}
+
+// Texto descritivo do período selecionado
+function _relPeriodoLabel() {
+    if (!relFiltros.dataInicio) return 'Todos os registros';
+    const di = relFiltros.dataInicio.toLocaleDateString('pt-BR');
+    const df = relFiltros.dataFim.toLocaleDateString('pt-BR');
+    return di === df ? di : `${di} → ${df}`;
+}
+
+// Renderiza widget de calendário para seleção de período
+function _renderCalendario() {
+    const { ano, mes } = _relCal;
+    const hoje        = new Date();
+    const diasNoMes   = new Date(ano, mes + 1, 0).getDate();
+    const offsetSem   = new Date(ano, mes, 1).getDay(); // 0=Dom
+    const nomeMes     = new Date(ano, mes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+    const di  = relFiltros.dataInicio;
+    const df  = relFiltros.dataFim;
+    const diD = di ? new Date(di.getFullYear(), di.getMonth(), di.getDate()) : null;
+    const dfD = df ? new Date(df.getFullYear(), df.getMonth(), df.getDate()) : null;
+
+    const cabecalho = ['D','S','T','Q','Q','S','S'].map(l =>
+        `<div style="text-align:center;font-size:.6rem;font-weight:700;color:var(--text-muted,#505868);padding:4px 0;">${l}</div>`
+    ).join('');
+
+    const vazios = Array(offsetSem).fill('<div></div>').join('');
+
+    const dias = Array.from({ length: diasNoMes }, (_, i) => {
+        const d     = i + 1;
+        const dataD = new Date(ano, mes, d);
+
+        const isInicio = diD && dataD.getTime() === diD.getTime();
+        const isFim    = dfD && dataD.getTime() === dfD.getTime();
+        const inRange  = diD && dfD && dataD > diD && dataD < dfD;
+        const isHoje   = dataD.toDateString() === hoje.toDateString();
+
+        let bg = 'transparent', cor = 'var(--text-primary,#f0f2f7)', borda = '1px solid transparent', fw = '400', br = '6px';
+
+        if (isInicio && isFim) {
+            // Dia único selecionado
+            bg = '#a855f7'; cor = '#fff'; borda = '1px solid #9333ea'; fw = '700';
+        } else if (isInicio) {
+            bg = '#a855f7'; cor = '#fff'; borda = '1px solid #9333ea'; fw = '700'; br = '6px 0 0 6px';
+        } else if (isFim) {
+            bg = '#a855f7'; cor = '#fff'; borda = '1px solid #9333ea'; fw = '700'; br = '0 6px 6px 0';
+        } else if (inRange) {
+            bg = 'rgba(168,85,247,.18)'; borda = '1px solid rgba(168,85,247,.12)'; br = '0';
+        } else if (isHoje) {
+            borda = '1px solid rgba(168,85,247,.55)'; cor = '#c084fc'; fw = '600';
+        }
+
+        const fixo     = isInicio || isFim || inRange;
+        const hoverIn  = fixo ? '' : `this.style.background='rgba(168,85,247,.14)';this.style.borderColor='rgba(168,85,247,.3)'`;
+        const hoverOut = fixo ? '' : `this.style.background='${bg}';this.style.borderColor='transparent'`;
+
+        return `<div onclick="window.relCalClicarDia(${ano},${mes},${d})"
+            style="text-align:center;padding:5px 1px;border-radius:${br};cursor:pointer;font-size:.8rem;font-weight:${fw};background:${bg};color:${cor};border:${borda};transition:background .1s;user-select:none;"
+            onmouseover="${hoverIn}" onmouseout="${hoverOut}">${d}</div>`;
+    }).join('');
+
+    const labelSel   = _relPeriodoLabel();
+    const isSelAtivo = !!di;
+
+    return `<div style="background:var(--bg-elevated,#1a1e28);border:1px solid var(--border);border-radius:10px;padding:10px 12px;width:232px;">
+        <!-- Navegação de mês -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:4px;">
+            <button onclick="window.relCalNavegar(-1)" title="Mês anterior"
+                style="background:none;border:1px solid var(--border);color:var(--text-muted,#505868);cursor:pointer;font-size:1rem;width:28px;height:28px;border-radius:6px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='var(--text-primary,#f0f2f7)'"
+                onmouseout="this.style.background='none';this.style.color='var(--text-muted,#505868)'">‹</button>
+            <span style="font-size:.78rem;font-weight:700;color:var(--text-primary,#f0f2f7);text-transform:capitalize;text-align:center;flex:1;">${nomeMes}</span>
+            <button onclick="window.relCalNavegar(1)" title="Próximo mês"
+                style="background:none;border:1px solid var(--border);color:var(--text-muted,#505868);cursor:pointer;font-size:1rem;width:28px;height:28px;border-radius:6px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                onmouseover="this.style.background='rgba(255,255,255,.06)';this.style.color='var(--text-primary,#f0f2f7)'"
+                onmouseout="this.style.background='none';this.style.color='var(--text-muted,#505868)'">›</button>
+        </div>
+        <!-- Grade de dias -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px;">
+            ${cabecalho}${vazios}${dias}
+        </div>
+        <!-- Rodapé: seleção atual + limpar -->
+        <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:28px;">
+            <span style="font-size:.7rem;color:${isSelAtivo ? '#c084fc' : 'var(--text-muted,#505868)'};font-weight:${isSelAtivo ? '700' : '400'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;" title="${labelSel}">
+                ${isSelAtivo ? '📅 ' : '📋 '}${labelSel}
+            </span>
+            ${isSelAtivo
+                ? `<button onclick="window.relCalLimpar()"
+                    style="font-size:.68rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:5px;padding:3px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;"
+                    onmouseover="this.style.background='rgba(239,68,68,.2)'"
+                    onmouseout="this.style.background='rgba(239,68,68,.1)'">✕ Limpar</button>`
+                : `<span style="font-size:.68rem;color:var(--text-muted,#505868);font-style:italic;">Clique para filtrar</span>`
+            }
+        </div>
+    </div>`;
+}
+
+// ── Handlers do calendário ────────────────────────────────────────────────────
+window.relCalNavegar = function(delta) {
+    _relCal.mes += delta;
+    if (_relCal.mes < 0)  { _relCal.mes = 11; _relCal.ano--; }
+    if (_relCal.mes > 11) { _relCal.mes = 0;  _relCal.ano++; }
+    window.renderizarRelatorios();
+};
+
+window.relCalToggle = function() {
+    _relCalAberto = !_relCalAberto;
+    window.renderizarRelatorios();
+};
+
+window.relCalClicarDia = function(ano, mes, dia) {
+    const clicado = new Date(ano, mes, dia);
+
+    if (_relCal.fase === 'primeiro' || !relFiltros.dataInicio) {
+        // 1º clique: dia único selecionado
+        relFiltros.dataInicio = new Date(ano, mes, dia, 0, 0, 0, 0);
+        relFiltros.dataFim    = new Date(ano, mes, dia, 23, 59, 59, 999);
+        _relCal.fase          = 'segundo';
+    } else {
+        // 2º clique
+        const iniD = new Date(relFiltros.dataInicio.getFullYear(), relFiltros.dataInicio.getMonth(), relFiltros.dataInicio.getDate());
+        if (clicado.getTime() === iniD.getTime()) {
+            // Clicou no mesmo dia → deseleciona
+            relFiltros.dataInicio = null;
+            relFiltros.dataFim    = null;
+        } else if (clicado < iniD) {
+            // Clicou antes → o início vira o fim, novo dia vira o início
+            const novoFim = new Date(iniD.getFullYear(), iniD.getMonth(), iniD.getDate(), 23, 59, 59, 999);
+            relFiltros.dataInicio = new Date(ano, mes, dia, 0, 0, 0, 0);
+            relFiltros.dataFim    = novoFim;
+        } else {
+            // Clicou depois → estende o intervalo
+            relFiltros.dataFim = new Date(ano, mes, dia, 23, 59, 59, 999);
+        }
+        _relCal.fase = 'primeiro';
+        // fecha o dropdown ao completar a seleção de intervalo
+        if (relFiltros.dataInicio) _relCalAberto = false;
+    }
+    window.renderizarRelatorios();
+};
+
+window.relCalLimpar = function() {
+    relFiltros.dataInicio = null;
+    relFiltros.dataFim    = null;
+    _relCal.fase          = 'primeiro';
+    _relCalAberto         = false;
+    window.renderizarRelatorios();
+};
+
+function _selStyle() {
+    return 'padding:8px 13px;background:var(--bg-elevated,#1a1e28);border:1px solid var(--border);border-radius:8px;color:var(--text-primary,#f0f2f7);font-family:inherit;font-size:.82rem;cursor:pointer;outline:none;min-width:200px;';
+}
+
+function _thSt(align) {
+    return `padding:9px 14px;text-align:${align};font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#505868);white-space:nowrap;`;
+}
+
+function _tdSt(align) {
+    return `padding:10px 14px;text-align:${align};vertical-align:middle;`;
+}
+
+function _relStatCard(icon, label, valor, bg, cor) {
+    return `<div style="background:${bg};border:1px solid ${cor}44;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.35rem;">${icon}</span>
+        <div>
+            <div style="font-size:.63rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${cor};opacity:.85;">${label}</div>
+            <div style="font-size:.98rem;font-weight:700;color:${cor};">${valor}</div>
+        </div>
+    </div>`;
+}
+
+function _renderColabBloco(g) {
+    const total  = g.pedidos.reduce((s, p) => s + (p.total || 0), 0);
+    const sorted = [...g.pedidos].sort((a, b) => (b.data?.seconds || 0) - (a.data?.seconds || 0));
+
+    const stColor = s => s==='pronto'?'#22c55e':s==='preparando'?'#f59e0b':s==='cancelado'?'#ef4444':'#3b82f6';
+    const stBg    = s => s==='pronto'?'rgba(34,197,94,.1)':s==='preparando'?'rgba(245,158,11,.1)':s==='cancelado'?'rgba(239,68,68,.1)':'rgba(59,130,246,.1)';
+
+    return `
+    <div style="background:var(--bg-elevated,#1a1e28);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden;">
+        <!-- Cabeçalho do colaborador -->
+        <div style="padding:14px 18px;background:rgba(168,85,247,.06);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.35);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">👤</div>
+                <div>
+                    <div style="font-weight:700;font-size:.95rem;">${g.nome}</div>
+                    <div style="font-size:.72rem;color:var(--text-muted,#505868);">${sorted.length} pedido(s) no período</div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:.63rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted,#505868);">Total do período</div>
+                <div style="font-size:1.2rem;font-weight:700;color:#a855f7;">R$ ${fmt(total)}</div>
+            </div>
+        </div>
+
+        ${sorted.length === 0
+            ? `<div style="padding:24px;text-align:center;color:var(--text-muted,#505868);font-size:.85rem;">— Sem pedidos neste período —</div>`
+            : `<div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,.18);">
+                            <th style="${_thSt('left')}">Data</th>
+                            <th style="${_thSt('left')}">Hora</th>
+                            <th style="${_thSt('left')}">Itens</th>
+                            <th style="${_thSt('right')}">Total</th>
+                            <th style="${_thSt('center')}">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.map(p => {
+                            const d    = p.data?.seconds ? new Date(p.data.seconds * 1000) : (p.data?.toDate ? p.data.toDate() : new Date());
+                            const data = d.toLocaleDateString('pt-BR');
+                            const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            const itens = (p.itens || []).map(it =>
+                                `<span style="display:inline-block;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;padding:1px 7px;margin:1px 2px;font-size:.74rem;white-space:nowrap;">${it.quantidade}× ${it.nome}</span>`
+                            ).join('');
+                            return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+                                <td style="${_tdSt('left')};white-space:nowrap;font-weight:600;">${data}</td>
+                                <td style="${_tdSt('left')};color:var(--text-muted,#505868);white-space:nowrap;">${hora}</td>
+                                <td style="${_tdSt('left')};">
+                                    <div style="display:flex;flex-wrap:wrap;gap:2px;">${itens}</div>
+                                    ${p.observacao ? `<div style="font-size:.7rem;color:var(--text-muted,#505868);margin-top:4px;">📝 ${p.observacao}</div>` : ''}
+                                </td>
+                                <td style="${_tdSt('right')};font-weight:700;white-space:nowrap;">R$ ${fmt(p.total)}</td>
+                                <td style="${_tdSt('center')};">
+                                    <span style="background:${stBg(p.status)};color:${stColor(p.status)};border:1px solid ${stColor(p.status)}44;border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:600;white-space:nowrap;">${p.status}</span>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr style="border-top:2px solid var(--border);background:rgba(168,85,247,.05);">
+                            <td colspan="3" style="${_tdSt('right')};font-size:.8rem;font-weight:600;color:var(--text-muted,#505868);">Total do período:</td>
+                            <td style="${_tdSt('right')};font-weight:700;font-size:.98rem;color:#a855f7;">R$ ${fmt(total)}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`
+        }
+    </div>`;
+}
+
+window.renderizarRelatorios = function() {
+    const sec = document.getElementById('colabSubContent');
+    if (!sec) return;
+
+    const todosPeriodos = !relFiltros.dataInicio;
+
+    // Colaboradores em ordem alfabética
+    const colabsOrdenados = [...colaboradores].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    // Filtra pedidos pelo período selecionado no calendário (ou todos)
+    const noPeriodo = _relFiltrarPorPeriodo(pedidosCols);
+
+    // Filtra por colaborador se não for "Todos"
+    const filtrados = relFiltros.colaboradorId === 'all'
+        ? noPeriodo
+        : noPeriodo.filter(p => p.colaboradorId === relFiltros.colaboradorId);
+
+    // Monta grupos em ordem alfabética
+    const grupos = {};
+    const listaBase = relFiltros.colaboradorId === 'all'
+        ? colabsOrdenados
+        : colabsOrdenados.filter(c => c.id === relFiltros.colaboradorId);
+
+    listaBase.forEach(c => { grupos[c.id] = { nome: c.nome, pedidos: [] }; });
+    filtrados.forEach(p => {
+        const cid = p.colaboradorId;
+        if (!grupos[cid]) grupos[cid] = { nome: p.colaboradorNome || cid, pedidos: [] };
+        grupos[cid].pedidos.push(p);
+    });
+
+    // Ordena entradas do objeto por nome
+    const gruposOrdenados = Object.entries(grupos).sort(([, a], [, b]) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    const totalGeral   = filtrados.reduce((s, p) => s + (p.total || 0), 0);
+    const colabAtivos  = Object.values(grupos).filter(g => g.pedidos.length > 0).length;
+
+    const colabSelecionadoNome = relFiltros.colaboradorId !== 'all'
+        ? (colaboradores.find(c => c.id === relFiltros.colaboradorId)?.nome || 'Selecionado')
+        : null;
+
+    const encerramento = todosPeriodos ? 'Todo o histórico' : relFiltros.dataFim.toLocaleDateString('pt-BR');
+
+    const btnImpBase  = 'padding:8px 13px;border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;border:1px solid';
+    const btnDisabled = 'padding:8px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text-muted,#505868);border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:600;cursor:not-allowed;display:flex;align-items:center;gap:5px;white-space:nowrap;opacity:.45;';
+
+    sec.innerHTML = `
+    <div>
+        <!-- Filtros -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+            <h2 style="margin:0;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:7px;">📊 Relatório de Gastos</h2>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+
+                <!-- Calendário de período (dropdown) -->
+                <div style="position:relative;">
+                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#505868);margin-bottom:5px;">Período</div>
+                    <!-- Botão "Todos os registros" / período selecionado + seta -->
+                    <div onclick="window.relCalToggle()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 13px;background:var(--bg-elevated,#1a1e28);border:1px solid ${relFiltros.dataInicio ? 'rgba(168,85,247,.55)' : 'var(--border)'};border-radius:8px;min-width:220px;cursor:pointer;user-select:none;transition:border-color .18s;" onmouseover="this.style.borderColor='rgba(168,85,247,.55)'" onmouseout="this.style.borderColor='${relFiltros.dataInicio ? 'rgba(168,85,247,.55)' : 'var(--border)'}'">
+                        <span style="font-size:.82rem;color:${relFiltros.dataInicio ? '#c084fc' : 'var(--text-primary,#f0f2f7)'};font-weight:${relFiltros.dataInicio ? '700' : '400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;" title="${_relPeriodoLabel()}">
+                            ${relFiltros.dataInicio ? '📅 ' : '📋 '}${_relPeriodoLabel()}
+                        </span>
+                        <span style="font-size:.85rem;color:var(--text-muted,#505868);transition:transform .2s;display:inline-block;transform:${_relCalAberto ? 'rotate(180deg)' : 'rotate(0deg)'};flex-shrink:0;">▾</span>
+                    </div>
+                    <!-- Calendário (dropdown) -->
+                    ${_relCalAberto ? `<div style="position:absolute;top:calc(100% + 6px);left:0;z-index:200;">${_renderCalendario()}</div>` : ''}
+                </div>
+
+                <!-- Seletor de colaborador (ordem alfabética) -->
+                <div>
+                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#505868);margin-bottom:5px;">Colaborador</div>
+                    <select onchange="window.filtrarRelatorio('colab',this.value)" style="${_selStyle()}">
+                        <option value="all" ${relFiltros.colaboradorId === 'all' ? 'selected' : ''}>👥 Todos os colaboradores</option>
+                        ${colabsOrdenados.map(c => `<option value="${c.id}" ${c.id === relFiltros.colaboradorId ? 'selected' : ''}>${c.nome}</option>`).join('')}
+                    </select>
+                </div>
+
+                <!-- Botões Imprimir -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#505868);">🖨️ Imprimir</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button onclick="window.imprimirRelatorio('all')"
+                            style="${btnImpBase} rgba(59,130,246,.35);background:rgba(59,130,246,.12);color:#3b82f6;"
+                            onmouseover="this.style.background='rgba(59,130,246,.22)'" onmouseout="this.style.background='rgba(59,130,246,.12)'">
+                            🖨️ Todos
+                        </button>
+                        ${colabSelecionadoNome
+                            ? `<button onclick="window.imprimirRelatorio('${relFiltros.colaboradorId}')"
+                                style="${btnImpBase} rgba(168,85,247,.35);background:rgba(168,85,247,.12);color:#a855f7;max-width:160px;overflow:hidden;text-overflow:ellipsis;"
+                                title="Imprimir apenas: ${colabSelecionadoNome}"
+                                onmouseover="this.style.background='rgba(168,85,247,.22)'" onmouseout="this.style.background='rgba(168,85,247,.12)'">
+                                🖨️ ${colabSelecionadoNome}
+                              </button>`
+                            : `<button disabled style="${btnDisabled}" title="Selecione um colaborador específico">🖨️ Selecionado</button>`
+                        }
+                    </div>
+                </div>
+
+                <!-- Botões Excel -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                    <div style="font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted,#505868);">📊 Excel</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button onclick="window.exportarRelatorioExcel('all')"
+                            style="${btnImpBase} rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#22c55e;"
+                            onmouseover="this.style.background='rgba(34,197,94,.22)'" onmouseout="this.style.background='rgba(34,197,94,.12)'">
+                            📊 Todos
+                        </button>
+                        ${colabSelecionadoNome
+                            ? `<button onclick="window.exportarRelatorioExcel('${relFiltros.colaboradorId}')"
+                                style="${btnImpBase} rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#f59e0b;max-width:160px;overflow:hidden;text-overflow:ellipsis;"
+                                title="Excel apenas: ${colabSelecionadoNome}"
+                                onmouseover="this.style.background='rgba(245,158,11,.22)'" onmouseout="this.style.background='rgba(245,158,11,.12)'">
+                                📊 ${colabSelecionadoNome}
+                              </button>`
+                            : `<button disabled style="${btnDisabled}" title="Selecione um colaborador específico">📊 Selecionado</button>`
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Cards de resumo -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px;">
+            ${_relStatCard('💳', 'Total Gasto', 'R$ ' + fmt(totalGeral), 'rgba(168,85,247,.1)', '#a855f7')}
+            ${_relStatCard('📦', 'Pedidos',     filtrados.length,         'rgba(59,130,246,.1)', '#3b82f6')}
+            ${_relStatCard('👥', 'Com pedidos', colabAtivos,              'rgba(34,197,94,.1)',  '#22c55e')}
+            ${_relStatCard('📅', todosPeriodos ? 'Período' : 'Encerramento', encerramento, 'rgba(245,158,11,.1)', '#f59e0b')}
+        </div>
+
+        <!-- Blocos por colaborador (ordem alfabética) -->
+        ${gruposOrdenados.length === 0
+            ? `<div style="text-align:center;padding:60px 20px;color:var(--text-muted,#505868);">Nenhum colaborador cadastrado.</div>`
+            : gruposOrdenados.map(([, g]) => _renderColabBloco(g)).join('')
+        }
+    </div>`;
+};
+
+window.imprimirRelatorio = function(colabId) {
+    const nomeEmpresa   = (configuracoes && configuracoes.nomeCardapio) ? configuracoes.nomeCardapio : 'X-Food';
+    const emitidoEm     = new Date().toLocaleString('pt-BR');
+    const periodoLabel  = _relPeriodoLabel();
+
+    // Monta dados filtrados
+    const noPeriodo = _relFiltrarPorPeriodo(pedidosCols);
+    const filtrados = colabId === 'all' ? noPeriodo : noPeriodo.filter(p => p.colaboradorId === colabId);
+
+    // Colaboradores em ordem alfabética
+    const colabsOrdenados = [...colaboradores].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const listaBase = colabId === 'all' ? colabsOrdenados : colabsOrdenados.filter(c => c.id === colabId);
+
+    const grupos = {};
+    listaBase.forEach(c => { grupos[c.id] = { nome: c.nome, pedidos: [] }; });
+    filtrados.forEach(p => {
+        const cid = p.colaboradorId;
+        if (!grupos[cid]) grupos[cid] = { nome: p.colaboradorNome || cid, pedidos: [] };
+        grupos[cid].pedidos.push(p);
+    });
+
+    // Ordena grupos por nome
+    const gruposOrdenados = Object.entries(grupos).sort(([, a], [, b]) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    const totalGeral  = filtrados.reduce((s, p) => s + (p.total || 0), 0);
+    const tituloScope = colabId === 'all' ? 'Todos os Colaboradores' : (grupos[colabId]?.nome || '');
+
+    // Gera HTML de cada bloco de colaborador (ordem alfabética)
+    const gruposHtml = gruposOrdenados.map(([, g]) => {
+        const total  = g.pedidos.reduce((s, p) => s + (p.total || 0), 0);
+        const sorted = [...g.pedidos].sort((a, b) => (b.data?.seconds || 0) - (a.data?.seconds || 0));
+
+        const linhas = sorted.map(p => {
+            const d    = p.data?.seconds ? new Date(p.data.seconds * 1000) : (p.data?.toDate ? p.data.toDate() : new Date());
+            const data = d.toLocaleDateString('pt-BR');
+            const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const itens = (p.itens || []).map(it => `${it.quantidade}× ${it.nome}`).join(', ');
+            return `<tr>
+                <td>${data}</td>
+                <td>${hora}</td>
+                <td>${itens}${p.observacao ? `<br><small style="color:#666;">📝 ${p.observacao}</small>` : ''}</td>
+                <td style="text-align:right;white-space:nowrap;">R$ ${fmt(p.total)}</td>
+                <td style="text-align:center;">${p.status}</td>
+            </tr>`;
+        }).join('');
+
+        return `
+        <div class="colab-block">
+            <div class="colab-header">
+                <div>
+                    <div class="colab-nome">${g.nome}</div>
+                    <div class="colab-sub">${sorted.length} pedido(s) no período</div>
+                </div>
+                <div class="colab-total">R$ ${fmt(total)}</div>
+            </div>
+            ${sorted.length === 0
+                ? `<p class="empty">Sem pedidos neste período.</p>`
+                : `<table>
+                    <thead>
+                        <tr><th>Data</th><th>Hora</th><th>Itens</th><th style="text-align:right;">Total</th><th style="text-align:center;">Status</th></tr>
+                    </thead>
+                    <tbody>${linhas}</tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right;"><strong>Total do período</strong></td>
+                            <td style="text-align:right;"><strong>R$ ${fmt(total)}</strong></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>`
+            }
+        </div>`;
+    }).join('');
+
+    const reportBody = `
+<div class="rpt-header">
+  <div>
+    <div class="rpt-title">${nomeEmpresa} — Relatório de Gastos</div>
+    <div class="rpt-sub">
+      Período: <strong>${periodoLabel}</strong><br>
+      Escopo: <strong>${tituloScope}</strong>
+    </div>
+  </div>
+  <div class="rpt-meta">
+    Emitido em:<br><strong>${emitidoEm}</strong>
+  </div>
+</div>
+<div class="summary">
+  <div class="sc"><div class="sc-lbl">Total Gasto</div><div class="sc-val">R$ ${fmt(totalGeral)}</div></div>
+  <div class="sc"><div class="sc-lbl">Pedidos</div><div class="sc-val">${filtrados.length}</div></div>
+  <div class="sc"><div class="sc-lbl">Colaboradores</div><div class="sc-val">${Object.values(grupos).filter(g => g.pedidos.length > 0).length}</div></div>
+</div>
+${gruposHtml}
+<div class="rpt-footer">
+  <span>${nomeEmpresa} — Sistema de Gestão de Colaboradores</span>
+  <span>Gerado em ${emitidoEm}</span>
+</div>`;
+
+    const rptStyles = `
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body,#rptBody{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;background:#fff;}
+  .rpt-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px;}
+  .rpt-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+  .rpt-sub{font-size:11px;color:#444;line-height:1.7;}
+  .rpt-meta{text-align:right;font-size:10px;color:#666;line-height:1.7;}
+  .summary{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+  .sc{flex:1;min-width:110px;border:1px solid #ddd;border-radius:6px;padding:10px 13px;background:#f9f9f9;}
+  .sc-lbl{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#777;}
+  .sc-val{font-size:16px;font-weight:700;color:#111;margin-top:3px;}
+  .colab-block{margin-bottom:26px;page-break-inside:avoid;}
+  .colab-block + .colab-block{border-top:1px dashed #bbb;padding-top:22px;}
+  .colab-header{display:flex;justify-content:space-between;align-items:center;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;padding:10px 14px;margin-bottom:10px;}
+  .colab-nome{font-size:13px;font-weight:700;}
+  .colab-sub{font-size:10px;color:#666;margin-top:2px;}
+  .colab-total{font-size:17px;font-weight:700;color:#333;}
+  .empty{color:#999;font-style:italic;padding:10px 0;font-size:11px;}
+  table{width:100%;border-collapse:collapse;font-size:11px;}
+  thead tr{background:#222;color:#fff;}
+  thead th{padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;}
+  tbody tr:nth-child(even){background:#f7f7f7;}
+  tbody td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.5;}
+  tfoot tr{background:#ececec;border-top:2px solid #222;}
+  tfoot td{padding:8px 10px;}
+  .rpt-footer{margin-top:28px;border-top:1px solid #ccc;padding-top:10px;font-size:9px;color:#999;display:flex;justify-content:space-between;}
+  @media print{#rptPrintToolbar{display:none!important;}.colab-block{page-break-inside:avoid;}}`;
+
+    // Salva HTML completo para uso na impressão real
+    window._relPrintFullHtml = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Relatório — ${periodoLabel}</title>
+<style>${rptStyles}</style>
+</head><body style="padding:28px 32px;">${reportBody}
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+    // Cria/atualiza overlay bloqueante
+    let overlay = document.getElementById('relPrintOverlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'relPrintOverlay';
+    overlay.style.cssText = [
+        'position:fixed','top:0','left:0','width:100%','height:100%',
+        'z-index:99999','background:rgba(0,0,0,.78)',
+        'backdrop-filter:blur(5px)','-webkit-backdrop-filter:blur(5px)',
+        'display:flex','align-items:flex-start','justify-content:center',
+        'overflow-y:auto','padding:20px','box-sizing:border-box'
+    ].join(';');
+
+    overlay.innerHTML = `
+    <div style="background:#fff;color:#111;width:100%;max-width:980px;border-radius:12px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);margin:auto;flex-shrink:0;">
+        <!-- Barra de ferramentas -->
+        <div id="rptPrintToolbar" style="background:#1a1e28;color:#f0f2f7;padding:13px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:2px solid #111;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.1rem;">🖨️</span>
+                <div>
+                    <div style="font-weight:700;font-size:.95rem;">Pré-visualização do Relatório</div>
+                    <div style="font-size:.72rem;color:#7c8799;margin-top:1px;">${periodoLabel} · ${tituloScope}</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="window.executarImpressao()"
+                    style="padding:9px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"
+                    onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                    🖨️ Imprimir / Salvar PDF
+                </button>
+                <button onclick="window.fecharModalImpressao()"
+                    style="padding:9px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"
+                    onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    ✕ Fechar
+                </button>
+            </div>
+        </div>
+        <!-- Conteúdo do relatório -->
+        <div id="rptBody" style="padding:28px 32px;">
+            <style>${rptStyles}</style>
+            ${reportBody}
+        </div>
+    </div>`;
+
+    document.body.appendChild(overlay);
+};
+
+window.executarImpressao = function() {
+    if (!window._relPrintFullHtml) return;
+    const win = window.open('', '_blank', 'width=980,height=750');
+    if (!win) { showToast('Permita popups para imprimir.', 'error'); return; }
+    win.document.write(window._relPrintFullHtml);
+    win.document.close();
+};
+
+window.fecharModalImpressao = function() {
+    const overlay = document.getElementById('relPrintOverlay');
+    if (overlay) overlay.remove();
+};
+
+// ─── EXPORTAR EXCEL (ExcelJS — planilha estilizada) ──────────────────────────
+window.exportarRelatorioExcel = function(colabId) {
+    const nomeEmpresa  = (configuracoes && configuracoes.nomeCardapio) ? configuracoes.nomeCardapio : 'X-Food';
+    const periodoLabel = _relPeriodoLabel();
+    const noPeriodo    = _relFiltrarPorPeriodo(pedidosCols);
+    const filtrados    = colabId === 'all' ? noPeriodo : noPeriodo.filter(p => p.colaboradorId === colabId);
+
+    const colabsOrdenados = [...colaboradores].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const listaBase = colabId === 'all' ? colabsOrdenados : colabsOrdenados.filter(c => c.id === colabId);
+
+    const grupos = {};
+    listaBase.forEach(c => { grupos[c.id] = { nome: c.nome, pedidos: [] }; });
+    filtrados.forEach(p => {
+        const cid = p.colaboradorId;
+        if (!grupos[cid]) grupos[cid] = { nome: p.colaboradorNome || cid, pedidos: [] };
+        grupos[cid].pedidos.push(p);
+    });
+    const gruposOrdenados = Object.entries(grupos).sort(([, a], [, b]) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    // Carrega ExcelJS sob demanda
+    const _carregarExcelJS = () => new Promise((resolve, reject) => {
+        if (window.ExcelJS) { resolve(window.ExcelJS); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
+        s.onload  = () => resolve(window.ExcelJS);
+        s.onerror = () => reject(new Error('Falha ao carregar ExcelJS'));
+        document.head.appendChild(s);
+    });
+
+    showToast('Gerando planilha Excel…', 'info');
+
+    _carregarExcelJS().then(async ExcelJS => {
+        const wb = new ExcelJS.Workbook();
+        wb.creator  = nomeEmpresa;
+        wb.created  = new Date();
+
+        const ws = wb.addWorksheet('Relatório', {
+            views: [{ state: 'frozen', ySplit: 6 }],
+            pageSetup: { orientation: 'landscape', fitToPage: true }
+        });
+
+        ws.columns = [
+            { width: 32 }, // Colaborador
+            { width: 13 }, // Data
+            { width:  9 }, // Hora
+            { width: 50 }, // Itens
+            { width: 30 }, // Observação
+            { width: 16 }, // Total
+            { width: 14 }, // Status
+        ];
+
+        const COLS = 7;
+
+        // ── Paleta (profissional com acentos sutis) ──────────────────────────
+        const C = {
+            bg0      : 'FFFFFFFF', // fundo base branco
+            bg1      : 'FF1e2535', // fundo título/meta (azul petróleo escuro)
+            bgHeader : 'FF2c3e55', // cabeçalho das colunas (azul acinzentado)
+            bgColab  : 'FFe8edf3', // cabeçalho por colaborador (azul muito claro)
+            bgRowA   : 'FFFFFFFF', // linha par (branco)
+            bgRowB   : 'FFf4f6f9', // linha ímpar (cinza azulado suave)
+            bgSub    : 'FFdce4ef', // subtotal (azul claro)
+            bgTotal  : 'FF1e2535', // total geral (mesmo do título)
+            txPrimary: 'FF1a1a2e',
+            txMuted  : 'FF64748b',
+            txTeal   : 'FFFFFFFF', // branco (título/total)
+            txBlue   : 'FF1e3a5f', // azul escuro (subtotal)
+            txGreen  : 'FFFFFFFF', // branco (total geral)
+            txGreenL : 'FF1a1a2e', // quase preto (valores linhas)
+            txColab  : 'FF1e2535', // azul muito escuro (nome colaborador)
+            white    : 'FFFFFFFF',
+            bdrDark  : 'FFc9d3de',
+            bdrTeal  : 'FF2c3e55',
+            bdrBlue  : 'FF7ea8cc',
+            bdrGreen : 'FF1e2535',
+        };
+
+        const thin   = color => ({ style: 'thin',   color: { argb: color } });
+        const medium = color => ({ style: 'medium',  color: { argb: color } });
+        const borderBox  = (c) => ({ top: thin(c),   bottom: thin(c),   left: thin(c),   right: thin(c)   });
+        const borderMid  = (c) => ({ top: medium(c), bottom: medium(c), left: medium(c), right: medium(c) });
+        const borderHBar = (c, side) => {
+            const b = { top: thin(C.bdrDark), bottom: thin(C.bdrDark), left: thin(C.bdrDark), right: thin(C.bdrDark) };
+            b[side] = medium(c);
+            return b;
+        };
+
+        const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+        const applyCell = (cell, opts = {}) => {
+            if (opts.bg)       cell.fill      = fill(opts.bg);
+            if (opts.color)    cell.font       = { ...(cell.font||{}), color: { argb: opts.color } };
+            if (opts.bold)     cell.font       = { ...(cell.font||{}), bold: true };
+            if (opts.italic)   cell.font       = { ...(cell.font||{}), italic: true };
+            if (opts.size)     cell.font       = { ...(cell.font||{}), size: opts.size };
+            if (opts.numFmt)   cell.numFmt     = opts.numFmt;
+            if (opts.border)   cell.border     = opts.border;
+            if (opts.align)    cell.alignment  = { vertical: 'middle', ...opts.align };
+        };
+
+        // ── Linha de título ──────────────────────────────────────────────────
+        const rowTit = ws.addRow([`${nomeEmpresa} — Relatório de Gastos`]);
+        ws.mergeCells(rowTit.number, 1, rowTit.number, COLS);
+        rowTit.height = 40;
+        applyCell(rowTit.getCell(1), {
+            bg: C.bg1, color: C.txTeal, bold: true, size: 16,
+            align: { horizontal: 'center' },
+            border: borderMid(C.bdrTeal)
+        });
+
+        // ── Metadados ────────────────────────────────────────────────────────
+        const addMeta = (label, value) => {
+            const r = ws.addRow([`${label}:  ${value}`]);
+            r.height = 17;
+            ws.mergeCells(r.number, 1, r.number, COLS);
+            applyCell(r.getCell(1), {
+                bg: C.bg1, color: C.txMuted, italic: true, size: 9,
+                align: { horizontal: 'left', indent: 2 },
+                border: { left: medium(C.bdrTeal), right: medium(C.bdrTeal), top: thin(C.bdrDark), bottom: thin(C.bdrDark) }
+            });
+        };
+        addMeta('Período',    periodoLabel);
+        addMeta('Escopo',     colabId === 'all' ? 'Todos os Colaboradores' : (grupos[colabId]?.nome || ''));
+        addMeta('Emitido em', new Date().toLocaleString('pt-BR'));
+
+        // Separador
+        const rowSep = ws.addRow([]);
+        ws.mergeCells(rowSep.number, 1, rowSep.number, COLS);
+        rowSep.height = 5;
+        rowSep.getCell(1).fill = fill(C.bg0);
+
+        // ── Cabeçalho das colunas ────────────────────────────────────────────
+        const HDR = ['Colaborador', 'Data', 'Hora', 'Itens', 'Observação', 'Total (R$)', 'Status'];
+        const rowHdr = ws.addRow(HDR);
+        rowHdr.height = 24;
+        rowHdr.eachCell({ includeEmpty: true }, (cell, col) => {
+            cell.fill      = fill(C.bgHeader);
+            cell.font      = { bold: true, color: { argb: C.white }, size: 10 };
+            cell.alignment = { vertical: 'middle', horizontal: col === 6 ? 'right' : 'center' };
+            cell.border    = {
+                top:    medium(C.bdrTeal),
+                bottom: medium(C.bdrTeal),
+                left:   col === 1    ? medium(C.bdrTeal) : thin(C.bdrDark),
+                right:  col === COLS ? medium(C.bdrTeal) : thin(C.bdrDark),
+            };
+        });
+
+        // ── Dados por colaborador ────────────────────────────────────────────
+        gruposOrdenados.forEach(([, g]) => {
+            const sorted     = [...g.pedidos].sort((a, b) => (a.data?.seconds||0) - (b.data?.seconds||0));
+            const totalColab = g.pedidos.reduce((s, p) => s + (p.total||0), 0);
+
+            // Linha cabeçalho do colaborador — mesclada em todas as colunas, sem total
+            const rColab = ws.addRow([`  ${g.nome}`, '', '', '', '', '', '']);
+            ws.mergeCells(rColab.number, 1, rColab.number, COLS);
+            rColab.height = 24;
+            rColab.eachCell({ includeEmpty: true }, (cell) => {
+                cell.fill   = fill(C.bg1);
+                cell.border = {
+                    top:    medium(C.bdrTeal),
+                    bottom: thin(C.bdrDark),
+                    left:   medium(C.bdrTeal),
+                    right:  medium(C.bdrTeal),
+                };
+            });
+            rColab.getCell(1).value     = `  ${g.nome}`;
+            rColab.getCell(1).font      = { bold: true, color: { argb: C.white }, size: 10.5 };
+            rColab.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+
+            if (sorted.length === 0) {
+                const r = ws.addRow(['', '—', '—', 'Sem pedidos no período', '—', '', '—']);
+                r.height = 19;
+                r.eachCell({ includeEmpty: true }, (cell, col) => {
+                    cell.fill      = fill(C.bgRowA);
+                    cell.font      = { italic: true, color: { argb: C.txMuted }, size: 9 };
+                    cell.alignment = { vertical: 'middle', horizontal: col === 4 ? 'left' : 'center' };
+                    cell.border    = {
+                        top: thin(C.bdrDark), bottom: thin(C.bdrDark),
+                        left:  col === 1    ? medium(C.bdrTeal) : thin(C.bdrDark),
+                        right: col === COLS ? medium(C.bdrTeal) : thin(C.bdrDark),
+                    };
+                });
+            } else {
+                sorted.forEach((p, i) => {
+                    const d    = p.data?.seconds ? new Date(p.data.seconds*1000) : (p.data?.toDate ? p.data.toDate() : new Date());
+                    const data = d.toLocaleDateString('pt-BR');
+                    const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const itens = (p.itens||[]).map(it => `${it.quantidade}x ${it.nome}`).join(', ');
+                    const bgRow = i % 2 === 0 ? C.bgRowA : C.bgRowB;
+
+                    const r = ws.addRow([g.nome, data, hora, itens, p.observacao||'', p.total||0, p.status||'']);
+                    r.height = 20;
+                    r.eachCell({ includeEmpty: true }, (cell, col) => {
+                        cell.fill   = fill(bgRow);
+                        cell.border = {
+                            top: thin(C.bdrDark), bottom: thin(C.bdrDark),
+                            left:  col === 1    ? medium(C.bdrTeal) : thin(C.bdrDark),
+                            right: col === COLS ? medium(C.bdrTeal) : thin(C.bdrDark),
+                        };
+                        cell.font   = { color: { argb: C.txPrimary }, size: 9 };
+
+                        if (col === 1) {
+                            cell.font      = { color: { argb: C.txMuted }, size: 8.5, italic: true };
+                            cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 2 };
+                        } else if (col === 2 || col === 3) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        } else if (col === 4) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        } else if (col === 5) {
+                            cell.font      = { color: { argb: C.txMuted }, size: 8.5, italic: true };
+                            cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        } else if (col === 6) {
+                            cell.value     = p.total || 0;
+                            cell.numFmt    = '"R$ "#,##0.00';
+                            cell.font      = { bold: true, color: { argb: C.txGreenL }, size: 9 };
+                            cell.alignment = { vertical: 'middle', horizontal: 'right' };
+                        } else if (col === 7) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                            cell.font      = { color: { argb: C.txMuted }, size: 8.5 };
+                        }
+                    });
+                });
+            }
+
+            // Linha subtotal do colaborador
+            const rSub = ws.addRow([`Subtotal — ${g.nome}`, '', '', '', '', totalColab, '']);
+            ws.mergeCells(rSub.number, 1, rSub.number, 5);
+            rSub.height = 21;
+            rSub.eachCell({ includeEmpty: true }, (cell, col) => {
+                cell.fill   = fill(C.bgSub);
+                cell.border = {
+                    top:    medium(C.bdrBlue),
+                    bottom: medium(C.bdrTeal),
+                    left:   col === 1    ? medium(C.bdrTeal) : thin(C.bdrDark),
+                    right:  col === COLS ? medium(C.bdrTeal) : thin(C.bdrDark),
+                };
+                if (col === 1) {
+                    cell.font      = { bold: true, color: { argb: C.txBlue }, size: 9.5 };
+                    cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 2 };
+                }
+                if (col === 6) {
+                    cell.value     = totalColab;
+                    cell.numFmt    = '"R$ "#,##0.00';
+                    cell.font      = { bold: true, color: { argb: C.txBlue }, size: 10 };
+                    cell.alignment = { vertical: 'middle', horizontal: 'right' };
+                }
+            });
+
+            // Separador entre colaboradores
+            const rBlank = ws.addRow([]);
+            ws.mergeCells(rBlank.number, 1, rBlank.number, COLS);
+            rBlank.height = 5;
+            rBlank.getCell(1).fill = fill(C.bg0);
+        });
+
+        // ── Total Geral ───────────────────────────────────────────────────────
+        const totalGeral = filtrados.reduce((s, p) => s + (p.total||0), 0);
+        const rTotal = ws.addRow(['TOTAL GERAL', '', '', '', '', totalGeral, '']);
+        ws.mergeCells(rTotal.number, 1, rTotal.number, 5);
+        rTotal.height = 30;
+        rTotal.eachCell({ includeEmpty: true }, (cell, col) => {
+            cell.fill   = fill(C.bgTotal);
+            cell.border = borderMid(C.bdrGreen);
+            if (col === 1) {
+                cell.font      = { bold: true, size: 13, color: { argb: C.txGreen } };
+                cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 2 };
+            }
+            if (col === 6) {
+                cell.value     = totalGeral;
+                cell.numFmt    = '"R$ "#,##0.00';
+                cell.font      = { bold: true, size: 13, color: { argb: C.txGreen } };
+                cell.alignment = { vertical: 'middle', horizontal: 'right' };
+            }
+        });
+
+        // ── Gerar buffer e baixar ─────────────────────────────────────────────
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url    = URL.createObjectURL(blob);
+        const a      = document.createElement('a');
+        const colabNome  = colabId === 'all' ? 'Todos' : (colaboradores.find(c => c.id === colabId)?.nome || colabId);
+        const safePeriod = periodoLabel.replace(/[\/\\?%*:|"<>]/g, '-');
+        a.href     = url;
+        a.download = `${nomeEmpresa} - Relatório - ${colabNome} - ${safePeriod}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('✅ Excel gerado com sucesso!', 'success');
+
+    }).catch(err => {
+        console.error(err);
+        showToast('Erro ao gerar Excel. Verifique sua conexão.', 'error');
+    });
+};
+
+window.filtrarRelatorio = function(tipo, valor) {
+    if (tipo === 'colab') relFiltros.colaboradorId = valor;
+    window.renderizarRelatorios();
+};
 
 console.log('X-Food Admin v4 — Colaboradores + Pratos Col + Pedidos Col inicializado!');
